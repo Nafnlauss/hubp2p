@@ -1,0 +1,38 @@
+{
+  "common": {
+    "appName": "P2P Application",
+    "welcome": "Welcome",
+    "goodbye": "Goodbye",
+    "error": "Error",
+    "success": "Success",
+    "loading": "Loading...",
+    "noData": "No data available"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "settings": "Settings",
+    "logout": "Sign Out"
+  },
+  "errors": {
+    "pageNotFound": "Page not found",
+    "serverError": "Server error",
+    "validationError": "Validation error",
+    "networkError": "Connection error"
+  },
+  "messages": {
+    "greeting": "Hello, {name}!",
+    "itemCount": "{count, plural, =0 {no items} one {one item} other {# items}}",
+    "price": "Price: {amount, number, currency}",
+    "discount": "Discount of {percent, number, percent}",
+    "date": "Date: {date, date, full}",
+    "time": "Time: {time, time, time}",
+    "dateRange": "Period: {startDate, date, medium} to {endDate, date, medium}"
+  },
+  "formats": {
+    "currency": "${value, number, currency}",
+    "percentage": "{value, number, percent}",
+    "decimal": "{value, number, decimal}"
+  }
+}

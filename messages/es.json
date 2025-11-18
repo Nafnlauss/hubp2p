@@ -1,0 +1,38 @@
+{
+  "common": {
+    "appName": "Aplicación P2P",
+    "welcome": "Bienvenido",
+    "goodbye": "Adiós",
+    "error": "Error",
+    "success": "Éxito",
+    "loading": "Cargando...",
+    "noData": "Sin datos disponibles"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  },
+  "errors": {
+    "pageNotFound": "Página no encontrada",
+    "serverError": "Error del servidor",
+    "validationError": "Error de validación",
+    "networkError": "Error de conexión"
+  },
+  "messages": {
+    "greeting": "¡Hola, {name}!",
+    "itemCount": "{count, plural, =0 {ningún elemento} one {un elemento} other {# elementos}}",
+    "price": "Precio: {amount, number, currency}",
+    "discount": "Descuento de {percent, number, percent}",
+    "date": "Fecha: {date, date, full}",
+    "time": "Hora: {time, time, time}",
+    "dateRange": "Período: {startDate, date, medium} a {endDate, date, medium}"
+  },
+  "formats": {
+    "currency": "{value, number, currency} €",
+    "percentage": "{value, number, percent}",
+    "decimal": "{value, number, decimal}"
+  }
+}

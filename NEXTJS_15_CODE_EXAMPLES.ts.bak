@@ -1,0 +1,920 @@
+// =============================================================================
+// NEXTJS 15: EXEMPLOS PRÁTICOS DE CÓDIGO
+// =============================================================================
+
+// ============================================================================
+// 1. APP ROUTER - SERVER COMPONENTS COM DATA FETCHING
+// ============================================================================
+
+// app/posts/page.tsx
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+
+export const metadata: Metadata = {
+  title: 'Blog Posts',
+  description: 'Read our latest blog posts',
+}
+
+interface Post {
+  id: number
+  title: string
+  content: string
+  author: string
+  createdAt: string
+}
+
+async function getPosts(): Promise<Post[]> {
+  const res = await fetch('https://api.example.com/posts', {
+    next: { revalidate: 3600 }, // Cache por 1 hora
+  })
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch posts')
+  }
+
+  return res.json()
+}
+
+export default async function PostsPage() {
+  const posts = await getPosts()
+
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-8">Posts</h1>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {posts.map(post => (
+          <PostCard key={post.id} post={post} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PostCard({ post }: { post: Post }) {
+  return (
+    <article className="border rounded-lg p-4 hover:shadow-lg transition">
+      <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+      <p className="text-gray-600 mb-4">{post.content}</p>
+      <div className="flex justify-between items-center text-sm text-gray-500">
+        <span>{post.author}</span>
+        <time>{new Date(post.createdAt).toLocaleDateString()}</time>
+      </div>
+    </article>
+  )
+}
+
+// ============================================================================
+// 2. CLIENT COMPONENT COM INTERATIVIDADE
+// ============================================================================
+
+// components/PostInteractions.tsx
+'use client'
+
+import { useState } from 'react'
+
+interface PostInteractionsProps {
+  postId: number
+  initialLikes: number
+}
+
+export function PostInteractions({ postId, initialLikes }: PostInteractionsProps) {
+  const [likes, setLikes] = useState(initialLikes)
+  const [isLiked, setIsLiked] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleLike = async () => {
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/posts/${postId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ liked: !isLiked }),
+      })
+
+      if (res.ok) {
+        setIsLiked(!isLiked)
+        setLikes(prev => (isLiked ? prev - 1 : prev + 1))
+      }
+    } catch (error) {
+      console.error('Failed to update like:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Check out this post!',
+          url: `${window.location.origin}/posts/${postId}`,
+        })
+      } catch (error) {
+        console.log('Share cancelled:', error)
+      }
+    }
+  }
+
+  return (
+    <div className="flex gap-4 items-center">
+      <button
+        onClick={handleLike}
+        disabled={isLoading}
+        className={`flex items-center gap-2 px-4 py-2 rounded transition ${
+          isLiked
+            ? 'bg-red-100 text-red-600'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+        }`}
+      >
+        {isLiked ? '❤️' : '🤍'}
+        <span>{likes}</span>
+      </button>
+
+      <button
+        onClick={handleShare}
+        className="flex items-center gap-2 px-4 py-2 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 transition"
+      >
+        📤 Share
+      </button>
+    </div>
+  )
+}
+
+// ============================================================================
+// 3. DYNAMIC ROUTE COM PARAMS COMO PROMISE
+// ============================================================================
+
+// app/posts/[slug]/page.tsx
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { PostInteractions } from '@/components/PostInteractions'
+
+async function getPost(slug: string) {
+  const res = await fetch(`https://api.example.com/posts/${slug}`, {
+    next: { revalidate: 3600 },
+  })
+
+  if (!res.ok) {
+    return null
+  }
+
+  return res.json()
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const post = await getPost(slug)
+
+  if (!post) {
+    return {
+      title: 'Post not found',
+    }
+  }
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      images: [post.image],
+    },
+  }
+}
+
+export default async function PostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  const post = await getPost(slug)
+
+  if (!post) {
+    notFound()
+  }
+
+  return (
+    <article className="container mx-auto py-8 max-w-2xl">
+      <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
+
+      <div className="flex gap-4 mb-8 text-gray-600">
+        <span>{post.author}</span>
+        <time>{new Date(post.createdAt).toLocaleDateString()}</time>
+        <span>⏱️ {post.readingTime} min read</span>
+      </div>
+
+      {post.image && (
+        <img
+          src={post.image}
+          alt={post.title}
+          className="w-full rounded-lg mb-8"
+        />
+      )}
+
+      <div
+        className="prose prose-lg mb-8"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
+
+      <PostInteractions postId={post.id} initialLikes={post.likes} />
+    </article>
+  )
+}
+
+// ============================================================================
+// 4. ROUTE HANDLER COM VALIDAÇÃO
+// ============================================================================
+
+// app/api/posts/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+
+const PostSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200),
+  content: z.string().min(10, 'Content must be at least 10 characters'),
+  excerpt: z.string().optional(),
+  author: z.string().min(1, 'Author is required'),
+  published: z.boolean().default(false),
+})
+
+type PostInput = z.infer<typeof PostSchema>
+
+export async function GET(request: NextRequest) {
+  try {
+    // Pegar query parameters
+    const searchParams = request.nextUrl.searchParams
+    const limit = parseInt(searchParams.get('limit') ?? '10')
+    const offset = parseInt(searchParams.get('offset') ?? '0')
+
+    const posts = await getPostsFromDB(limit, offset)
+
+    return NextResponse.json(posts, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    })
+  } catch (error) {
+    console.error('Error fetching posts:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch posts' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+
+    // Validar com Zod
+    const validatedData = PostSchema.parse(body)
+
+    // Salvar no banco de dados
+    const post = await savePostToDB(validatedData)
+
+    return NextResponse.json(post, { status: 201 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: error.errors,
+        },
+        { status: 400 }
+      )
+    }
+
+    console.error('Error creating post:', error)
+    return NextResponse.json(
+      { error: 'Failed to create post' },
+      { status: 500 }
+    )
+  }
+}
+
+// Funções mock (substituir com implementação real)
+async function getPostsFromDB(limit: number, offset: number) {
+  return [
+    {
+      id: 1,
+      title: 'Example Post',
+      content: 'This is an example post',
+      author: 'John Doe',
+    },
+  ]
+}
+
+async function savePostToDB(data: PostInput) {
+  return {
+    id: Date.now(),
+    ...data,
+    createdAt: new Date(),
+  }
+}
+
+// ============================================================================
+// 5. DYNAMIC ROUTE HANDLER COM PARAMS COMO PROMISE
+// ============================================================================
+
+// app/api/posts/[id]/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params // ⚠️ IMPORTANTE: params é uma Promise no Next.js 15
+
+    const post = await getPostFromDB(id)
+
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(post, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600',
+      },
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch post' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+
+    const post = await updatePostInDB(id, body)
+
+    return NextResponse.json(post)
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to update post' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    await deletePostFromDB(id)
+
+    return new NextResponse(null, { status: 204 })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to delete post' },
+      { status: 500 }
+    )
+  }
+}
+
+// Funções mock
+async function getPostFromDB(id: string) {
+  return { id, title: 'Post Title', content: 'Post content' }
+}
+
+async function updatePostInDB(id: string, data: any) {
+  return { id, ...data }
+}
+
+async function deletePostFromDB(id: string) {
+  // Delete logic
+}
+
+// ============================================================================
+// 6. MIDDLEWARE PARA AUTENTICAÇÃO
+// ============================================================================
+
+// middleware.ts
+import { NextRequest, NextResponse } from 'next/server'
+
+const publicPaths = ['/login', '/register', '/about']
+const adminPaths = ['/admin', '/dashboard']
+
+export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const token = request.cookies.get('auth-token')?.value
+
+  // Verificar se é rota pública
+  if (publicPaths.some(path => pathname.startsWith(path))) {
+    return NextResponse.next()
+  }
+
+  // Verificar autenticação para rotas protegidas
+  if (adminPaths.some(path => pathname.startsWith(path)) && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Adicionar user ID ao header (passável para componentes)
+  if (token) {
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-user-token', token)
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match todos exceto:
+     * - _next/static
+     * - _next/image
+     * - favicon.ico
+     * - public files
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
+}
+
+// ============================================================================
+// 7. REVALIDAÇÃO DE CACHE
+// ============================================================================
+
+// app/api/revalidate/route.ts
+import { revalidateTag, revalidatePath } from 'next/cache'
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  // Verificar secret token
+  const secret = request.headers.get('x-revalidate-token')
+
+  if (secret !== process.env.REVALIDATE_SECRET) {
+    return new NextResponse('Unauthorized', { status: 401 })
+  }
+
+  const { type, identifier } = await request.json()
+
+  try {
+    if (type === 'tag') {
+      revalidateTag(identifier)
+    } else if (type === 'path') {
+      revalidatePath(identifier)
+    } else {
+      return NextResponse.json(
+        { error: 'Invalid revalidation type' },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json({ revalidated: true })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to revalidate' },
+      { status: 500 }
+    )
+  }
+}
+
+// Exemplo de uso: chamar este endpoint quando dados forem atualizados
+// fetch('/api/revalidate', {
+//   method: 'POST',
+//   headers: {
+//     'x-revalidate-token': process.env.NEXT_PUBLIC_REVALIDATE_SECRET,
+//   },
+//   body: JSON.stringify({
+//     type: 'tag',
+//     identifier: 'posts'
+//   })
+// })
+
+// ============================================================================
+// 8. FORMA CORRETA DE USAR FETCH COM TAGS (DATA CACHE)
+// ============================================================================
+
+// lib/api.ts
+export async function getPosts() {
+  const res = await fetch('https://api.example.com/posts', {
+    next: {
+      tags: ['posts'], // Para revalidar com revalidateTag('posts')
+      revalidate: 3600, // Revalidar a cada 1 hora
+    },
+  })
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch posts')
+  }
+
+  return res.json()
+}
+
+export async function getPostBySlug(slug: string) {
+  const res = await fetch(`https://api.example.com/posts/${slug}`, {
+    next: {
+      tags: ['posts', `post-${slug}`], // Múltiplas tags para revalidação seletiva
+      revalidate: 3600,
+    },
+  })
+
+  if (!res.ok) {
+    return null
+  }
+
+  return res.json()
+}
+
+export async function getUser(userId: string) {
+  // Sem cache (sempre fetch fresh)
+  const res = await fetch(`https://api.example.com/users/${userId}`, {
+    cache: 'no-store', // Desabilitar cache completamente
+  })
+
+  return res.json()
+}
+
+// ============================================================================
+// 9. SUSPENSE E STREAMING
+// ============================================================================
+
+// app/dashboard/page.tsx
+import { Suspense } from 'react'
+
+export default function DashboardPage() {
+  return (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold">Dashboard</h1>
+
+      {/* Conteúdo estático carrega imediatamente */}
+      <section>
+        <h2>Overview</h2>
+        <p>Bem-vindo ao seu dashboard!</p>
+      </section>
+
+      {/* Seção dinâmica com fallback */}
+      <Suspense fallback={<StatisticsSkeleton />}>
+        <Statistics />
+      </Suspense>
+
+      {/* Outra seção dinâmica */}
+      <Suspense fallback={<RecentActivitySkeleton />}>
+        <RecentActivity />
+      </Suspense>
+    </div>
+  )
+}
+
+async function Statistics() {
+  // Simular delay
+  await new Promise(resolve => setTimeout(resolve, 1000))
+
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <div className="bg-white p-4 rounded shadow">
+        <h3>Total Users</h3>
+        <p className="text-2xl font-bold">12,345</p>
+      </div>
+      <div className="bg-white p-4 rounded shadow">
+        <h3>Revenue</h3>
+        <p className="text-2xl font-bold">$54,321</p>
+      </div>
+      <div className="bg-white p-4 rounded shadow">
+        <h3>Growth</h3>
+        <p className="text-2xl font-bold">23%</p>
+      </div>
+    </div>
+  )
+}
+
+async function RecentActivity() {
+  await new Promise(resolve => setTimeout(resolve, 500))
+
+  return (
+    <div className="bg-white p-4 rounded shadow">
+      <h2>Atividade Recente</h2>
+      <ul className="space-y-2">
+        <li>User John signed up</li>
+        <li>Post by Sarah was published</li>
+        <li>New comment from Mike</li>
+      </ul>
+    </div>
+  )
+}
+
+function StatisticsSkeleton() {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="bg-gray-200 p-4 rounded animate-pulse h-24" />
+      ))}
+    </div>
+  )
+}
+
+function RecentActivitySkeleton() {
+  return <div className="bg-gray-200 p-4 rounded animate-pulse h-32" />
+}
+
+// ============================================================================
+// 10. ERROR HANDLING E NOT FOUND
+// ============================================================================
+
+// app/error.tsx
+'use client'
+
+import { useEffect } from 'react'
+
+interface ErrorProps {
+  error: Error & { digest?: string }
+  reset: () => void
+}
+
+export default function Error({ error, reset }: ErrorProps) {
+  useEffect(() => {
+    // Log error to error tracking service
+    console.error('Error:', error)
+  }, [error])
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          Oops! Algo deu errado
+        </h2>
+        <p className="text-gray-600 mb-8">
+          Desculpe, encontramos um erro ao processar sua requisição.
+        </p>
+
+        {error.digest && (
+          <p className="text-sm text-gray-500 mb-4">
+            Error ID: {error.digest}
+          </p>
+        )}
+
+        <button
+          onClick={() => reset()}
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+        >
+          Tente novamente
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// app/not-found.tsx
+import Link from 'next/link'
+
+export default function NotFound() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          Página não encontrada
+        </h2>
+        <p className="text-gray-600 mb-8">
+          Desculpe, a página que você procura não existe.
+        </p>
+
+        <Link
+          href="/"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+        >
+          Voltar para home
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// 11. LAYOUT COM SHARED UI
+// ============================================================================
+
+// app/layout.tsx
+import type { Metadata } from 'next'
+import { Providers } from '@/app/providers'
+import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
+import '@/styles/globals.css'
+
+export const metadata: Metadata = {
+  title: {
+    template: '%s | My Site',
+    default: 'My Site',
+  },
+  description: 'Welcome to my site',
+  robots: {
+    index: true,
+    follow: true,
+  },
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="pt-BR">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body>
+        <Providers>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </Providers>
+      </body>
+    </html>
+  )
+}
+
+// app/providers.tsx
+'use client'
+
+import { ReactNode } from 'react'
+import { SessionProvider } from 'next-auth/react'
+
+export function Providers({ children }: { children: ReactNode }) {
+  return (
+    <SessionProvider>
+      {children}
+    </SessionProvider>
+  )
+}
+
+// ============================================================================
+// 12. FORM COM SERVER ACTION (APP ROUTER)
+// ============================================================================
+
+// app/contact/page.tsx
+import { ContactForm } from '@/components/forms/ContactForm'
+
+export default function ContactPage() {
+  return (
+    <div className="container mx-auto py-12">
+      <h1 className="text-3xl font-bold mb-8">Contato</h1>
+      <ContactForm />
+    </div>
+  )
+}
+
+// components/forms/ContactForm.tsx
+'use client'
+
+import { useState } from 'react'
+import { submitContactForm } from '@/app/actions/contact'
+
+export function ContactForm() {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    'idle'
+  )
+
+  async function handleSubmit(formData: FormData) {
+    setStatus('loading')
+
+    try {
+      await submitContactForm(formData)
+      setStatus('success')
+    } catch (error) {
+      setStatus('error')
+    }
+  }
+
+  return (
+    <form action={handleSubmit} className="max-w-md space-y-4">
+      <input
+        type="text"
+        name="name"
+        placeholder="Seu nome"
+        required
+        className="w-full px-4 py-2 border rounded"
+      />
+      <input
+        type="email"
+        name="email"
+        placeholder="Seu email"
+        required
+        className="w-full px-4 py-2 border rounded"
+      />
+      <textarea
+        name="message"
+        placeholder="Sua mensagem"
+        required
+        className="w-full px-4 py-2 border rounded"
+        rows={4}
+      />
+
+      <button
+        type="submit"
+        disabled={status === 'loading'}
+        className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+      >
+        {status === 'loading' ? 'Enviando...' : 'Enviar'}
+      </button>
+
+      {status === 'success' && (
+        <p className="text-green-600">Mensagem enviada com sucesso!</p>
+      )}
+      {status === 'error' && (
+        <p className="text-red-600">Erro ao enviar mensagem.</p>
+      )}
+    </form>
+  )
+}
+
+// app/actions/contact.ts
+'use server'
+
+export async function submitContactForm(formData: FormData) {
+  const name = formData.get('name')
+  const email = formData.get('email')
+  const message = formData.get('message')
+
+  // Validação
+  if (!name || !email || !message) {
+    throw new Error('Missing required fields')
+  }
+
+  // Enviar email
+  try {
+    await sendEmail({
+      to: email,
+      subject: 'Contato recebido',
+      body: message,
+    })
+  } catch (error) {
+    throw new Error('Failed to send email')
+  }
+}
+
+// ============================================================================
+// TIPOS ÚTEIS
+// ============================================================================
+
+export interface APIResponse<T> {
+  data: T
+  status: 'success' | 'error'
+  message?: string
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  limit: number
+  offset: number
+}
+
+// ============================================================================
+// HELPERS ÚTEIS
+// ============================================================================
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+
+export async function fetchAPI<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  })
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`)
+  }
+
+  return res.json()
+}
+
+export function classNames(...classes: (string | undefined | false)[]) {
+  return classes.filter(Boolean).join(' ')
+}
+
+// ============================================================================
+// FIM DOS EXEMPLOS
+// ============================================================================

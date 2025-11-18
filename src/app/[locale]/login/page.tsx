@@ -75,7 +75,7 @@ export default function LoginPage() {
       let redirectTo = "/dashboard";
       const user = authData.user;
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select(
             "kyc_status, first_deposit_completed, wallet_configured, onboarding_completed"
@@ -83,19 +83,34 @@ export default function LoginPage() {
           .eq("id", user.id)
           .single();
 
+        console.log("🔍 [LOGIN DEBUG] User ID:", user.id);
+        console.log("🔍 [LOGIN DEBUG] Profile data:", profile);
+        console.log("🔍 [LOGIN DEBUG] Profile error:", profileError);
+
         if (profile) {
+          console.log("🔍 [LOGIN DEBUG] KYC Status:", profile.kyc_status);
+          console.log("🔍 [LOGIN DEBUG] First deposit:", profile.first_deposit_completed);
+
           if (profile.kyc_status !== "approved") {
+            console.log("✅ [LOGIN DEBUG] Redirecionando para /kyc (KYC não aprovado)");
             redirectTo = "/kyc";
           } else if (!profile.first_deposit_completed) {
+            console.log("✅ [LOGIN DEBUG] Redirecionando para /deposit");
             redirectTo = "/deposit";
           } else if (!profile.wallet_configured) {
+            console.log("✅ [LOGIN DEBUG] Redirecionando para /wallet");
             redirectTo = "/wallet";
+          } else {
+            console.log("✅ [LOGIN DEBUG] Redirecionando para /dashboard");
           }
+        } else {
+          console.log("⚠️ [LOGIN DEBUG] Nenhum perfil encontrado!");
         }
       }
 
       // Redirecionar com locale prefixado
       const target = `/${locale}${redirectTo}`;
+      console.log("🎯 [LOGIN DEBUG] Redirecionando para:", target);
       window.location.href = target;
     } catch (error) {
       toast({

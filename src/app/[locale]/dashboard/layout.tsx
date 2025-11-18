@@ -30,7 +30,17 @@ interface DashboardLayoutProps {
 
 async function DashboardLayout({ children, params }: DashboardLayoutProps) {
   const { locale } = await params;
-  const supabase = await createClient();
+
+  console.log('🔍 [DASHBOARD LAYOUT] Iniciando...');
+
+  let supabase;
+  try {
+    supabase = await createClient();
+    console.log('✅ [DASHBOARD LAYOUT] Cliente Supabase criado');
+  } catch (error) {
+    console.error('❌ [DASHBOARD LAYOUT] Erro ao criar cliente Supabase:', error);
+    redirect(`/${locale}/login`);
+  }
 
   // Verificar autenticação
   const {
@@ -38,7 +48,11 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
     error: authError,
   } = await supabase.auth.getUser();
 
+  console.log('🔍 [DASHBOARD LAYOUT] User:', user ? user.email : 'null');
+  console.log('🔍 [DASHBOARD LAYOUT] Auth error:', authError);
+
   if (authError || !user) {
+    console.log('🔴 [DASHBOARD LAYOUT] Redirecionando para login');
     redirect(`/${locale}/login`);
   }
 

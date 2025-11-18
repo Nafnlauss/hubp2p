@@ -114,7 +114,6 @@ export async function POST(request: Request) {
           const { data: byCpf } = await supabase
             .from('profiles')
             .select('id')
-            // @ts-expect-error: profiles.cpf exists in DB though not in TS type here
             .eq('cpf', digits)
             .limit(1)
             .maybeSingle()

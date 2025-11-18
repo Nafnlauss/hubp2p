@@ -46,7 +46,6 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, cpf, is_admin')
-    // @ts-expect-error - Supabase type inference issue
     .eq('id', user.id)
     .single();
 

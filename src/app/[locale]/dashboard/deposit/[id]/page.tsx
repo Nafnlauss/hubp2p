@@ -140,7 +140,6 @@ export default function PaymentPage() {
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        // @ts-expect-error - Supabase type inference issue
         .eq('id', params.id)
         .single();
 

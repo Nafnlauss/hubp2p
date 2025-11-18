@@ -80,7 +80,6 @@ export default function LoginPage() {
           .select(
             "kyc_status, first_deposit_completed, wallet_configured, onboarding_completed"
           )
-          // @ts-expect-error - Supabase type inference issue
           .eq("id", user.id)
           .single();
 

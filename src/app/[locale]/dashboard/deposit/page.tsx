@@ -165,7 +165,6 @@ export default function NewDepositPage() {
       // Criar transação
       const { data: transaction, error } = await supabase
         .from('transactions')
-        // @ts-expect-error - Supabase type inference issue
         .insert({
           user_id: user.id,
           transaction_number: transactionNumber || `TXN-${Date.now()}`,

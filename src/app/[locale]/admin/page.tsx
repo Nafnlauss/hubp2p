@@ -32,7 +32,6 @@ export default async function AdminDashboard({
         cpf
       )
     `)
-    // @ts-expect-error - Supabase type inference issue
     .in("status", ["pending_payment", "payment_received", "converting"])
     .order("created_at", { ascending: false })
     .limit(10)

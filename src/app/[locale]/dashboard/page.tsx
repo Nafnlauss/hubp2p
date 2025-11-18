@@ -59,7 +59,6 @@ async function DashboardPage({ params }: DashboardPageProps) {
   const { data: transactions } = await supabase
     .from('transactions')
     .select('*')
-    // @ts-expect-error - Supabase type inference issue
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 

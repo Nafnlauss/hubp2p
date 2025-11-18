@@ -1,38 +1,42 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
-import Link from "next/link"
 import {
-  LayoutDashboard,
-  Receipt,
-  Users,
-  ShieldCheck,
   Bell,
-  LogOut
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+  LayoutDashboard,
+  LogOut,
+  Receipt,
+  ShieldCheck,
+  Users,
+} from 'lucide-react'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+
+import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/server'
 
 async function checkAdmin() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/login")
+    redirect('/login')
   }
 
   const userId = user.id
   const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin, full_name")
-    // @ts-expect-error - Supabase type inference issue
-    .eq("id", userId)
+    .from('profiles')
+    .select('is_admin, full_name')
+    .eq('id', userId)
     .single()
 
-  if (!profile || !(profile as any).is_admin) {
-    redirect("/")
+  type AdminProfile = { is_admin: boolean; full_name: string }
+
+  if (!profile || !(profile as AdminProfile).is_admin) {
+    redirect('/')
   }
 
-  return { user, profile: profile as { is_admin: boolean; full_name: string } }
+  return { user, profile: profile as AdminProfile }
 }
 
 export default async function AdminLayout({
@@ -47,27 +51,27 @@ export default async function AdminLayout({
 
   const navigation = [
     {
-      name: "Dashboard",
+      name: 'Dashboard',
       href: `/${locale}/admin`,
       icon: LayoutDashboard,
     },
     {
-      name: "Transações",
+      name: 'Transações',
       href: `/${locale}/admin/transactions`,
       icon: Receipt,
     },
     {
-      name: "Usuários",
+      name: 'Usuários',
       href: `/${locale}/admin/users`,
       icon: Users,
     },
     {
-      name: "KYC Pendentes",
+      name: 'KYC Pendentes',
       href: `/${locale}/admin/kyc`,
       icon: ShieldCheck,
     },
     {
-      name: "Notificações",
+      name: 'Notificações',
       href: `/${locale}/admin/notifications`,
       icon: Bell,
     },
@@ -76,7 +80,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="border-b border-gray-200 bg-white">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
@@ -85,18 +89,22 @@ export default async function AdminLayout({
                 <span className="text-xl font-bold">P2P Exchange</span>
               </div>
               <div className="hidden md:block">
-                <span className="text-sm text-gray-500">Painel Administrativo</span>
+                <span className="text-sm text-gray-500">
+                  Painel Administrativo
+                </span>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="text-sm">
-                <div className="font-medium text-gray-900">{profile.full_name}</div>
+                <div className="font-medium text-gray-900">
+                  {profile.full_name}
+                </div>
                 <div className="text-xs text-gray-500">Administrador</div>
               </div>
               <form action="/auth/signout" method="post">
                 <Button variant="outline" size="sm" type="submit">
-                  <LogOut className="h-4 w-4 mr-2" />
+                  <LogOut className="mr-2 h-4 w-4" />
                   Sair
                 </Button>
               </form>
@@ -108,7 +116,7 @@ export default async function AdminLayout({
       <div className="flex">
         {/* Sidebar */}
         <aside className="hidden lg:fixed lg:inset-y-0 lg:top-16 lg:flex lg:w-64 lg:flex-col">
-          <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200 px-6 py-4">
+          <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 py-4">
             <nav className="flex flex-1 flex-col">
               <ul className="flex flex-1 flex-col gap-y-2">
                 {navigation.map((item) => (
@@ -128,10 +136,8 @@ export default async function AdminLayout({
         </aside>
 
         {/* Main content */}
-        <main className="lg:pl-64 flex-1">
-          <div className="px-4 sm:px-6 lg:px-8 py-8">
-            {children}
-          </div>
+        <main className="flex-1 lg:pl-64">
+          <div className="px-4 py-8 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>

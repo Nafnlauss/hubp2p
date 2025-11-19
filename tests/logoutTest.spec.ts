@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('logout flow test', async ({ page }) => {
   console.log('🔵 [TEST] Iniciando teste de logout...')
@@ -34,12 +34,12 @@ test('logout flow test', async ({ page }) => {
 
   await page.waitForTimeout(500)
 
-  // Clicar no botão de sair
-  await page.click('button:has-text("Sair")')
-  console.log('✅ [TEST] Botão de logout clicado')
-
-  // Aguardar redirect para login
-  await page.waitForTimeout(3000)
+  // Clicar no botão de sair e aguardar navegação
+  await Promise.all([
+    page.waitForURL('**/login', { timeout: 5000 }),
+    page.click('button:has-text("Sair")'),
+  ])
+  console.log('✅ [TEST] Botão de logout clicado e navegação concluída')
 
   const urlAfterLogout = page.url()
   console.log('📍 [TEST] URL após logout:', urlAfterLogout)

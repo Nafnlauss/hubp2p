@@ -1,15 +1,9 @@
-import {
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  PlusCircle,
-  Receipt,
-  User,
-} from 'lucide-react'
+import { LayoutDashboard, Menu, PlusCircle, Receipt, User } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ReactNode } from 'react'
 
+import { LogoutButton } from '@/components/LogoutButton'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -189,15 +183,7 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <form action="/auth/signout" method="post">
-                    <button
-                      type="submit"
-                      className="flex w-full items-center text-destructive"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sair
-                    </button>
-                  </form>
+                  <LogoutButton />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

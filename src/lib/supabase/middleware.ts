@@ -88,8 +88,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   // If user is logged in and tries to access auth pages, redirect to dashboard
-  // BUT allow access to onboarding routes even if logged in
-  if (user && isAuthRoute) {
+  // BUT allow access to signout route and onboarding routes even if logged in
+  const isSignoutRoute = pathname.includes('/auth/signout')
+
+  if (user && isAuthRoute && !isSignoutRoute) {
     console.log(
       '🟢 [MIDDLEWARE] Usuário autenticado tentando acessar página de auth. Redirecionando para dashboard',
     )

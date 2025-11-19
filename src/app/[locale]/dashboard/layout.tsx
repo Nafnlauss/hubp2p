@@ -43,29 +43,23 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
 
   console.log('🔍 [DASHBOARD LAYOUT] Iniciando...')
 
-  let supabase
-  try {
-    supabase = await createClient()
-    console.log('✅ [DASHBOARD LAYOUT] Cliente Supabase criado')
-  } catch (error) {
-    console.error(
-      '❌ [DASHBOARD LAYOUT] Erro ao criar cliente Supabase:',
-      error,
-    )
-    redirect(`/${locale}/login`)
-  }
+  const supabase = await createClient()
+  console.log('✅ [DASHBOARD LAYOUT] Cliente Supabase criado')
 
-  // Verificar autenticação
+  // O middleware já protege essa rota, então podemos confiar que o usuário está autenticado
+  // Apenas buscar dados do perfil
   const {
     data: { user },
-    error: authError,
   } = await supabase.auth.getUser()
 
   console.log('🔍 [DASHBOARD LAYOUT] User:', user ? user.email : 'null')
-  console.log('🔍 [DASHBOARD LAYOUT] Auth error:', authError)
 
-  if (authError || !user) {
-    console.log('🔴 [DASHBOARD LAYOUT] Redirecionando para login')
+  // Se por algum motivo não temos usuário aqui, redirecionar
+  // mas isso não deveria acontecer pois o middleware já protege
+  if (!user) {
+    console.log(
+      '⚠️ [DASHBOARD LAYOUT] Usuário não encontrado (não deveria acontecer)',
+    )
     redirect(`/${locale}/login`)
   }
 

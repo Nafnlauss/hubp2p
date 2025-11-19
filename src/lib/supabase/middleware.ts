@@ -8,15 +8,12 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // Verificar se temos os cookies customizados de sessão
-  const accessToken = request.cookies.get('sb-access-token')?.value
-  const refreshToken = request.cookies.get('sb-refresh-token')?.value
-
-  console.log('🔑 [MIDDLEWARE] Cookies customizados:', {
-    hasAccessToken: !!accessToken,
-    hasRefreshToken: !!refreshToken,
-    accessTokenPreview: accessToken?.slice(0, 20) + '...',
-  })
+  // Debug: ver todos os cookies recebidos
+  const allRequestCookies = request.cookies.getAll()
+  console.log(
+    '🍪 [MIDDLEWARE] Cookies recebidos:',
+    allRequestCookies.map((c) => c.name),
+  )
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,14 +33,7 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  // Se temos tokens customizados, setar a sessão manualmente
-  if (accessToken && refreshToken) {
-    await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    })
-  }
-
+  // Obter usuário autenticado através dos cookies padrão do Supabase
   const {
     data: { user },
   } = await supabase.auth.getUser()

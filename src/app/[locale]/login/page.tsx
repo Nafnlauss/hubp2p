@@ -3,7 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -27,11 +26,11 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
+import { createClient } from '@/lib/supabase/client'
 import { type SignInFormData, signInSchema } from '@/lib/validations/auth'
 
 export default function LoginPage() {
   const t = useTranslations()
-  const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const locale = useLocale()
@@ -48,47 +47,53 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
+      console.log('🔵 [LOGIN] Iniciando login client-side...')
+
+      const supabase = createClient()
+
+      // Fazer login diretamente no client-side
+      const { error, data: authData } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
       })
 
-      const result = (await response.json()) as {
-        success: boolean
-        redirectTo?: string
-        error?: string
-      }
-
-      if (!response.ok || !result.success) {
+      if (error) {
+        console.error('❌ [LOGIN] Erro no login:', error.message)
         toast({
           title: t('common.error'),
-          description: result.error || 'Erro ao fazer login',
+          description: error.message || 'Erro ao fazer login',
           variant: 'destructive',
         })
         setIsLoading(false)
         return
       }
 
+      if (!authData.session) {
+        console.error('❌ [LOGIN] Sessão não criada')
+        toast({
+          title: t('common.error'),
+          description: 'Erro ao criar sessão',
+          variant: 'destructive',
+        })
+        setIsLoading(false)
+        return
+      }
+
+      console.log('✅ [LOGIN] Login bem-sucedido:', authData.user?.email)
+
       toast({
         title: t('common.success'),
         description: 'Login realizado com sucesso!',
       })
 
-      const redirectPath = result.redirectTo?.startsWith('/')
-        ? result.redirectTo
-        : `/${result.redirectTo || 'dashboard'}`
-      const target = `/${locale}${redirectPath}`
-      console.log('🎯 [LOGIN DEBUG] Redirecionando para:', target)
+      // Redirecionar para /dashboard - o middleware vai cuidar do resto
+      const target = `/${locale}/dashboard`
+      console.log('🎯 [LOGIN] Redirecionando para:', target)
 
-      // Desabilitar loading para permitir navegação
-      setIsLoading(false)
-      router.push(target)
-    } catch {
+      // Usar window.location.href para garantir que o browser recarregue e reconheça os cookies
+      window.location.href = target
+    } catch (error) {
+      console.error('❌ [LOGIN] Erro inesperado:', error)
       toast({
         title: t('common.error'),
         description: 'Erro inesperado ao fazer login',

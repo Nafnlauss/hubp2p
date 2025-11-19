@@ -94,8 +94,8 @@ export async function POST(request: Request) {
     console.log('✅ [API] Retornando redirectTo:', redirectTo)
 
     // Debug: ver quais cookies foram setados
-    const cookieStore = await cookies()
-    const allCookies = cookieStore.getAll()
+    const debugCookieStore = await cookies()
+    const allCookies = debugCookieStore.getAll()
     console.log(
       '🍪 [API] Todos os cookies após login:',
       allCookies.map((c) => ({ name: c.name, hasValue: !!c.value })),

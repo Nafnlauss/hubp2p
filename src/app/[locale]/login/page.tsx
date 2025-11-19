@@ -27,8 +27,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
-import { createClient } from '@/lib/supabase/client'
-// Removido: import de Server Action em Client Component (não suportado)
 import { type SignInFormData, signInSchema } from '@/lib/validations/auth'
 
 export default function LoginPage() {
@@ -37,7 +35,6 @@ export default function LoginPage() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const locale = useLocale()
-  const supabase = createClient()
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
@@ -51,15 +48,26 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
       })
 
-      if (error) {
+      const result = (await response.json()) as {
+        success: boolean
+        redirectTo?: string
+        error?: string
+      }
+
+      if (!response.ok || !result.success) {
         toast({
           title: t('common.error'),
-          description: error.message || 'Erro ao fazer login',
+          description: result.error || 'Erro ao fazer login',
           variant: 'destructive',
         })
         setIsLoading(false)
@@ -71,64 +79,14 @@ export default function LoginPage() {
         description: 'Login realizado com sucesso!',
       })
 
-      // Determinar próximo passo baseado no perfil
-      let redirectTo = '/dashboard'
-      const user = authData.user
-      if (user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select(
-            'kyc_status, first_deposit_completed, wallet_configured, onboarding_completed',
-          )
-          .eq('id', user.id)
-          .single()
-
-        console.log('🔍 [LOGIN DEBUG] User ID:', user.id)
-        console.log('🔍 [LOGIN DEBUG] Profile data:', profile)
-        console.log('🔍 [LOGIN DEBUG] Profile error:', profileError)
-
-        if (profile) {
-          console.log('🔍 [LOGIN DEBUG] KYC Status:', profile.kyc_status)
-          console.log(
-            '🔍 [LOGIN DEBUG] First deposit:',
-            profile.first_deposit_completed,
-          )
-
-          if (profile.kyc_status !== 'approved') {
-            console.log(
-              '✅ [LOGIN DEBUG] Redirecionando para /kyc (KYC não aprovado)',
-            )
-            redirectTo = '/kyc'
-          } else if (!profile.first_deposit_completed) {
-            console.log('✅ [LOGIN DEBUG] Redirecionando para /deposit')
-            redirectTo = '/deposit'
-          } else if (profile.wallet_configured) {
-            console.log('✅ [LOGIN DEBUG] Redirecionando para /dashboard')
-          } else {
-            console.log('✅ [LOGIN DEBUG] Redirecionando para /wallet')
-            redirectTo = '/wallet'
-          }
-        } else {
-          console.log('⚠️ [LOGIN DEBUG] Nenhum perfil encontrado!')
-        }
-      }
-
-      // Redirecionar com locale prefixado
-      const target = `/${locale}${redirectTo}`
+      const redirectPath = result.redirectTo?.startsWith('/')
+        ? result.redirectTo
+        : `/${result.redirectTo || 'dashboard'}`
+      const target = `/${locale}${redirectPath}`
       console.log('🎯 [LOGIN DEBUG] Redirecionando para:', target)
-
-      // Usar router.push com refresh forçado ao invés de window.location.href
-      // Isso deve manter os cookies do Supabase
-      console.log(
-        '⏱️ [LOGIN DEBUG] Aguardando 1 segundo e fazendo router.push...',
-      )
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log('✅ [LOGIN DEBUG] Fazendo router.push...')
 
       // Desabilitar loading para permitir navegação
       setIsLoading(false)
-
-      // Usar router.push que deve manter os cookies
       router.push(target)
       router.refresh()
     } catch {

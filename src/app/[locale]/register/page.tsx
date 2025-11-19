@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,7 +43,7 @@ type Step = 1 | 2 | 3;
 
 export default function RegisterPage() {
   const t = useTranslations();
-  const router = useRouter();
+  const locale = useLocale();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -111,9 +111,15 @@ export default function RegisterPage() {
 
         // Use window.location.href para forçar um refresh completo
         // Isso garante que o middleware veja a nova sessão do Supabase
-        if (result.redirectTo) {
+        if (result.success) {
+          const redirectSource = result.redirectTo ?? "/kyc";
+          const redirectPath = redirectSource.startsWith("/")
+            ? redirectSource
+            : `/${redirectSource}`;
+          const target = `/${locale}${redirectPath}`;
+
           setTimeout(() => {
-            window.location.href = result.redirectTo!;
+            window.location.href = target;
           }, 500);
         }
       } else {

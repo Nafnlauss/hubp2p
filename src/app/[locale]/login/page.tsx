@@ -88,7 +88,6 @@ export default function LoginPage() {
       // Desabilitar loading para permitir navegação
       setIsLoading(false)
       router.push(target)
-      router.refresh()
     } catch {
       toast({
         title: t('common.error'),

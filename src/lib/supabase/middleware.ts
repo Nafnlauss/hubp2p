@@ -79,6 +79,9 @@ export async function updateSession(request: NextRequest) {
   // Check if current path is an auth route
   const isAuthRoute = authRoutes.some((route) => pathname.includes(route))
 
+  console.log('🔍 [MIDDLEWARE] isProtectedRoute:', isProtectedRoute)
+  console.log('🔍 [MIDDLEWARE] isAuthRoute:', isAuthRoute)
+
   // Extract locale from pathname ensuring it's valid; fallback to default when missing/invalid
   const supportedLocales = ['pt-BR', 'en', 'es'] as const
   const firstSegment = pathname.split('/')[1] || ''

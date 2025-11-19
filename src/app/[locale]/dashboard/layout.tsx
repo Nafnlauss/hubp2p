@@ -30,12 +30,12 @@ interface DashboardLayoutProps {
 }
 
 interface Profile {
-  full_name: string | null
-  cpf: string | null
-  is_admin: boolean | null
-  kyc_status: string | null
-  first_deposit_completed: boolean | null
-  wallet_configured: boolean | null
+  full_name: string | undefined
+  cpf: string | undefined
+  is_admin: boolean | undefined
+  kyc_status: string | undefined
+  first_deposit_completed: boolean | undefined
+  wallet_configured: boolean | undefined
 }
 
 async function DashboardLayout({ children, params }: DashboardLayoutProps) {
@@ -54,38 +54,36 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
 
   console.log('🔍 [DASHBOARD LAYOUT] User:', user ? user.email : 'null')
 
-  // Se por algum motivo não temos usuário aqui, redirecionar
-  // mas isso não deveria acontecer pois o middleware já protege
-  if (!user) {
-    console.log(
-      '⚠️ [DASHBOARD LAYOUT] Usuário não encontrado (não deveria acontecer)',
-    )
-    redirect(`/${locale}/login`)
-  }
+  // Middleware já protege essa rota - não verificar autenticação aqui
+  // Se user é null, apenas não buscar perfil (evita loop de redirecionamento)
 
-  // Buscar perfil do usuário
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select(
-      'full_name, cpf, is_admin, kyc_status, first_deposit_completed, wallet_configured',
-    )
-    .eq('id', user.id)
-    .single()
+  let typedProfile: Profile | undefined
 
-  console.log('🔍 [DASHBOARD LAYOUT] Profile:', profile)
+  // Buscar perfil do usuário APENAS se user existe
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select(
+        'full_name, cpf, is_admin, kyc_status, first_deposit_completed, wallet_configured',
+      )
+      .eq('id', user.id)
+      .single()
 
-  const typedProfile = profile as Profile | null
+    console.log('🔍 [DASHBOARD LAYOUT] Profile:', profile)
 
-  // Redirecionar para KYC se não estiver aprovado
-  if (typedProfile && typedProfile.kyc_status !== 'approved') {
-    console.log(
-      '🔴 [DASHBOARD LAYOUT] KYC não aprovado! Redirecionando para /kyc',
-    )
-    redirect(`/${locale}/kyc`)
+    typedProfile = profile as Profile | undefined
+
+    // Redirecionar para KYC se não estiver aprovado
+    if (typedProfile && typedProfile.kyc_status !== 'approved') {
+      console.log(
+        '🔴 [DASHBOARD LAYOUT] KYC não aprovado! Redirecionando para /kyc',
+      )
+      redirect(`/${locale}/kyc`)
+    }
   }
 
   const userName =
-    typedProfile?.full_name || user.email?.split('@')[0] || 'Usuário'
+    typedProfile?.full_name || user?.email?.split('@')[0] || 'Usuário'
   const userInitials = userName
     .split(' ')
     .map((n: string) => n[0])

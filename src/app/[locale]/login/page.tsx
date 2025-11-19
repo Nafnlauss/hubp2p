@@ -117,14 +117,20 @@ export default function LoginPage() {
       const target = `/${locale}${redirectTo}`
       console.log('🎯 [LOGIN DEBUG] Redirecionando para:', target)
 
-      // Aguardar 500ms para garantir que os cookies foram escritos
-      console.log('⏱️ [LOGIN DEBUG] Aguardando cookies serem escritos...')
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      // Usar router.push com refresh forçado ao invés de window.location.href
+      // Isso deve manter os cookies do Supabase
       console.log(
-        '✅ [LOGIN DEBUG] Cookies devem estar prontos, redirecionando...',
+        '⏱️ [LOGIN DEBUG] Aguardando 1 segundo e fazendo router.push...',
       )
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      console.log('✅ [LOGIN DEBUG] Fazendo router.push...')
 
-      window.location.href = target
+      // Desabilitar loading para permitir navegação
+      setIsLoading(false)
+
+      // Usar router.push que deve manter os cookies
+      router.push(target)
+      router.refresh()
     } catch {
       toast({
         title: t('common.error'),

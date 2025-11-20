@@ -13,10 +13,17 @@ function buildKycUrl(base?: string | undefined, cpf?: string | undefined) {
   const raw = (base && base.trim()) || fallback
   try {
     const u = new URL(raw)
-    if (cpf && !u.searchParams.has('document')) {
+    // Sempre substituir o document se tiver CPF válido
+    if (cpf) {
       const digits = cpf.replaceAll(/\D/g, '')
-      if (digits) u.searchParams.set('document', digits)
+      if (digits && digits.length === 11) {
+        u.searchParams.set('document', digits)
+        console.log('✅ [PROTEO] CPF setado na URL:', digits)
+      } else {
+        console.warn('⚠️ [PROTEO] CPF inválido:', cpf)
+      }
     }
+    console.log('🔗 [PROTEO] URL final:', u.toString())
     return u.toString()
   } catch {
     return raw

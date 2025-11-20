@@ -9,21 +9,8 @@ export default function SucessoPage() {
   const locale = useLocale()
   const [countdown, setCountdown] = useState(5)
 
-  useEffect(() => {
-    // Redirecionar para dashboard após 5 segundos
-    const timer = setInterval(() => {
-      setCountdown((previous) => {
-        if (previous <= 1) {
-          clearInterval(timer)
-          router.push(`/${locale}/dashboard`)
-          return 0
-        }
-        return previous - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [router, locale])
+  // Removido redirecionamento automático para dar tempo do webhook do Proteo
+  // atualizar o status do KYC no banco antes do usuário tentar acessar o dashboard
 
   const irParaDashboard = () => {
     router.push(`/${locale}/dashboard`)
@@ -128,8 +115,8 @@ export default function SucessoPage() {
               </button>
 
               <div className="text-center text-sm text-gray-500">
-                Redirecionando automaticamente em{' '}
-                <span className="font-bold text-green-600">{countdown}s</span>
+                Clique no botão acima quando estiver pronto para acessar o
+                dashboard
               </div>
             </div>
           </div>

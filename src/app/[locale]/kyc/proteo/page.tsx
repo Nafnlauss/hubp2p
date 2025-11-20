@@ -43,30 +43,56 @@ export default function ProteoKycEmbed() {
     const supabase = createClient()
 
     async function init() {
+      console.log('🔵 [PROTEO] Iniciando verificação KYC...')
+
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
       if (!user) {
+        console.log('🔴 [PROTEO] Usuário não autenticado')
         router.push(`/${locale}/login`)
         return
       }
 
-      const { data: profile } = await supabase
+      console.log('✅ [PROTEO] Usuário autenticado:', user.email)
+
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('cpf, full_name, kyc_status')
         .eq('id', user.id)
         .single()
 
+      if (profileError) {
+        console.error('❌ [PROTEO] Erro ao buscar perfil:', profileError)
+        setStatus('error')
+        setLoading(false)
+        return
+      }
+
+      console.log('📋 [PROTEO] Profile encontrado:', {
+        cpf: profile?.cpf,
+        full_name: profile?.full_name,
+        kyc_status: profile?.kyc_status,
+      })
+
       // Se já completou KYC, redirecionar para dashboard
       if (profile?.kyc_status === 'approved') {
+        console.log('✅ [PROTEO] KYC já aprovado, redirecionando...')
         router.push(`/${locale}/dashboard`)
+        return
+      }
+
+      if (!profile?.cpf) {
+        console.error('❌ [PROTEO] CPF não encontrado no perfil!')
+        setStatus('error')
+        setLoading(false)
         return
       }
 
       const url = buildKycUrl(
         process.env.NEXT_PUBLIC_PROTEO_KYC_URL,
-        profile?.cpf || undefined,
+        profile.cpf,
       )
       setKycUrl(url)
       setStatus('ready')
@@ -169,20 +195,30 @@ export default function ProteoKycEmbed() {
               <AlertCircle className="mx-auto mb-4 h-16 w-16 text-destructive" />
               <h2 className="mb-2 text-xl font-bold">Erro ao Carregar</h2>
               <p className="mb-4 text-muted-foreground">
-                Não foi possível carregar a verificação do Proteo. Isso pode
-                acontecer se o Proteo bloquear iframe (X-Frame-Options).
+                Não foi possível carregar a verificação do Proteo.
+                {!kycUrl && ' CPF não encontrado no seu cadastro.'}
+                {kycUrl &&
+                  ' Isso pode acontecer se o Proteo bloquear iframe (X-Frame-Options).'}
               </p>
               <div className="flex flex-col gap-2">
                 <Button onClick={() => window.location.reload()}>
                   Tentar Novamente
                 </Button>
+                {kycUrl && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      window.open(kycUrl, '_blank')
+                    }}
+                  >
+                    Abrir em Nova Aba
+                  </Button>
+                )}
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    window.open(kycUrl, '_blank')
-                  }}
+                  onClick={() => router.push(`/${locale}/dashboard`)}
                 >
-                  Abrir em Nova Aba
+                  Ir para Dashboard
                 </Button>
               </div>
             </div>

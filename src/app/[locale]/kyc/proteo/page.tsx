@@ -82,9 +82,9 @@ export default function ProteoKycEmbed() {
         event.data?.type === 'success'
       ) {
         setStatus('completed')
-        // Aguardar webhook atualizar e redirecionar
+        // Aguardar webhook atualizar e redirecionar para página de sucesso
         setTimeout(() => {
-          router.push(`/${locale}/dashboard`)
+          router.push(`/${locale}/sucesso`)
         }, 2000)
       }
     }

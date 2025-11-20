@@ -1,225 +1,167 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
+import { useLocale } from 'next-intl'
 
-const PROTEO_BASE = 'https://onboarding.proteo.com.br/'
-const PROTEO_TENANT = 'dias_marketplace'
-const PROTEO_BACKGROUND_CHECK_ID = '3c35bb87-0b04-4130-a026-e4ee9f8ce2c4'
-
-function formatarCPF(valor: string): string {
-  const numeros = valor.replaceAll(/\D/g, '')
-  return numeros
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d)/, '$1.$2')
-    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-}
-
-function validarCPF(cpf: string): boolean {
-  const numeros = cpf.replaceAll(/\D/g, '')
-
-  if (numeros.length !== 11) return false
-  if (/^(\d)\1{10}$/.test(numeros)) return false
-
-  let soma = 0
-  for (let index = 0; index < 9; index++) {
-    soma += Number.parseInt(numeros.charAt(index)) * (10 - index)
-  }
-  let resto = 11 - (soma % 11)
-  const digito1 = resto >= 10 ? 0 : resto
-
-  soma = 0
-  for (let index = 0; index < 10; index++) {
-    soma += Number.parseInt(numeros.charAt(index)) * (11 - index)
-  }
-  resto = 11 - (soma % 11)
-  const digito2 = resto >= 10 ? 0 : resto
+export default function HomePage() {
+  const locale = useLocale()
 
   return (
-    Number.parseInt(numeros.charAt(9)) === digito1 &&
-    Number.parseInt(numeros.charAt(10)) === digito2
-  )
-}
-
-export default function KycPage() {
-  const [cpf, setCpf] = useState('')
-  const [cpfValido, setCpfValido] = useState(false)
-  const [mostrarIframe, setMostrarIframe] = useState(false)
-  const [proteoUrl, setProteoUrl] = useState('')
-  const [erro, setErro] = useState('')
-
-  const handleCpfChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const valorFormatado = formatarCPF(event.target.value)
-    setCpf(valorFormatado)
-
-    const valido = validarCPF(valorFormatado)
-    setCpfValido(valido)
-
-    if (valido) {
-      setErro('')
-    }
-  }
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault()
-
-    if (!validarCPF(cpf)) {
-      setErro('CPF inválido. Por favor, verifique os números digitados.')
-      return
-    }
-
-    // Remover pontos e traços do CPF
-    const cpfLimpo = cpf.replaceAll(/\D/g, '')
-
-    // Construir URL do Proteo
-    const url = `${PROTEO_BASE}?tenant=${PROTEO_TENANT}&background_check_id=${PROTEO_BACKGROUND_CHECK_ID}&document=${cpfLimpo}`
-
-    console.log('🚀 Iniciando KYC com Proteo')
-    console.log('📄 CPF:', cpfLimpo)
-    console.log('🔗 URL:', url)
-
-    setProteoUrl(url)
-    setMostrarIframe(true)
-  }
-
-  const voltarParaCpf = () => {
-    setMostrarIframe(false)
-    setCpf('')
-    setCpfValido(false)
-    setErro('')
-  }
-
-  if (mostrarIframe) {
-    return (
-      <div className="flex h-screen w-full flex-col bg-white">
-        {/* Header minimalista */}
-        <div className="flex items-center justify-between border-b bg-white px-6 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-              <span className="text-xl">🔐</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Header */}
+      <header className="border-b bg-white/80 backdrop-blur-sm">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
+              <span className="text-xl font-bold text-white">₿</span>
             </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                Verificação de Identidade
-              </h1>
-              <p className="text-xs text-gray-500">CPF: {cpf}</p>
+            <span className="text-xl font-bold text-gray-900">HubP2P</span>
+          </div>
+          <Link
+            href={`/${locale}/login`}
+            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+          >
+            Entrar
+          </Link>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <main className="container mx-auto px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-4xl text-center">
+          {/* Badge */}
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-lg">
+            <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
+            <span className="text-sm font-medium text-gray-700">
+              Plataforma P2P Segura
+            </span>
+          </div>
+
+          {/* Título */}
+          <h1 className="mb-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-5xl font-bold text-transparent md:text-6xl">
+            Compre Criptomoedas
+            <br />
+            de Forma Simples e Segura
+          </h1>
+
+          {/* Descrição */}
+          <p className="mb-8 text-xl text-gray-600 md:text-2xl">
+            Plataforma P2P brasileira totalmente automatizada com verificação
+            KYC obrigatória. Compre Bitcoin e outras criptomoedas com Pix ou
+            TED.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link
+              href={`/${locale}/register`}
+              className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-4 font-semibold text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl sm:w-auto"
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                Cadastre-se Grátis
+                <span className="transition-transform group-hover:translate-x-1">
+                  →
+                </span>
+              </span>
+            </Link>
+            <Link
+              href={`/${locale}/login`}
+              className="inline-flex w-full items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-8 py-4 font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50 sm:w-auto"
+            >
+              Já tenho conta
+            </Link>
+          </div>
+
+          {/* Trust indicators */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🔒</span>
+              <span>Criptografia SSL</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">✓</span>
+              <span>KYC Obrigatório</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⚡</span>
+              <span>Pix Instantâneo</span>
             </div>
           </div>
-          <button
-            onClick={voltarParaCpf}
-            className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-          >
-            ← Voltar
-          </button>
         </div>
 
-        {/* Iframe do Proteo */}
-        <div className="relative flex-1">
-          <iframe
-            src={proteoUrl}
-            title="Proteo KYC"
-            className="h-full w-full border-0"
-            allow="camera *; microphone *; clipboard-write *; geolocation *; fullscreen *"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox allow-top-navigation"
-            referrerPolicy="no-referrer"
-            loading="eager"
-            onLoad={() => console.log('✅ Iframe Proteo carregado')}
-            onError={() => console.error('❌ Erro ao carregar iframe')}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md">
-        {/* Card principal */}
-        <div className="overflow-hidden rounded-2xl bg-white shadow-2xl">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-12 text-center">
-            <div className="mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-              <span className="text-4xl">🔐</span>
+        {/* Features Grid */}
+        <div className="mx-auto mt-24 grid max-w-6xl gap-8 md:grid-cols-3">
+          {/* Feature 1 */}
+          <div className="rounded-2xl bg-white p-8 shadow-xl transition-all hover:scale-105">
+            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+              <span className="text-2xl">🔐</span>
             </div>
-            <h1 className="mb-2 text-3xl font-bold text-white">
-              Verificação KYC
-            </h1>
-            <p className="text-blue-100">
-              Digite seu CPF para iniciar a verificação de identidade
+            <h3 className="mb-3 text-xl font-bold text-gray-900">
+              Segurança Total
+            </h3>
+            <p className="text-gray-600">
+              Verificação KYC obrigatória via Proteo. Todos os dados
+              criptografados e protegidos conforme LGPD.
             </p>
           </div>
 
-          {/* Formulário */}
-          <form onSubmit={handleSubmit} className="p-8">
-            <div className="mb-6">
-              <label
-                htmlFor="cpf"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                CPF
-              </label>
-              <input
-                type="text"
-                id="cpf"
-                value={cpf}
-                onChange={handleCpfChange}
-                placeholder="000.000.000-00"
-                maxLength={14}
-                className={`w-full rounded-xl border-2 px-4 py-4 text-lg font-medium transition-all focus:outline-none focus:ring-4 ${
-                  erro
-                    ? 'border-red-300 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-100'
-                    : cpfValido
-                      ? 'border-green-300 bg-green-50 text-green-900 focus:border-green-500 focus:ring-green-100'
-                      : 'border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-blue-100'
-                }`}
-              />
-
-              {/* Feedback visual */}
-              <div className="mt-2 flex items-center gap-2">
-                {cpfValido && (
-                  <div className="flex items-center gap-1 text-sm text-green-600">
-                    <span>✓</span>
-                    <span>CPF válido</span>
-                  </div>
-                )}
-                {erro && (
-                  <div className="flex items-center gap-1 text-sm text-red-600">
-                    <span>✗</span>
-                    <span>{erro}</span>
-                  </div>
-                )}
-              </div>
+          {/* Feature 2 */}
+          <div className="rounded-2xl bg-white p-8 shadow-xl transition-all hover:scale-105">
+            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <span className="text-2xl">⚡</span>
             </div>
+            <h3 className="mb-3 text-xl font-bold text-gray-900">
+              Pix Instantâneo
+            </h3>
+            <p className="text-gray-600">
+              Deposite via Pix ou TED. Confirmação manual por operadores
+              verificados em minutos.
+            </p>
+          </div>
 
-            <button
-              type="submit"
-              disabled={!cpfValido}
-              className={`w-full rounded-xl py-4 text-lg font-semibold transition-all ${
-                cpfValido
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl'
-                  : 'cursor-not-allowed bg-gray-200 text-gray-400'
-              }`}
-            >
-              {cpfValido ? 'Continuar →' : 'Digite um CPF válido'}
-            </button>
-          </form>
-
-          {/* Footer */}
-          <div className="border-t bg-gray-50 px-8 py-4">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>🔒</span>
-              <span>Seus dados estão seguros e criptografados</span>
+          {/* Feature 3 */}
+          <div className="rounded-2xl bg-white p-8 shadow-xl transition-all hover:scale-105">
+            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
+              <span className="text-2xl">🤝</span>
             </div>
+            <h3 className="mb-3 text-xl font-bold text-gray-900">
+              100% Brasileiro
+            </h3>
+            <p className="text-gray-600">
+              Plataforma desenvolvida para o mercado brasileiro com suporte em
+              português e compliance nacional.
+            </p>
           </div>
         </div>
 
-        {/* Info adicional */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Powered by{' '}
-            <span className="font-semibold text-blue-600">Proteo KYC</span>
+        {/* CTA Section */}
+        <div className="mx-auto mt-24 max-w-4xl rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 p-12 text-center shadow-2xl">
+          <h2 className="mb-4 text-3xl font-bold text-white md:text-4xl">
+            Pronto para começar?
+          </h2>
+          <p className="mb-8 text-lg text-blue-100">
+            Cadastre-se agora e complete sua verificação KYC em minutos.
+          </p>
+          <Link
+            href={`/${locale}/register`}
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-blue-600 shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
+          >
+            Criar Conta Gratuita
+            <span>→</span>
+          </Link>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t bg-white/80 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-8 text-center text-sm text-gray-600">
+          <p>© 2024 HubP2P. Todos os direitos reservados.</p>
+          <p className="mt-2">
+            Plataforma P2P de criptomoedas com conformidade LGPD e Lei
+            9.613/1998
           </p>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }

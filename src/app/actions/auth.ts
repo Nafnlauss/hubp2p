@@ -170,34 +170,18 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
     }
 
     console.log('✅ Perfil criado com sucesso!')
+    console.log(
+      '✅ Cadastro completo - retornando credenciais para login no client',
+    )
 
-    // 3. Fazer login automático após criar a conta
-    console.log('🔵 Fazendo login automático...')
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: validatedData.email,
-      password: validatedData.password,
-    })
-
-    if (signInError) {
-      console.error('❌ Erro no login automático:', signInError)
-      // Mesmo com erro, retornar sucesso e pedir pro usuário fazer login
-      return {
-        success: true,
-        redirectTo: '/login',
-        error: 'Conta criada! Faça login para continuar.',
-      }
-    }
-
-    console.log('✅ Login automático bem-sucedido!')
-    console.log('✅ Cadastro completo - redirecionando para /kyc')
-
-    // Revalidar paths para garantir que o middleware veja a sessão
-    revalidatePath('/', 'layout')
-    revalidatePath('/kyc')
-
+    // Retornar sucesso COM as credenciais para o client fazer login
     return {
       success: true,
       redirectTo: '/kyc',
+      credentials: {
+        email: validatedData.email,
+        password: validatedData.password,
+      },
     }
   } catch (error) {
     console.error('❌ Erro no catch:', error)

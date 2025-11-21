@@ -18,16 +18,48 @@ test('Teste completo: criar conta e verificar redirecionamento para KYC', async 
   // PASSO 1: CRIAR NOVA CONTA
   // ==========================================
   console.log('📍 [TEST] Navegando para página de registro...')
-  await page.goto('http://localhost:3000/pt-BR/register')
+  await page.goto('http://localhost:3001/pt-BR/register')
 
-  console.log('✍️ [TEST] Preenchendo formulário de registro...')
-  await page.fill('input[name="fullName"]', testName)
-  await page.fill('input[name="cpf"]', testCPF)
-  await page.fill('input[name="email"]', testEmail)
-  await page.fill('input[name="password"]', testPassword)
-  await page.fill('input[name="confirmPassword"]', testPassword)
+  // STEP 1: Email e Senha
+  console.log('✍️ [TEST] Step 1: Preenchendo email e senha...')
+  await page.fill('input#email', testEmail)
+  await page.fill('input#password', testPassword)
+  await page.fill('input#confirmPassword', testPassword)
 
-  console.log('🔘 [TEST] Enviando formulário de registro...')
+  await page.screenshot({ path: 'tests/screenshots/step1.png', fullPage: true })
+
+  console.log('🔘 [TEST] Avançando para Step 2...')
+  await page.click('button[type="submit"]')
+  await page.waitForTimeout(1500)
+
+  // STEP 2: Dados Pessoais
+  console.log('✍️ [TEST] Step 2: Preenchendo dados pessoais...')
+  await page.waitForSelector('input#fullName', { state: 'visible' })
+  await page.fill('input#fullName', testName)
+  await page.fill('input#cpf', testCPF)
+  await page.fill('input#phone', '11987654321')
+  await page.fill('input#dateOfBirth', '1990-01-01')
+
+  await page.screenshot({ path: 'tests/screenshots/step2.png', fullPage: true })
+
+  console.log('🔘 [TEST] Avançando para Step 3...')
+  await page.click('button[type="submit"]')
+  await page.waitForTimeout(1500)
+
+  // STEP 3: Endereço
+  console.log('✍️ [TEST] Step 3: Preenchendo endereço...')
+  await page.waitForSelector('input#addressZip', { state: 'visible' })
+  console.log('✅ [TEST] Step 3 carregou corretamente!')
+
+  await page.fill('input#addressZip', '01001000')
+  await page.waitForTimeout(1500) // Aguardar CEP lookup
+
+  await page.fill('input#addressNumber', '123')
+  await page.fill('input#addressComplement', 'Apto 45')
+
+  await page.screenshot({ path: 'tests/screenshots/step3.png', fullPage: true })
+
+  console.log('🔘 [TEST] Finalizando cadastro...')
   await page.click('button[type="submit"]')
 
   // Aguardar processamento

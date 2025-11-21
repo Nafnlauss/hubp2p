@@ -46,9 +46,8 @@ export default function HomePage() {
 
           {/* Descrição */}
           <p className="mb-8 text-xl text-gray-600 md:text-2xl">
-            Plataforma P2P brasileira totalmente automatizada com verificação
-            KYC obrigatória. Compre Bitcoin e outras criptomoedas com Pix ou
-            TED.
+            Verificação KYC obrigatória. Compre Bitcoin e outras criptomoedas
+            com Pix ou TED de forma rápida e segura.
           </p>
 
           {/* CTA Buttons */}
@@ -84,7 +83,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-lg">⚡</span>
-              <span>Pix Instantâneo</span>
+              <span>Recebimento Rápido</span>
             </div>
           </div>
         </div>
@@ -100,8 +99,8 @@ export default function HomePage() {
               Segurança Total
             </h3>
             <p className="text-gray-600">
-              Verificação KYC obrigatória via Proteo. Todos os dados
-              criptografados e protegidos conforme LGPD.
+              Verificação KYC obrigatória. Todos os dados criptografados e
+              protegidos conforme LGPD.
             </p>
           </div>
 
@@ -111,25 +110,25 @@ export default function HomePage() {
               <span className="text-2xl">⚡</span>
             </div>
             <h3 className="mb-3 text-xl font-bold text-gray-900">
-              Pix Instantâneo
+              Recebimento Rápido
             </h3>
             <p className="text-gray-600">
-              Deposite via Pix ou TED. Confirmação manual por operadores
-              verificados em minutos.
+              Deposite via Pix ou TED. Confirmação automática e envio de
+              criptomoedas em minutos.
             </p>
           </div>
 
           {/* Feature 3 */}
           <div className="rounded-2xl bg-white p-8 shadow-xl transition-all hover:scale-105">
             <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-              <span className="text-2xl">🤝</span>
+              <span className="text-2xl">🌍</span>
             </div>
             <h3 className="mb-3 text-xl font-bold text-gray-900">
-              100% Brasileiro
+              Compliance Mundial
             </h3>
             <p className="text-gray-600">
-              Plataforma desenvolvida para o mercado brasileiro com suporte em
-              português e compliance nacional.
+              Plataforma desenvolvida seguindo regras de compliance mundial, com
+              suporte multilíngue e conformidade internacional.
             </p>
           </div>
         </div>

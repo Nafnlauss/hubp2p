@@ -143,25 +143,43 @@ export default function ProteoKycEmbed() {
     }, 3000) // Verificar a cada 3 segundos
 
     // Listener para mensagens do iframe (caso Proteo envie postMessage)
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       // Verificar origem por segurança
       if (!event.origin.includes('proteo.com.br')) return
 
       console.log('📨 [PROTEO] Mensagem recebida do iframe:', event.data)
 
-      // Proteo pode enviar diferentes formatos de mensagem
-      if (
-        event.data?.status === 'completed' ||
-        event.data?.event === 'kyc_completed' ||
-        event.data?.type === 'success'
-      ) {
-        console.log('✅ [PROTEO] Mensagem de conclusão recebida do iframe!')
+      // Proteo envia {event: 'complete'} quando o onboarding é finalizado
+      if (event.data?.event === 'complete' && event.data?.step === 'Complete') {
+        console.log(
+          '✅ [PROTEO] Conclusão detectada! Atualizando KYC no banco...',
+        )
         setStatus('completed')
         clearInterval(pollInterval)
-        // Aguardar webhook atualizar e redirecionar para página de sucesso
+
+        try {
+          // Chamar nossa API para marcar KYC como aprovado
+          const response = await fetch('/api/kyc/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          })
+
+          if (response.ok) {
+            console.log('✅ [PROTEO] KYC marcado como aprovado com sucesso!')
+          } else {
+            console.error(
+              '❌ [PROTEO] Erro ao marcar KYC como aprovado:',
+              await response.text(),
+            )
+          }
+        } catch (error) {
+          console.error('❌ [PROTEO] Erro ao chamar API:', error)
+        }
+
+        // Redirecionar para página de sucesso
         setTimeout(() => {
           router.push(`/${locale}/sucesso`)
-        }, 2000)
+        }, 1000)
       }
     }
 

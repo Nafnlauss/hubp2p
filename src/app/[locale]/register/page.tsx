@@ -228,290 +228,392 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="container flex min-h-screen items-center justify-center px-4 py-16">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
-            {t('auth.register.title')}
-          </CardTitle>
-          <CardDescription>{t('auth.register.subtitle')}</CardDescription>
-          <div className="pt-4">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>
-                {t('auth.register.stepOf', { current: currentStep, total: 3 })}
-              </span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 py-16">
+      <div className="container mx-auto flex items-center justify-center">
+        <Card className="w-full max-w-2xl shadow-2xl">
+          <CardHeader className="space-y-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+            <CardTitle className="text-3xl font-bold">
+              {t('auth.register.title')}
+            </CardTitle>
+            <CardDescription className="text-blue-100">
+              {t('auth.register.subtitle')}
+            </CardDescription>
+            <div className="pt-6">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">
+                  {t('auth.register.stepOf', {
+                    current: currentStep,
+                    total: 3,
+                  })}
+                </span>
+                <span className="text-sm opacity-90">
+                  {currentStep === 1 && '🔐 Credenciais'}
+                  {currentStep === 2 && '👤 Dados Pessoais'}
+                  {currentStep === 3 && '📍 Endereço'}
+                </span>
+              </div>
+              <div className="mt-4 flex gap-2">
+                {[1, 2, 3].map((step) => (
+                  <div
+                    key={step}
+                    className={`h-2.5 flex-1 rounded-full transition-all duration-500 ${
+                      step <= currentStep ? 'bg-white shadow-lg' : 'bg-white/30'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="mt-2 flex gap-2">
-              {[1, 2, 3].map((step) => (
-                <div
-                  key={step}
-                  className={`h-2 flex-1 rounded-full ${
-                    step <= currentStep ? 'bg-primary' : 'bg-muted'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
 
-        <CardContent>
-          {/* Step 1: Dados de Acesso */}
-          {currentStep === 1 && (
-            <Form {...step1Form}>
-              <form
-                onSubmit={step1Form.handleSubmit(handleStep1Submit)}
-                className="space-y-4"
-              >
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold">
-                    {t('auth.register.step1.title')}
-                  </h3>
-                </div>
+          <CardContent className="p-8">
+            {/* Step 1: Dados de Acesso */}
+            {currentStep === 1 && (
+              <Form {...step1Form}>
+                <form
+                  onSubmit={step1Form.handleSubmit(handleStep1Submit)}
+                  className="space-y-6"
+                >
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-gray-800">
+                      {t('auth.register.step1.title')}
+                    </h3>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Crie suas credenciais de acesso à plataforma
+                    </p>
+                  </div>
 
-                <FormField
-                  control={step1Form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.register.step1.email')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder={t(
-                            'auth.register.step1.emailPlaceholder',
-                          )}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={step1Form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          {t('auth.register.step1.email')}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder={t(
+                              'auth.register.step1.emailPlaceholder',
+                            )}
+                            className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={step1Form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.register.step1.password')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder={t(
-                            'auth.register.step1.passwordPlaceholder',
-                          )}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={step1Form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          {t('auth.register.step1.password')}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder={t(
+                              'auth.register.step1.passwordPlaceholder',
+                            )}
+                            className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={step1Form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('auth.register.step1.confirmPassword')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder={t(
-                            'auth.register.step1.confirmPasswordPlaceholder',
-                          )}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={step1Form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          {t('auth.register.step1.confirmPassword')}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder={t(
+                              'auth.register.step1.confirmPasswordPlaceholder',
+                            )}
+                            className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <Button type="submit" className="w-full">
-                  {t('common.next')}
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </form>
-            </Form>
-          )}
-
-          {/* Step 2: Dados Pessoais */}
-          {currentStep === 2 && (
-            <Form {...step2Form}>
-              <form
-                onSubmit={step2Form.handleSubmit(handleStep2Submit)}
-                className="space-y-4"
-              >
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold">
-                    {t('auth.register.step2.title')}
-                  </h3>
-                </div>
-
-                <FormField
-                  control={step2Form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.register.step2.fullName')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t(
-                            'auth.register.step2.fullNamePlaceholder',
-                          )}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={step2Form.control}
-                  name="cpf"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.register.step2.cpf')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="000.000.000-00"
-                          {...field}
-                          onChange={(event) => {
-                            const formatted = formatCPF(event.target.value)
-                            field.onChange(formatted)
-                          }}
-                          maxLength={14}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={step2Form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.register.step2.phone')}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="(00) 00000-0000"
-                          {...field}
-                          onChange={(event) => {
-                            const formatted = formatPhone(event.target.value)
-                            field.onChange(formatted)
-                          }}
-                          maxLength={15}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={step2Form.control}
-                  name="dateOfBirth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('auth.register.step2.dateOfBirth')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-4">
                   <Button
-                    type="button"
-                    variant="outline"
-                    onClick={goToPreviousStep}
-                    className="flex-1"
+                    type="submit"
+                    className="mt-8 h-12 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
                   >
-                    <ChevronLeft className="mr-2 h-4 w-4" />
-                    {t('common.previous')}
-                  </Button>
-                  <Button type="submit" className="flex-1">
                     {t('common.next')}
-                    <ChevronRight className="ml-2 h-4 w-4" />
+                    <ChevronRight className="ml-2 h-5 w-5" />
                   </Button>
-                </div>
-              </form>
-            </Form>
-          )}
+                </form>
+              </Form>
+            )}
 
-          {/* Step 3: Endereço */}
-          {currentStep === 3 && (
-            <Form {...step3Form}>
-              <form
-                onSubmit={step3Form.handleSubmit(handleStep3Submit)}
-                className="space-y-4"
-              >
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold">
-                    {t('auth.register.step3.title')}
-                  </h3>
-                </div>
+            {/* Step 2: Dados Pessoais */}
+            {currentStep === 2 && (
+              <Form {...step2Form}>
+                <form
+                  onSubmit={step2Form.handleSubmit(handleStep2Submit)}
+                  className="space-y-6"
+                >
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-gray-800">
+                      {t('auth.register.step2.title')}
+                    </h3>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Informe seus dados pessoais para verificação KYC
+                    </p>
+                  </div>
 
-                <FormField
-                  control={step3Form.control}
-                  name="addressZip"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('auth.register.step3.addressZip')}
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
+                  <FormField
+                    control={step2Form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          {t('auth.register.step2.fullName')}
+                        </FormLabel>
+                        <FormControl>
                           <Input
-                            placeholder="00000-000"
+                            placeholder={t(
+                              'auth.register.step2.fullNamePlaceholder',
+                            )}
+                            className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
                             {...field}
-                            onChange={(event) => {
-                              handleCEPChange(event.target.value)
-                            }}
-                            maxLength={9}
-                            disabled={isLoading || isLoadingCEP}
                           />
-                          {isLoadingCEP && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                      {isLoadingCEP && (
-                        <p className="text-xs text-muted-foreground">
-                          Buscando endereço...
-                        </p>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={step2Form.control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step2.cpf')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="000.000.000-00"
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              onChange={(event) => {
+                                const formatted = formatCPF(event.target.value)
+                                field.onChange(formatted)
+                              }}
+                              maxLength={14}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </FormItem>
-                  )}
-                />
+                    />
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={step2Form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step2.phone')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="(00) 00000-0000"
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              onChange={(event) => {
+                                const formatted = formatPhone(
+                                  event.target.value,
+                                )
+                                field.onChange(formatted)
+                              }}
+                              maxLength={15}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
-                    control={step3Form.control}
-                    name="addressStreet"
+                    control={step2Form.control}
+                    name="dateOfBirth"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          {t('auth.register.step3.addressStreet')}
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          {t('auth.register.step2.dateOfBirth')}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="mt-8 flex gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={goToPreviousStep}
+                      className="h-12 flex-1 border-2 border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50"
+                    >
+                      <ChevronLeft className="mr-2 h-5 w-5" />
+                      {t('common.previous')}
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="h-12 flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                    >
+                      {t('common.next')}
+                      <ChevronRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            )}
+
+            {/* Step 3: Endereço */}
+            {currentStep === 3 && (
+              <Form {...step3Form}>
+                <form
+                  onSubmit={step3Form.handleSubmit(handleStep3Submit)}
+                  className="space-y-6"
+                >
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-gray-800">
+                      {t('auth.register.step3.title')}
+                    </h3>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Complete com seu endereço residencial
+                    </p>
+                  </div>
+
+                  <FormField
+                    control={step3Form.control}
+                    name="addressZip"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          {t('auth.register.step3.addressZip')}
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              placeholder="00000-000"
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              onChange={(event) => {
+                                handleCEPChange(event.target.value)
+                              }}
+                              maxLength={9}
+                              disabled={isLoading || isLoadingCEP}
+                            />
+                            {isLoadingCEP && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                        {isLoadingCEP && (
+                          <p className="text-sm font-medium text-blue-600">
+                            🔍 Buscando endereço automaticamente...
+                          </p>
+                        )}
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={step3Form.control}
+                      name="addressStreet"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step3.addressStreet')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={t(
+                                'auth.register.step3.addressStreetPlaceholder',
+                              )}
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={step3Form.control}
+                      name="addressNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step3.addressNumber')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={t(
+                                'auth.register.step3.addressNumberPlaceholder',
+                              )}
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={step3Form.control}
+                    name="addressComplement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          {t('auth.register.step3.addressComplement')}
+                          <span className="ml-1 text-xs text-gray-400">
+                            (opcional)
+                          </span>
                         </FormLabel>
                         <FormControl>
                           <Input
                             placeholder={t(
-                              'auth.register.step3.addressStreetPlaceholder',
+                              'auth.register.step3.addressComplementPlaceholder',
                             )}
+                            className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
                             {...field}
                             disabled={isLoading}
                           />
@@ -521,137 +623,102 @@ export default function RegisterPage() {
                     )}
                   />
 
-                  <FormField
-                    control={step3Form.control}
-                    name="addressNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {t('auth.register.step3.addressNumber')}
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t(
-                              'auth.register.step3.addressNumberPlaceholder',
-                            )}
-                            {...field}
-                            disabled={isLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={step3Form.control}
+                      name="addressCity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step3.addressCity')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={t(
+                                'auth.register.step3.addressCityPlaceholder',
+                              )}
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={step3Form.control}
-                  name="addressComplement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('auth.register.step3.addressComplement')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t(
-                            'auth.register.step3.addressComplementPlaceholder',
-                          )}
-                          {...field}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={step3Form.control}
+                      name="addressState"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step3.addressState')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={t(
+                                'auth.register.step3.addressStatePlaceholder',
+                              )}
+                              className="h-11 uppercase transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              maxLength={2}
+                              {...field}
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <FormField
-                    control={step3Form.control}
-                    name="addressCity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {t('auth.register.step3.addressCity')}
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t(
-                              'auth.register.step3.addressCityPlaceholder',
-                            )}
-                            {...field}
-                            disabled={isLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="mt-8 flex gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={goToPreviousStep}
+                      className="h-12 flex-1 border-2 border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50"
+                      disabled={isLoading}
+                    >
+                      <ChevronLeft className="mr-2 h-5 w-5" />
+                      {t('common.previous')}
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="h-12 flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          {t('common.loading')}
+                        </>
+                      ) : (
+                        <>
+                          {t('auth.register.submit')}
+                          <ChevronRight className="ml-2 h-5 w-5" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            )}
+          </CardContent>
 
-                  <FormField
-                    control={step3Form.control}
-                    name="addressState"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {t('auth.register.step3.addressState')}
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t(
-                              'auth.register.step3.addressStatePlaceholder',
-                            )}
-                            maxLength={2}
-                            {...field}
-                            disabled={isLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={goToPreviousStep}
-                    className="flex-1"
-                    disabled={isLoading}
-                  >
-                    <ChevronLeft className="mr-2 h-4 w-4" />
-                    {t('common.previous')}
-                  </Button>
-                  <Button type="submit" className="flex-1" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t('common.loading')}
-                      </>
-                    ) : (
-                      t('auth.register.submit')
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          )}
-        </CardContent>
-
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm text-muted-foreground">
-            {t('auth.register.hasAccount')}{' '}
-            <Link
-              href="/login"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              {t('auth.register.loginLink')}
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+          <CardFooter className="border-t bg-gray-50/50 p-6">
+            <div className="w-full text-center text-sm text-gray-600">
+              {t('auth.register.hasAccount')}{' '}
+              <Link
+                href="/login"
+                className="font-semibold text-blue-600 transition-colors hover:text-purple-600 hover:underline"
+              >
+                {t('auth.register.loginLink')}
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   )
 }

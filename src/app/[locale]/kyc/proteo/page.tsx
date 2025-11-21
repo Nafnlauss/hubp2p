@@ -93,17 +93,21 @@ export default function ProteoKycEmbed() {
         return
       }
 
-      if (!profile?.cpf) {
-        console.error('❌ [PROTEO] CPF não encontrado no perfil!')
+      const cpfFromProfile = profile?.cpf?.replaceAll(/\D/g, '') || ''
+      const cpfFromMetadata =
+        (user.user_metadata as { cpf?: string })?.cpf?.replaceAll(/\D/g, '') ||
+        ''
+
+      const cpfToUse = cpfFromProfile || cpfFromMetadata
+
+      if (!cpfToUse || cpfToUse.length !== 11) {
+        console.error('❌ [PROTEO] CPF não encontrado no perfil ou metadados!')
         setStatus('error')
         setLoading(false)
         return
       }
 
-      const url = buildKycUrl(
-        process.env.NEXT_PUBLIC_PROTEO_KYC_URL,
-        profile.cpf,
-      )
+      const url = buildKycUrl(process.env.NEXT_PUBLIC_PROTEO_KYC_URL, cpfToUse)
       setKycUrl(url)
       setStatus('ready')
       setLoading(false)
@@ -226,9 +230,9 @@ export default function ProteoKycEmbed() {
                 )}
                 <Button
                   variant="outline"
-                  onClick={() => router.push(`/${locale}/dashboard`)}
+                  onClick={() => router.push(`/${locale}/kyc`)}
                 >
-                  Ir para Dashboard
+                  Voltar para KYC
                 </Button>
               </div>
             </div>

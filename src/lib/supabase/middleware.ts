@@ -38,6 +38,22 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  let userProfile: { kyc_status?: string | null } | null
+
+  if (user) {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('kyc_status')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (error) {
+      console.error('❌ [MIDDLEWARE] Erro ao buscar perfil:', error.message)
+    }
+
+    userProfile = profile
+  }
+
   const pathname = request.nextUrl.pathname
 
   console.log(
@@ -87,16 +103,30 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Usuários autenticados mas com KYC pendente não podem acessar rotas protegidas
+  if (user && isProtectedRoute && userProfile?.kyc_status !== 'approved') {
+    console.log(
+      '🟠 [MIDDLEWARE] KYC pendente! Redirecionando usuário autenticado para KYC',
+    )
+    const url = request.nextUrl.clone()
+    url.pathname = `/${locale}/kyc`
+    return NextResponse.redirect(url)
+  }
+
   // If user is logged in and tries to access auth pages, redirect to dashboard
   // BUT allow access to signout route and onboarding routes even if logged in
   const isSignoutRoute = pathname.includes('/auth/signout')
 
   if (user && isAuthRoute && !isSignoutRoute) {
+    const targetPath =
+      userProfile?.kyc_status === 'approved' ? '/dashboard' : '/kyc'
+
     console.log(
-      '🟢 [MIDDLEWARE] Usuário autenticado tentando acessar página de auth. Redirecionando para dashboard',
+      '🟢 [MIDDLEWARE] Usuário autenticado acessando rota pública. Aplicando redirecionamento para',
+      targetPath,
     )
     const url = request.nextUrl.clone()
-    url.pathname = `/${locale}/dashboard`
+    url.pathname = `/${locale}${targetPath}`
     return NextResponse.redirect(url)
   }
 

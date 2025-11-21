@@ -108,6 +108,10 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
     const validatedData = signUpSchema.parse(data)
     console.log('✅ Dados validados com sucesso')
 
+    const sanitizedCPF = validatedData.cpf.replaceAll(/\D/g, '')
+    const sanitizedPhone = validatedData.phone.replaceAll(/\D/g, '')
+    const sanitizedZip = validatedData.addressZip.replaceAll(/\D/g, '')
+
     // Criar cliente Supabase
     const supabase = await createClient()
 
@@ -144,21 +148,27 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
     // 2. Criar profile do usuário usando admin client (com permissões service_role)
     console.log('🔵 Criando perfil no banco...')
     const supabaseAdmin = await createAdminClient()
+    const profilePayload = {
+      id: authData.user.id,
+      full_name: validatedData.fullName,
+      cpf: sanitizedCPF,
+      phone: sanitizedPhone,
+      date_of_birth: validatedData.dateOfBirth,
+      address_zip: sanitizedZip,
+      address_street: validatedData.addressStreet,
+      address_number: validatedData.addressNumber,
+      address_complement: validatedData.addressComplement || undefined,
+      address_city: validatedData.addressCity,
+      address_state: validatedData.addressState.toUpperCase(),
+      kyc_status: 'pending',
+      onboarding_completed: false,
+      first_deposit_completed: false,
+      wallet_configured: false,
+    }
+
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .insert({
-        id: authData.user.id,
-        full_name: validatedData.fullName,
-        cpf: validatedData.cpf.replaceAll(/\D/g, ''), // Remove formatação
-        phone: validatedData.phone.replaceAll(/\D/g, ''),
-        date_of_birth: validatedData.dateOfBirth,
-        address_zip: validatedData.addressZip.replaceAll(/\D/g, ''),
-        address_street: validatedData.addressStreet,
-        address_number: validatedData.addressNumber,
-        address_complement: validatedData.addressComplement || undefined,
-        address_city: validatedData.addressCity,
-        address_state: validatedData.addressState.toUpperCase(),
-      })
+      .upsert(profilePayload, { onConflict: 'id' })
 
     if (profileError) {
       console.error('❌ Erro ao criar perfil:', profileError)
@@ -168,6 +178,15 @@ export async function signUp(data: SignUpData): Promise<AuthResponse> {
         error: `Erro ao criar perfil: ${profileError.message}`,
       }
     }
+
+    // Atualizar metadados do usuário para garantir CPF disponível no client
+    await supabaseAdmin.auth.admin.updateUserById(authData.user.id, {
+      user_metadata: {
+        full_name: validatedData.fullName,
+        cpf: sanitizedCPF,
+        phone: sanitizedPhone,
+      },
+    })
 
     console.log('✅ Perfil criado com sucesso!')
     console.log(

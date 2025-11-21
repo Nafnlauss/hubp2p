@@ -1,19 +1,57 @@
 'use client'
 
+import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { useEffect, useState } from 'react'
 
+import { createClient } from '@/lib/supabase/client'
+
 export default function SucessoPage() {
   const router = useRouter()
   const locale = useLocale()
-  const [countdown, setCountdown] = useState(5)
+  const [status, setStatus] = useState<'loading' | 'approved'>('loading')
 
-  // Removido redirecionamento automático para dar tempo do webhook do Proteo
-  // atualizar o status do KYC no banco antes do usuário tentar acessar o dashboard
+  useEffect(() => {
+    const supabase = createClient()
+
+    async function verifyKyc() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.replace(`/${locale}/login`)
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('kyc_status')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.kyc_status !== 'approved') {
+        router.replace(`/${locale}/kyc`)
+        return
+      }
+
+      setStatus('approved')
+    }
+
+    void verifyKyc()
+  }, [locale, router])
 
   const irParaDashboard = () => {
     router.push(`/${locale}/dashboard`)
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+      </div>
+    )
   }
 
   return (

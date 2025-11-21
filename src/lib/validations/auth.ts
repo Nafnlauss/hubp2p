@@ -63,14 +63,39 @@ export const signUpStep1Schema = signUpStep1BaseSchema.refine(
   },
 )
 
-// Schema de Registro - Step 2: Dados pessoais e endereço (sem refine nos campos individuais)
+// Schema de Registro - Step 2: Dados pessoais (sem refine nos campos individuais)
 const signUpStep2BaseSchema = z.object({
   fullName: z
     .string()
     .min(1, 'Nome completo é obrigatório')
     .min(3, 'Nome deve ter no mínimo 3 caracteres')
     .regex(/^[\sA-Za-zÀ-ÿ]+$/, 'Nome deve conter apenas letras'),
+  cpf: z.string().min(1, 'CPF é obrigatório'),
+  phone: z.string().min(1, 'Telefone é obrigatório'),
   dateOfBirth: z.string().min(1, 'Data de nascimento é obrigatória'),
+})
+
+// Schema de Registro - Step 2 com validações
+export const signUpStep2Schema = signUpStep2BaseSchema
+  .refine((data) => validateCPF(data.cpf), {
+    message: 'CPF inválido',
+    path: ['cpf'],
+  })
+  .refine(
+    (data) => {
+      const birthDate = new Date(data.dateOfBirth)
+      const today = new Date()
+      const age = today.getFullYear() - birthDate.getFullYear()
+      return age >= 18
+    },
+    {
+      message: 'Você deve ter pelo menos 18 anos',
+      path: ['dateOfBirth'],
+    },
+  )
+
+// Schema de Registro - Step 3: Endereço
+export const signUpStep3Schema = z.object({
   addressZip: z
     .string()
     .min(1, 'CEP é obrigatório')
@@ -93,35 +118,6 @@ const signUpStep2BaseSchema = z.object({
     .min(1, 'Estado é obrigatório')
     .length(2, 'Estado deve ter 2 caracteres (ex: SP)'),
 })
-
-// Schema de Registro - Step 2 com validações
-export const signUpStep2Schema = signUpStep2BaseSchema.refine(
-  (data) => {
-    const birthDate = new Date(data.dateOfBirth)
-    const today = new Date()
-    const age = today.getFullYear() - birthDate.getFullYear()
-    return age >= 18
-  },
-  {
-    message: 'Você deve ter pelo menos 18 anos',
-    path: ['dateOfBirth'],
-  },
-)
-
-// Schema de Registro - Step 3: CPF (sem refine)
-const signUpStep3BaseSchema = z.object({
-  cpf: z.string().min(1, 'CPF é obrigatório'),
-  phone: z.string().min(1, 'Telefone é obrigatório'),
-})
-
-// Schema de Registro - Step 3 com validação de CPF
-export const signUpStep3Schema = signUpStep3BaseSchema.refine(
-  (data) => validateCPF(data.cpf),
-  {
-    message: 'CPF inválido',
-    path: ['cpf'],
-  },
-)
 
 // Schema completo de registro (merge dos schemas base sem refine)
 export const signUpSchema = signUpStep1BaseSchema

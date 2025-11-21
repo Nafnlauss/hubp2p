@@ -64,21 +64,21 @@ export default function RegisterPage() {
     resolver: zodResolver(signUpStep2Schema),
     defaultValues: {
       fullName: '',
+      cpf: '',
+      phone: '',
       dateOfBirth: '',
-      addressZip: '',
-      addressStreet: '',
-      addressNumber: '',
-      addressComplement: '',
-      addressCity: '',
-      addressState: '',
     },
   })
 
   const step3Form = useForm<SignUpStep3FormData>({
     resolver: zodResolver(signUpStep3Schema),
     defaultValues: {
-      cpf: '',
-      phone: '',
+      addressZip: '',
+      addressStreet: '',
+      addressNumber: '',
+      addressComplement: '',
+      addressCity: '',
+      addressState: '',
     },
   })
 
@@ -222,7 +222,7 @@ export default function RegisterPage() {
   // Função para buscar endereço pelo CEP
   async function handleCEPChange(cep: string) {
     const formatted = formatCEP(cep)
-    step2Form.setValue('addressZip', formatted)
+    step3Form.setValue('addressZip', formatted)
 
     // Remove formatação para verificar se tem 8 dígitos
     const cleanCEP = cep.replaceAll(/\D/g, '')
@@ -238,13 +238,13 @@ export default function RegisterPage() {
           // Preenche os campos automaticamente
           const formattedAddress = formatAddressData(addressData)
 
-          step2Form.setValue('addressStreet', formattedAddress.addressStreet)
-          step2Form.setValue('addressCity', formattedAddress.addressCity)
-          step2Form.setValue('addressState', formattedAddress.addressState)
+          step3Form.setValue('addressStreet', formattedAddress.addressStreet)
+          step3Form.setValue('addressCity', formattedAddress.addressCity)
+          step3Form.setValue('addressState', formattedAddress.addressState)
 
           // Se tiver complemento no ViaCEP, preenche também
           if (formattedAddress.addressComplement) {
-            step2Form.setValue(
+            step3Form.setValue(
               'addressComplement',
               formattedAddress.addressComplement,
             )
@@ -294,8 +294,8 @@ export default function RegisterPage() {
                 </span>
                 <span className="text-sm opacity-90">
                   {currentStep === 1 && '🔐 Credenciais'}
-                  {currentStep === 2 && '👤📍 Dados e Endereço'}
-                  {currentStep === 3 && '🆔 Verificação'}
+                  {currentStep === 2 && '👤 Dados Pessoais'}
+                  {currentStep === 3 && '📍 Endereço'}
                 </span>
               </div>
               <div className="mt-4 flex gap-2">
@@ -408,7 +408,7 @@ export default function RegisterPage() {
               </Form>
             )}
 
-            {/* Step 2: Dados Pessoais e Endereço */}
+            {/* Step 2: Dados Pessoais */}
             {currentStep === 2 && (
               <Form {...step2Form}>
                 <form
@@ -420,7 +420,7 @@ export default function RegisterPage() {
                       {t('auth.register.step2.title')}
                     </h3>
                     <p className="mt-2 text-sm text-gray-500">
-                      Informe seus dados pessoais e endereço
+                      Informe seus dados pessoais para verificação KYC
                     </p>
                   </div>
 
@@ -446,6 +446,60 @@ export default function RegisterPage() {
                     )}
                   />
 
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={step2Form.control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step2.cpf')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="000.000.000-00"
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              onChange={(event) => {
+                                const formatted = formatCPF(event.target.value)
+                                field.onChange(formatted)
+                              }}
+                              maxLength={14}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={step2Form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step2.phone')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="(00) 00000-0000"
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              onChange={(event) => {
+                                const formatted = formatPhone(
+                                  event.target.value,
+                                )
+                                field.onChange(formatted)
+                              }}
+                              maxLength={15}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={step2Form.control}
                     name="dateOfBirth"
@@ -465,172 +519,6 @@ export default function RegisterPage() {
                       </FormItem>
                     )}
                   />
-
-                  <div className="border-t pt-6">
-                    <h4 className="mb-4 text-lg font-semibold text-gray-800">
-                      📍 Endereço
-                    </h4>
-
-                    <FormField
-                      control={step2Form.control}
-                      name="addressZip"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
-                            {t('auth.register.step3.addressZip')}
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Input
-                                placeholder="00000-000"
-                                className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
-                                {...field}
-                                onChange={(event) => {
-                                  handleCEPChange(event.target.value)
-                                }}
-                                maxLength={9}
-                                disabled={isLoading || isLoadingCEP}
-                              />
-                              {isLoadingCEP && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                                </div>
-                              )}
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                          {isLoadingCEP && (
-                            <p className="text-sm font-medium text-blue-600">
-                              🔍 Buscando endereço automaticamente...
-                            </p>
-                          )}
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                      <FormField
-                        control={step2Form.control}
-                        name="addressStreet"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">
-                              {t('auth.register.step3.addressStreet')}
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder={t(
-                                  'auth.register.step3.addressStreetPlaceholder',
-                                )}
-                                className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
-                                {...field}
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={step2Form.control}
-                        name="addressNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">
-                              {t('auth.register.step3.addressNumber')}
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder={t(
-                                  'auth.register.step3.addressNumberPlaceholder',
-                                )}
-                                className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
-                                {...field}
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={step2Form.control}
-                      name="addressComplement"
-                      render={({ field }) => (
-                        <FormItem className="mt-6">
-                          <FormLabel className="text-sm font-medium text-gray-700">
-                            {t('auth.register.step3.addressComplement')}
-                            <span className="ml-1 text-xs text-gray-400">
-                              (opcional)
-                            </span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder={t(
-                                'auth.register.step3.addressComplementPlaceholder',
-                              )}
-                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
-                              {...field}
-                              disabled={isLoading}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                      <FormField
-                        control={step2Form.control}
-                        name="addressCity"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">
-                              {t('auth.register.step3.addressCity')}
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder={t(
-                                  'auth.register.step3.addressCityPlaceholder',
-                                )}
-                                className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
-                                {...field}
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={step2Form.control}
-                        name="addressState"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">
-                              {t('auth.register.step3.addressState')}
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder={t(
-                                  'auth.register.step3.addressStatePlaceholder',
-                                )}
-                                className="h-11 uppercase transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
-                                maxLength={2}
-                                {...field}
-                                disabled={isLoading}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
 
                   <div className="mt-8 flex gap-4">
                     <Button
@@ -654,7 +542,7 @@ export default function RegisterPage() {
               </Form>
             )}
 
-            {/* Step 3: CPF e Telefone */}
+            {/* Step 3: Endereço */}
             {currentStep === 3 && (
               <Form {...step3Form}>
                 <form
@@ -666,31 +554,36 @@ export default function RegisterPage() {
                       {t('auth.register.step3.title')}
                     </h3>
                     <p className="mt-2 text-sm text-gray-500">
-                      Finalize seu cadastro com CPF e telefone para verificação
-                      KYC
+                      Informe seu endereço para finalizar o cadastro
                     </p>
                   </div>
 
                   <FormField
                     control={step3Form.control}
-                    name="cpf"
+                    name="addressZip"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-medium text-gray-700">
-                          {t('auth.register.step2.cpf')}
+                          {t('auth.register.step3.zip')}
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="000.000.000-00"
-                            className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
-                            {...field}
-                            onChange={(event) => {
-                              const formatted = formatCPF(event.target.value)
-                              field.onChange(formatted)
-                            }}
-                            maxLength={14}
-                            disabled={isLoading}
-                          />
+                          <div className="relative">
+                            <Input
+                              placeholder="00000-000"
+                              className="h-11 pr-10 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              onChange={(event) => {
+                                const formatted = formatCEP(event.target.value)
+                                field.onChange(formatted)
+                                handleCEPChange(formatted)
+                              }}
+                              maxLength={9}
+                              disabled={isLoading || isCEPLoading}
+                            />
+                            {isCEPLoading && (
+                              <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-blue-500" />
+                            )}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -699,29 +592,117 @@ export default function RegisterPage() {
 
                   <FormField
                     control={step3Form.control}
-                    name="phone"
+                    name="addressStreet"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-medium text-gray-700">
-                          {t('auth.register.step2.phone')}
+                          {t('auth.register.step3.street')}
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="(00) 00000-0000"
+                            placeholder="Rua, Avenida..."
                             className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
                             {...field}
-                            onChange={(event) => {
-                              const formatted = formatPhone(event.target.value)
-                              field.onChange(formatted)
-                            }}
-                            maxLength={15}
-                            disabled={isLoading}
+                            disabled={isLoading || isCEPLoading}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={step3Form.control}
+                      name="addressNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step3.number')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="123"
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              disabled={isLoading || isCEPLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={step3Form.control}
+                      name="addressComplement"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step3.complement')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Apto, Bloco... (opcional)"
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              disabled={isLoading || isCEPLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={step3Form.control}
+                      name="addressCity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step3.city')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Cidade"
+                              className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              disabled={isLoading || isCEPLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={step3Form.control}
+                      name="addressState"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            {t('auth.register.step3.state')}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="UF"
+                              className="h-11 uppercase transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                              {...field}
+                              onChange={(event) => {
+                                const value = event.target.value.toUpperCase()
+                                field.onChange(value)
+                              }}
+                              maxLength={2}
+                              disabled={isLoading || isCEPLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <p className="text-sm text-blue-800">

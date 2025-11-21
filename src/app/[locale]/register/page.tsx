@@ -137,6 +137,29 @@ export default function RegisterPage() {
           }
 
           console.log('✅ [REGISTER] Login bem-sucedido!')
+
+          // Aguardar a sessão estar disponível
+          console.log('⏳ [REGISTER] Aguardando sessão estar disponível...')
+          await new Promise((resolve) => setTimeout(resolve, 1500))
+
+          // Verificar se a sessão está disponível
+          const {
+            data: { user: verifyUser },
+          } = await supabase.auth.getUser()
+          console.log('🔍 [REGISTER] Sessão verificada:', verifyUser?.email)
+
+          if (!verifyUser) {
+            console.error(
+              '❌ [REGISTER] Sessão não disponível após delay! Redirecionando para login.',
+            )
+            toast({
+              title: t('common.error'),
+              description: 'Conta criada! Por favor, faça login manualmente.',
+              variant: 'destructive',
+            })
+            window.location.href = `/${locale}/login`
+            return
+          }
         }
 
         // Redirecionar para KYC

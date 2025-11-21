@@ -32,6 +32,24 @@ function gerarCPFValido(cpfBase: string): string {
 test('Teste de cadastro completo até verificação KYC', async ({ page }) => {
   console.log('🧪 [TEST] Iniciando teste de cadastro completo...')
 
+  // Capturar mensagens do console
+  page.on('console', (message) => {
+    const type = message.type()
+    const text = message.text()
+    if (type === 'error') {
+      console.log(`🔴 [BROWSER ERROR] ${text}`)
+    } else if (type === 'warning') {
+      console.log(`⚠️ [BROWSER WARN] ${text}`)
+    } else if (text.includes('[REGISTER]')) {
+      console.log(`📱 [BROWSER] ${text}`)
+    }
+  })
+
+  // Capturar erros de página
+  page.on('pageerror', (error) => {
+    console.log(`💥 [PAGE ERROR] ${error.message}`)
+  })
+
   // 1. Acessar landing page
   console.log('📍 [TEST] Passo 1: Acessando landing page')
   await page.goto('http://localhost:3000')

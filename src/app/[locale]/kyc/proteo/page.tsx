@@ -31,6 +31,8 @@ function buildKycUrl(base?: string | undefined, cpf?: string | undefined) {
 }
 
 export default function ProteoKycEmbed() {
+  console.log('🟢 [PROTEO COMPONENT] Componente montado!')
+
   const locale = useLocale()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -39,7 +41,15 @@ export default function ProteoKycEmbed() {
     'loading' | 'ready' | 'completed' | 'error'
   >('loading')
 
+  console.log('🟢 [PROTEO COMPONENT] Estado inicial:', {
+    loading,
+    status,
+    kycUrl,
+  })
+
   useEffect(() => {
+    console.log('🔵 [PROTEO EFFECT] useEffect executado!')
+
     const supabase = createClient()
 
     async function init() {

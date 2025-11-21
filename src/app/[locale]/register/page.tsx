@@ -138,19 +138,38 @@ export default function RegisterPage() {
 
           console.log('✅ [REGISTER] Login bem-sucedido!')
 
-          // Aguardar a sessão estar disponível
+          // Polling: tentar várias vezes até a sessão estar disponível
           console.log('⏳ [REGISTER] Aguardando sessão estar disponível...')
-          await new Promise((resolve) => setTimeout(resolve, 1500))
+          let verifyUser
+          const maxAttempts = 10 // 10 tentativas
+          const delayBetweenAttempts = 300 // 300ms entre cada tentativa
 
-          // Verificar se a sessão está disponível
-          const {
-            data: { user: verifyUser },
-          } = await supabase.auth.getUser()
-          console.log('🔍 [REGISTER] Sessão verificada:', verifyUser?.email)
+          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            console.log(`🔄 [REGISTER] Tentativa ${attempt}/${maxAttempts}...`)
+
+            const {
+              data: { user: currentUser },
+            } = await supabase.auth.getUser()
+
+            if (currentUser) {
+              verifyUser = currentUser
+              console.log(
+                `✅ [REGISTER] Sessão encontrada na tentativa ${attempt}:`,
+                currentUser.email,
+              )
+              break
+            }
+
+            if (attempt < maxAttempts) {
+              await new Promise((resolve) =>
+                setTimeout(resolve, delayBetweenAttempts),
+              )
+            }
+          }
 
           if (!verifyUser) {
             console.error(
-              '❌ [REGISTER] Sessão não disponível após delay! Redirecionando para login.',
+              '❌ [REGISTER] Sessão não disponível após todas as tentativas! Redirecionando para login.',
             )
             toast({
               title: t('common.error'),
@@ -160,6 +179,10 @@ export default function RegisterPage() {
             window.location.href = `/${locale}/login`
             return
           }
+
+          console.log(
+            '✅ [REGISTER] Sessão confirmada, redirecionando para KYC...',
+          )
         }
 
         // Redirecionar para KYC

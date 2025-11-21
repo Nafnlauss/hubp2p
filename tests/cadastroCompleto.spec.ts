@@ -40,7 +40,11 @@ test('Teste de cadastro completo até verificação KYC', async ({ page }) => {
       console.log(`🔴 [BROWSER ERROR] ${text}`)
     } else if (type === 'warning') {
       console.log(`⚠️ [BROWSER WARN] ${text}`)
-    } else if (text.includes('[REGISTER]')) {
+    } else if (
+      text.includes('[REGISTER]') ||
+      text.includes('[PROTEO') ||
+      text.includes('[KYC PAGE]')
+    ) {
       console.log(`📱 [BROWSER] ${text}`)
     }
   })

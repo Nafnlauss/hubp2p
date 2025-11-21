@@ -20,14 +20,41 @@ export default function KYCPage() {
       console.log('🔍 [KYC PAGE] Verificando autenticação no client...')
 
       const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
 
-      console.log('🔍 [KYC PAGE] User:', user ? user.email : 'null')
+      // Polling: tentar várias vezes até encontrar a sessão
+      let user
+      const maxAttempts = 10
+      const delayBetweenAttempts = 300
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        console.log(
+          `🔄 [KYC PAGE] Tentativa ${attempt}/${maxAttempts} de buscar sessão...`,
+        )
+
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser()
+
+        if (currentUser) {
+          user = currentUser
+          console.log(
+            `✅ [KYC PAGE] Sessão encontrada na tentativa ${attempt}:`,
+            currentUser.email,
+          )
+          break
+        }
+
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, delayBetweenAttempts),
+          )
+        }
+      }
 
       if (!user) {
-        console.log('🔴 [KYC PAGE] Não autenticado! Redirecionando para login')
+        console.log(
+          '🔴 [KYC PAGE] Não autenticado após todas as tentativas! Redirecionando para login',
+        )
         router.push(`/${locale}/login`)
         return
       }

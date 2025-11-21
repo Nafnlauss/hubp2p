@@ -151,35 +151,17 @@ export default function ProteoKycEmbed() {
 
       // Proteo envia {event: 'complete'} quando o onboarding é finalizado
       if (event.data?.event === 'complete' && event.data?.step === 'Complete') {
-        console.log(
-          '✅ [PROTEO] Conclusão detectada! Atualizando KYC no banco...',
-        )
-        setStatus('completed')
-        clearInterval(pollInterval)
+        console.log('📋 [PROTEO] Onboarding finalizado.')
+        console.log('⏳ [PROTEO] Aguardando webhook do Proteo aprovar KYC...')
 
-        try {
-          // Chamar nossa API para marcar KYC como aprovado
-          const response = await fetch('/api/kyc/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          })
+        // ⚠️ SEGURANÇA: NÃO aprovar automaticamente!
+        // O Proteo precisa analisar os documentos e pode APROVAR ou REJEITAR
+        // Apenas o webhook do Proteo (com validação de secret) deve atualizar o status
+        // O polling vai continuar verificando até o webhook atualizar o banco
 
-          if (response.ok) {
-            console.log('✅ [PROTEO] KYC marcado como aprovado com sucesso!')
-          } else {
-            console.error(
-              '❌ [PROTEO] Erro ao marcar KYC como aprovado:',
-              await response.text(),
-            )
-          }
-        } catch (error) {
-          console.error('❌ [PROTEO] Erro ao chamar API:', error)
-        }
-
-        // Redirecionar para página de sucesso
-        setTimeout(() => {
-          router.push(`/${locale}/sucesso`)
-        }, 1000)
+        // NÃO chamar /api/kyc/complete aqui!
+        // NÃO redirecionar automaticamente!
+        // Deixar o polling fazer o trabalho
       }
     }
 

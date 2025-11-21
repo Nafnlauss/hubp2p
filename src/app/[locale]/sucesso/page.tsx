@@ -104,65 +104,13 @@ export default function SucessoPage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
                   <span className="text-2xl text-white">✓</span>
                 </div>
-                <div className="text-left">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Verificação Recebida
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    🎉 Seu KYC foi Aprovado!
                   </h2>
-                  <p className="text-sm text-gray-600">
-                    Seus documentos estão sendo analisados
+                  <p className="mt-2 text-sm text-gray-600">
+                    Você já pode acessar todas as funcionalidades da plataforma
                   </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Próximos passos */}
-            <div className="mb-8 space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                📋 Próximos passos:
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3 rounded-lg bg-gray-50 p-4">
-                  <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-sm font-bold text-white">
-                    1
-                  </span>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      Análise de documentos
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Nossa equipe irá verificar suas informações (1-2 dias
-                      úteis)
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 rounded-lg bg-gray-50 p-4">
-                  <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
-                    2
-                  </span>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      Notificação por e-mail
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Você receberá um e-mail assim que a verificação for
-                      aprovada
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 rounded-lg bg-gray-50 p-4">
-                  <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-purple-500 text-sm font-bold text-white">
-                    3
-                  </span>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      Acesso completo à plataforma
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Após aprovação, você poderá realizar transações
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>

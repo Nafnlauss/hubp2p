@@ -94,15 +94,9 @@ export const signUpStep2Schema = signUpStep2BaseSchema
     },
   )
 
-// Schema de Registro - Step 3: Endereço
-export const signUpStep3Schema = z.object({
-  addressZip: z
-    .string()
-    .min(1, 'CEP é obrigatório')
-    .refine(
-      (value) => value.replaceAll(/\D/g, '').length === 8,
-      'CEP deve ter 8 dígitos',
-    ),
+// Schema de Registro - Step 3: Endereço (sem refine)
+const signUpStep3BaseSchema = z.object({
+  addressZip: z.string().min(1, 'CEP é obrigatório'),
   addressStreet: z
     .string()
     .min(1, 'Rua é obrigatória')
@@ -118,6 +112,15 @@ export const signUpStep3Schema = z.object({
     .min(1, 'Estado é obrigatório')
     .length(2, 'Estado deve ter 2 caracteres (ex: SP)'),
 })
+
+// Schema de Registro - Step 3 com validação de CEP
+export const signUpStep3Schema = signUpStep3BaseSchema.refine(
+  (data) => data.addressZip.replaceAll(/\D/g, '').length === 8,
+  {
+    message: 'CEP deve ter 8 dígitos',
+    path: ['addressZip'],
+  },
+)
 
 // Schema completo de registro (merge dos schemas base sem refine)
 export const signUpSchema = signUpStep1BaseSchema

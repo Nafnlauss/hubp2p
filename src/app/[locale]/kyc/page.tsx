@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
+import { Loader2, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { useEffect, useState } from 'react'
@@ -14,6 +14,7 @@ export default function KYCPage() {
   const locale = useLocale()
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   useEffect(() => {
     async function checkAuth() {
@@ -86,6 +87,21 @@ export default function KYCPage() {
     checkAuth()
   }, [router, locale])
 
+  async function handleLogout() {
+    if (isLoggingOut) return
+
+    setIsLoggingOut(true)
+
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch (error) {
+      console.error('❌ [KYC PAGE] Erro ao deslogar:', error)
+    } finally {
+      router.push(`/${locale}/login`)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -102,5 +118,21 @@ export default function KYCPage() {
     )
   }
 
-  return <ProteoKycEmbed />
+  return (
+    <div className="relative min-h-screen">
+      <div className="fixed right-4 top-4 z-50 flex items-center gap-2 rounded-full border border-muted-foreground/30 bg-white/70 px-3 py-1 text-xs text-muted-foreground shadow-sm backdrop-blur">
+        <span>Não quer continuar agora?</span>
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="inline-flex items-center gap-1 text-foreground transition hover:text-destructive disabled:opacity-60"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          {isLoggingOut ? 'Saindo...' : 'Sair'}
+        </button>
+      </div>
+      <ProteoKycEmbed />
+    </div>
+  )
 }

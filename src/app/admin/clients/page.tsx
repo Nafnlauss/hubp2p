@@ -142,10 +142,7 @@ export default async function ClientsPage() {
                               Aprovado
                             </Badge>
                           ) : client.kyc_status === 'pending' ? (
-                            <Badge
-                              variant="warning"
-                              className="shadow-sm"
-                            >
+                            <Badge variant="warning" className="shadow-sm">
                               Pendente
                             </Badge>
                           ) : client.kyc_status === 'rejected' ? (
@@ -171,11 +168,9 @@ export default async function ClientsPage() {
                         </TableCell>
                         <TableCell>
                           <p className="text-sm">
-                            {format(
-                              new Date(client.created_at),
-                              'dd/MM/yyyy',
-                              { locale: ptBR },
-                            )}
+                            {format(new Date(client.created_at), 'dd/MM/yyyy', {
+                              locale: ptBR,
+                            })}
                           </p>
                         </TableCell>
                         <TableCell className="text-right">

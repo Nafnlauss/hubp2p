@@ -139,7 +139,9 @@ export default async function AdminDashboard() {
                 <p className="mt-2 text-4xl font-bold">
                   {pendingTransactions || 0}
                 </p>
-                <p className="mt-1 text-xs opacity-75">aguardando confirmação</p>
+                <p className="mt-1 text-xs opacity-75">
+                  aguardando confirmação
+                </p>
               </div>
               <div className="rounded-full bg-white/20 p-4 backdrop-blur-sm">
                 <Clock className="h-8 w-8" />
@@ -214,9 +216,8 @@ export default async function AdminDashboard() {
               <TableBody>
                 {recentTransactions.map((transaction) => {
                   const status =
-                    statusMap[
-                      transaction.status as keyof typeof statusMap
-                    ] || statusMap.pending_payment
+                    statusMap[transaction.status as keyof typeof statusMap] ||
+                    statusMap.pending_payment
                   return (
                     <TableRow
                       key={transaction.id}
@@ -279,9 +280,7 @@ export default async function AdminDashboard() {
                           asChild
                           className="hover:bg-purple-100"
                         >
-                          <Link href={`/admin/transactions`}>
-                            Ver detalhes
-                          </Link>
+                          <Link href={`/admin/transactions`}>Ver detalhes</Link>
                         </Button>
                       </TableCell>
                     </TableRow>

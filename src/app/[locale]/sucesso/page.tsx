@@ -15,7 +15,7 @@ export default function SucessoPage() {
   useEffect(() => {
     const supabase = createClient()
 
-    async function verifyKyc() {
+    async function verifyKycWithPolling() {
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -25,21 +25,45 @@ export default function SucessoPage() {
         return
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('kyc_status')
-        .eq('id', user.id)
-        .single()
+      // Polling: tentar até 30 segundos para o webhook atualizar o banco
+      const maxAttempts = 60 // 60 tentativas
+      const delayBetweenAttempts = 500 // 500ms entre tentativas = 30 segundos total
 
-      if (profile?.kyc_status !== 'approved') {
-        router.replace(`/${locale}/kyc`)
-        return
+      console.log('🔍 [SUCESSO] Iniciando polling para verificar KYC...')
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        console.log(
+          `🔄 [SUCESSO] Tentativa ${attempt}/${maxAttempts} de verificar KYC...`,
+        )
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('kyc_status')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.kyc_status === 'approved') {
+          console.log('✅ [SUCESSO] KYC aprovado encontrado!')
+          setStatus('approved')
+          return
+        }
+
+        // Se ainda não foi atualizado, aguardar antes da próxima tentativa
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, delayBetweenAttempts),
+          )
+        }
       }
 
-      setStatus('approved')
+      // Se após todas as tentativas ainda não estiver aprovado, redirecionar para /kyc
+      console.log(
+        '❌ [SUCESSO] KYC não foi aprovado após polling. Redirecionando para /kyc',
+      )
+      router.replace(`/${locale}/kyc`)
     }
 
-    void verifyKyc()
+    void verifyKycWithPolling()
   }, [locale, router])
 
   const irParaDashboard = () => {

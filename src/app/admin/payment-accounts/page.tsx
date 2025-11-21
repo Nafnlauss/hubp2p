@@ -318,7 +318,7 @@ export default function PaymentAccountsPage() {
               </div>
               <Dialog open={isPixDialogOpen} onOpenChange={setIsPixDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-md">
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:from-purple-700 hover:to-pink-700">
                     <Plus className="mr-2 h-4 w-4" />
                     Adicionar PIX
                   </Button>
@@ -351,7 +351,11 @@ export default function PaymentAccountsPage() {
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" disabled={submitting} className="w-full">
+                      <Button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full"
+                      >
                         {submitting ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : null}
@@ -371,9 +375,7 @@ export default function PaymentAccountsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-purple-100">
-                      <TableHead className="font-semibold">
-                        Chave PIX
-                      </TableHead>
+                      <TableHead className="font-semibold">Chave PIX</TableHead>
                       <TableHead className="font-semibold">Status</TableHead>
                       <TableHead className="text-right font-semibold">
                         Ações
@@ -451,7 +453,7 @@ export default function PaymentAccountsPage() {
               </div>
               <Dialog open={isTedDialogOpen} onOpenChange={setIsTedDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-md">
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:from-purple-700 hover:to-pink-700">
                     <Plus className="mr-2 h-4 w-4" />
                     Adicionar Conta
                   </Button>
@@ -535,7 +537,11 @@ export default function PaymentAccountsPage() {
                           )}
                         />
                       </div>
-                      <Button type="submit" disabled={submitting} className="w-full">
+                      <Button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full"
+                      >
                         {submitting ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : null}

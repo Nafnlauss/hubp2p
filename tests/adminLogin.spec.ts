@@ -18,7 +18,7 @@ test('Admin login should redirect to admin dashboard', async ({ page }) => {
   await page.click('button[type="submit"]')
 
   // Aguardar redirecionamento para o painel admin
-  await page.waitForURL('**/admin', { timeout: 10000 })
+  await page.waitForURL('**/admin', { timeout: 10_000 })
 
   // Verificar que estamos no painel admin
   await expect(page).toHaveURL(/\/admin$/)

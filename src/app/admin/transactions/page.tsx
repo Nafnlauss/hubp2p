@@ -243,137 +243,137 @@ export default function TransactionsPage() {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-              <TableBody>
-                {transactions.map((transaction) => {
-                  const status =
-                    statusMap[transaction.status as keyof typeof statusMap] ||
-                    statusMap.pending_payment
-                  const isUpdating = updatingStatus === transaction.id
+                <TableBody>
+                  {transactions.map((transaction) => {
+                    const status =
+                      statusMap[transaction.status as keyof typeof statusMap] ||
+                      statusMap.pending_payment
+                    const isUpdating = updatingStatus === transaction.id
 
-                  return (
-                    <TableRow
-                      key={transaction.id}
-                      className="border-purple-50 transition-colors hover:bg-purple-50/50"
-                    >
-                      <TableCell className="font-mono font-semibold">
-                        #{transaction.transaction_number}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">
-                            {transaction.profiles?.full_name || 'N/A'}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {format(
-                          new Date(transaction.created_at),
-                          'dd/MM/yyyy HH:mm',
-                          { locale: ptBR },
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        }).format(transaction.amount_brl)}
-                      </TableCell>
-                      <TableCell>
-                        <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold uppercase text-purple-700">
-                          {transaction.payment_method}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium uppercase">
-                            {transaction.crypto_network}
-                          </p>
-                          <div className="flex items-center gap-1">
-                            <span className="max-w-[120px] truncate font-mono text-xs text-muted-foreground">
-                              {transaction.wallet_address}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() =>
-                                copyToClipboard(
-                                  transaction.wallet_address,
-                                  'Endereço',
-                                )
-                              }
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
+                    return (
+                      <TableRow
+                        key={transaction.id}
+                        className="border-purple-50 transition-colors hover:bg-purple-50/50"
+                      >
+                        <TableCell className="font-mono font-semibold">
+                          #{transaction.transaction_number}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">
+                              {transaction.profiles?.full_name || 'N/A'}
+                            </p>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            status.variant as
-                              | 'default'
-                              | 'secondary'
-                              | 'destructive'
-                              | 'outline'
-                          }
-                        >
-                          {status.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {transaction.status === 'pending_payment' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                handleStatusChange(
-                                  transaction.id,
-                                  'payment_received',
-                                )
-                              }
-                              disabled={isUpdating}
-                              className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-600 hover:to-emerald-600 hover:text-white"
-                            >
-                              {isUpdating ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              ) : (
-                                <CheckCircle2 className="mr-2 h-4 w-4" />
-                              )}
-                              Pagamento Recebido
-                            </Button>
+                        </TableCell>
+                        <TableCell>
+                          {format(
+                            new Date(transaction.created_at),
+                            'dd/MM/yyyy HH:mm',
+                            { locale: ptBR },
                           )}
-                          {transaction.status === 'payment_received' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                handleStatusChange(transaction.id, 'sent')
-                              }
-                              disabled={isUpdating}
-                              className="border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-600 hover:to-cyan-600 hover:text-white"
-                            >
-                              {isUpdating ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              ) : (
-                                <ArrowUpRight className="mr-2 h-4 w-4" />
-                              )}
-                              Cripto Enviada
-                            </Button>
-                          )}
-                          {transaction.status === 'sent' && (
-                            <Badge variant="success" className="px-3 py-1">
-                              Concluído
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell>
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          }).format(transaction.amount_brl)}
+                        </TableCell>
+                        <TableCell>
+                          <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold uppercase text-purple-700">
+                            {transaction.payment_method}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium uppercase">
+                              {transaction.crypto_network}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <span className="max-w-[120px] truncate font-mono text-xs text-muted-foreground">
+                                {transaction.wallet_address}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    transaction.wallet_address,
+                                    'Endereço',
+                                  )
+                                }
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              status.variant as
+                                | 'default'
+                                | 'secondary'
+                                | 'destructive'
+                                | 'outline'
+                            }
+                          >
+                            {status.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {transaction.status === 'pending_payment' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleStatusChange(
+                                    transaction.id,
+                                    'payment_received',
+                                  )
+                                }
+                                disabled={isUpdating}
+                                className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-600 hover:to-emerald-600 hover:text-white"
+                              >
+                                {isUpdating ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                                )}
+                                Pagamento Recebido
+                              </Button>
+                            )}
+                            {transaction.status === 'payment_received' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleStatusChange(transaction.id, 'sent')
+                                }
+                                disabled={isUpdating}
+                                className="border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-600 hover:to-cyan-600 hover:text-white"
+                              >
+                                {isUpdating ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <ArrowUpRight className="mr-2 h-4 w-4" />
+                                )}
+                                Cripto Enviada
+                              </Button>
+                            )}
+                            {transaction.status === 'sent' && (
+                              <Badge variant="success" className="px-3 py-1">
+                                Concluído
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             </div>
           ) : (
             <div className="flex h-32 items-center justify-center rounded-lg bg-purple-50/50">

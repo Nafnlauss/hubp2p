@@ -113,7 +113,7 @@ function formatCurrencyBRL(value: number): string {
 
 function parseCurrencyBRL(value: string): number {
   // Remove tudo exceto números e vírgula
-  const cleaned = value.replace(/[^\d,]/g, '')
+  const cleaned = value.replaceAll(/[^\d,]/g, '')
   // Substitui vírgula por ponto para conversão
   const normalized = cleaned.replace(',', '.')
   const parsed = Number.parseFloat(normalized)

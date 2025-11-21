@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Dashboard Redesign Test', () => {
-  test('should login and verify dashboard with new design', async ({ page }) => {
+  test('should login and verify dashboard with new design', async ({
+    page,
+  }) => {
     // Ir para a página de login
     await page.goto('http://localhost:3000/pt-BR/login')
 
@@ -15,7 +17,7 @@ test.describe('Dashboard Redesign Test', () => {
     console.log('🔐 Fazendo login...')
 
     // Aguardar redirecionamento para o dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 })
+    await page.waitForURL('**/dashboard', { timeout: 10_000 })
 
     console.log('✅ Redirecionado para o dashboard')
 
@@ -25,15 +27,21 @@ test.describe('Dashboard Redesign Test', () => {
     console.log('✅ Título do dashboard encontrado')
 
     // Verificar se os 3 cards estão visíveis
-    await expect(page.getByRole('heading', { name: 'Total Depositado' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Transações Pendentes' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Transações Concluídas' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Total Depositado' }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Transações Pendentes' }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Transações Concluídas' }),
+    ).toBeVisible()
     console.log('✅ Todos os 3 cards estão visíveis')
 
     // Verificar se o botão "Novo Depósito" está visível no topo
-    const novoDepositoButton = page.locator(
-      'button:has-text("Novo Depósito"), a:has-text("Novo Depósito")',
-    ).first()
+    const novoDepositoButton = page
+      .locator('button:has-text("Novo Depósito"), a:has-text("Novo Depósito")')
+      .first()
     await expect(novoDepositoButton).toBeVisible()
     console.log('✅ Botão "Novo Depósito" encontrado')
 
@@ -43,11 +51,7 @@ test.describe('Dashboard Redesign Test', () => {
 
     // Verificar navegação simplificada (3 itens apenas)
     // Dashboard, Novo Depósito, Minhas Transações
-    const navItems = [
-      'Dashboard',
-      'Novo Depósito',
-      'Minhas Transações',
-    ]
+    const navItems = ['Dashboard', 'Novo Depósito', 'Minhas Transações']
 
     for (const item of navItems) {
       const navLink = page.locator(`nav a:has-text("${item}")`).first()
@@ -61,7 +65,10 @@ test.describe('Dashboard Redesign Test', () => {
     console.log('✅ Item "Perfil" removido da navegação')
 
     // Verificar dropdown do usuário
-    const userButton = page.locator('button:has-text("Test User")').or(page.locator('button:has-text("TU")')).first()
+    const userButton = page
+      .locator('button:has-text("Test User")')
+      .or(page.locator('button:has-text("TU")'))
+      .first()
     await userButton.click()
     console.log('🔽 Dropdown do usuário aberto')
 
@@ -81,28 +88,37 @@ test.describe('Dashboard Redesign Test', () => {
     await page.waitForTimeout(500)
 
     // Testar navegação para "Novo Depósito"
-    const novoDepositoLink = page.locator('a[href*="/dashboard/deposit"]').first()
+    const novoDepositoLink = page
+      .locator('a[href*="/dashboard/deposit"]')
+      .first()
     await novoDepositoLink.click()
-    await page.waitForURL('**/dashboard/deposit', { timeout: 10000 })
+    await page.waitForURL('**/dashboard/deposit', { timeout: 10_000 })
     console.log('✅ Navegou para página de Novo Depósito')
 
     // Voltar para o dashboard
     const dashboardLink = page.locator('a[href$="/dashboard"]').first()
     await dashboardLink.click()
-    await page.waitForURL('**/dashboard', { timeout: 10000 })
+    await page.waitForURL('**/dashboard', { timeout: 10_000 })
     console.log('✅ Voltou para o dashboard')
 
     // Testar navegação para "Minhas Transações"
-    const transacoesLink = page.locator('a[href*="/dashboard/transactions"]').first()
+    const transacoesLink = page
+      .locator('a[href*="/dashboard/transactions"]')
+      .first()
     await transacoesLink.click()
-    await page.waitForURL('**/dashboard/transactions', { timeout: 10000 })
+    await page.waitForURL('**/dashboard/transactions', { timeout: 10_000 })
     console.log('✅ Navegou para página de Minhas Transações')
 
     // Tirar screenshot final do dashboard
     await page.goto('http://localhost:3000/pt-BR/dashboard')
     await page.waitForLoadState('networkidle')
-    await page.screenshot({ path: 'dashboard-redesign-final.png', fullPage: true })
-    console.log('📸 Screenshot do dashboard salvo em dashboard-redesign-final.png')
+    await page.screenshot({
+      path: 'dashboard-redesign-final.png',
+      fullPage: true,
+    })
+    console.log(
+      '📸 Screenshot do dashboard salvo em dashboard-redesign-final.png',
+    )
 
     console.log('\n🎉 Todos os testes do dashboard redesenhado passaram!')
   })

@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('Teste manual do admin - visualização', async ({ page }) => {
   console.log('🚀 Iniciando teste manual do admin...')
 
   // Aumentar timeout para poder visualizar
-  test.setTimeout(300000) // 5 minutos
+  test.setTimeout(300_000) // 5 minutos
 
   // 1. Acessar página de login
   console.log('📱 Acessando página de login...')
@@ -78,13 +78,15 @@ test('Teste manual do admin - visualização', async ({ page }) => {
 
     console.log('\n✅ Teste concluído com sucesso!')
     console.log('🎉 Todas as páginas foram navegadas corretamente!')
-
   } else {
     console.log('❌ Login falhou - ainda na página de login')
     console.log(`📍 URL após submit: ${currentURL}`)
 
     // Capturar mensagens de erro se houver
-    const errorMessage = await page.locator('.text-destructive').textContent().catch(() => null)
+    const errorMessage = await page
+      .locator('.text-destructive')
+      .textContent()
+      .catch(() => null)
     if (errorMessage) {
       console.log(`⚠️ Mensagem de erro: ${errorMessage}`)
     }
@@ -92,5 +94,5 @@ test('Teste manual do admin - visualização', async ({ page }) => {
 
   // Aguardar 30 segundos para você visualizar
   console.log('\n⏰ Aguardando 30 segundos para visualização...')
-  await page.waitForTimeout(30000)
+  await page.waitForTimeout(30_000)
 })

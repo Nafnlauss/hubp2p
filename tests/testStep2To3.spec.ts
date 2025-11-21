@@ -49,7 +49,7 @@ test('Teste específico: transição Step 2 para Step 3', async ({ page }) => {
   // Verificar se houve erros no console
   if (consoleErrors.length > 0) {
     console.log('❌ [TEST] ERROS ENCONTRADOS:')
-    consoleErrors.forEach((error) => console.log(`  - ${error}`))
+    for (const error of consoleErrors) console.log(`  - ${error}`)
     throw new Error(`Console errors: ${consoleErrors.join(', ')}`)
   }
 

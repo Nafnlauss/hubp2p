@@ -1,6 +1,8 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
-test('Verificar carregamento de clientes e transações no admin', async ({ page }) => {
+test('Verificar carregamento de clientes e transações no admin', async ({
+  page,
+}) => {
   // Login no admin
   await page.goto('http://localhost:3000/admin-login')
 
@@ -9,7 +11,7 @@ test('Verificar carregamento de clientes e transações no admin', async ({ page
   await page.click('button[type="submit"]')
 
   // Aguardar redirecionamento para dashboard
-  await page.waitForURL('**/admin', { timeout: 10000 })
+  await page.waitForURL('**/admin', { timeout: 10_000 })
 
   // Aguardar um pouco para garantir que o CSS carregou
   await page.waitForTimeout(2000)
@@ -19,7 +21,7 @@ test('Verificar carregamento de clientes e transações no admin', async ({ page
   // ==== TESTE PÁGINA DE CLIENTES ====
   console.log('\n📋 Navegando para página de clientes...')
   await page.click('a[href="/admin/clients"]')
-  await page.waitForURL('**/admin/clients', { timeout: 10000 })
+  await page.waitForURL('**/admin/clients', { timeout: 10_000 })
   await page.waitForTimeout(2000)
 
   // Verificar se a página carregou
@@ -48,7 +50,9 @@ test('Verificar carregamento de clientes e transações no admin', async ({ page
     const fullNameText = await fullName.textContent()
     const emailText = await email.textContent()
 
-    console.log(`👤 Primeiro cliente: ${fullNameText?.trim()} - ${emailText?.trim()}`)
+    console.log(
+      `👤 Primeiro cliente: ${fullNameText?.trim()} - ${emailText?.trim()}`,
+    )
   } else {
     console.log('⚠️ Nenhum cliente encontrado na tabela')
   }
@@ -56,14 +60,14 @@ test('Verificar carregamento de clientes e transações no admin', async ({ page
   // Screenshot da página de clientes
   await page.screenshot({
     path: 'admin-clients-data.png',
-    fullPage: true
+    fullPage: true,
   })
   console.log('📸 Screenshot salvo em admin-clients-data.png')
 
   // ==== TESTE PÁGINA DE TRANSAÇÕES ====
   console.log('\n💸 Navegando para página de transações...')
   await page.click('a[href="/admin/transactions"]')
-  await page.waitForURL('**/admin/transactions', { timeout: 10000 })
+  await page.waitForURL('**/admin/transactions', { timeout: 10_000 })
   await page.waitForTimeout(2000)
 
   // Verificar se a página carregou
@@ -95,7 +99,9 @@ test('Verificar carregamento de clientes e transações no admin', async ({ page
     const client = await clientName.textContent()
     const value = await amount.textContent()
 
-    console.log(`💰 Primeira transação: ${txNumber?.trim()} - Cliente: ${client?.trim()} - Valor: ${value?.trim()}`)
+    console.log(
+      `💰 Primeira transação: ${txNumber?.trim()} - Cliente: ${client?.trim()} - Valor: ${value?.trim()}`,
+    )
   } else {
     console.log('⚠️ Nenhuma transação encontrada na tabela')
   }
@@ -103,7 +109,7 @@ test('Verificar carregamento de clientes e transações no admin', async ({ page
   // Screenshot da página de transações
   await page.screenshot({
     path: 'admin-transactions-data.png',
-    fullPage: true
+    fullPage: true,
   })
   console.log('📸 Screenshot salvo em admin-transactions-data.png')
 

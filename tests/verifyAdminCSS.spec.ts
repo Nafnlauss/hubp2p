@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('Verificar se CSS do painel admin está carregando', async ({ page }) => {
   // Login no admin
@@ -9,7 +9,7 @@ test('Verificar se CSS do painel admin está carregando', async ({ page }) => {
   await page.click('button[type="submit"]')
 
   // Aguardar redirecionamento para dashboard
-  await page.waitForURL('**/admin', { timeout: 10000 })
+  await page.waitForURL('**/admin', { timeout: 10_000 })
 
   // Aguardar um pouco mais para garantir que o CSS carregou
   await page.waitForTimeout(2000)
@@ -25,7 +25,7 @@ test('Verificar se CSS do painel admin está carregando', async ({ page }) => {
   // Tirar screenshot para verificar visualmente
   await page.screenshot({
     path: 'admin-css-check.png',
-    fullPage: true
+    fullPage: true,
   })
 
   console.log('Screenshot salvo em admin-css-check.png')

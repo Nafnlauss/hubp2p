@@ -38,14 +38,14 @@ interface PageProps {
 }
 
 export default async function ClientDetailPage({ params }: PageProps) {
-  const resolvedParams = await params
+  const resolvedParameters = await params
   const supabase = await createClient()
 
   // Buscar dados do cliente
   const { data: client } = await supabase
     .from('clients')
     .select('*')
-    .eq('id', resolvedParams.id)
+    .eq('id', resolvedParameters.id)
     .single()
 
   if (!client) {
@@ -56,7 +56,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
   const { data: transactions } = await supabase
     .from('transactions')
     .select('*')
-    .eq('client_id', resolvedParams.id)
+    .eq('client_id', resolvedParameters.id)
     .order('created_at', { ascending: false })
 
   const statusMap = {
@@ -270,30 +270,28 @@ export default async function ClientDetailPage({ params }: PageProps) {
           <CardContent>
             {transactions && transactions.length > 0 ? (
               <div className="space-y-3">
-                {Array.from(
-                  new Set(
+                {[
+                  ...new Set(
                     transactions.map((t) => ({
                       network: t.crypto_network,
                       address: t.wallet_address,
                     })),
                   ),
-                ).map((wallet, index) => (
+                ].map((wallet, index) => (
                   <div key={index} className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground uppercase">
+                    <label className="text-xs font-medium uppercase text-muted-foreground">
                       {wallet.network}
                     </label>
                     <p className="break-all rounded-md bg-muted px-3 py-2 font-mono text-xs">
                       {wallet.address}
                     </p>
                     {index <
-                      Array.from(
-                        new Set(
-                          transactions.map((t) => ({
-                            network: t.crypto_network,
-                            address: t.wallet_address,
-                          })),
-                        ),
-                      ).length -
+                      new Set(
+                        transactions.map((t) => ({
+                          network: t.crypto_network,
+                          address: t.wallet_address,
+                        })),
+                      ).size -
                         1 && <Separator className="my-2" />}
                   </div>
                 ))}
@@ -331,9 +329,8 @@ export default async function ClientDetailPage({ params }: PageProps) {
               <TableBody>
                 {transactions.map((transaction) => {
                   const status =
-                    statusMap[
-                      transaction.status as keyof typeof statusMap
-                    ] || statusMap.pending_payment
+                    statusMap[transaction.status as keyof typeof statusMap] ||
+                    statusMap.pending_payment
                   return (
                     <TableRow key={transaction.id}>
                       <TableCell className="font-medium">

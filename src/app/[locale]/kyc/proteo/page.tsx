@@ -115,12 +115,39 @@ export default function ProteoKycEmbed() {
 
     init()
 
+    // Polling: verificar periodicamente se o KYC foi aprovado no banco
+    const pollInterval = setInterval(async () => {
+      console.log('🔄 [PROTEO] Verificando status do KYC no banco...')
+
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser()
+
+      if (!currentUser) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('kyc_status')
+        .eq('id', currentUser.id)
+        .single()
+
+      if (profile?.kyc_status === 'approved') {
+        console.log('✅ [PROTEO] KYC aprovado detectado via polling!')
+        setStatus('completed')
+        clearInterval(pollInterval)
+        // Redirecionar para página de sucesso
+        setTimeout(() => {
+          router.push(`/${locale}/sucesso`)
+        }, 1000)
+      }
+    }, 3000) // Verificar a cada 3 segundos
+
     // Listener para mensagens do iframe (caso Proteo envie postMessage)
     const handleMessage = (event: MessageEvent) => {
       // Verificar origem por segurança
       if (!event.origin.includes('proteo.com.br')) return
 
-      console.log('Mensagem recebida do Proteo:', event.data)
+      console.log('📨 [PROTEO] Mensagem recebida do iframe:', event.data)
 
       // Proteo pode enviar diferentes formatos de mensagem
       if (
@@ -128,7 +155,9 @@ export default function ProteoKycEmbed() {
         event.data?.event === 'kyc_completed' ||
         event.data?.type === 'success'
       ) {
+        console.log('✅ [PROTEO] Mensagem de conclusão recebida do iframe!')
         setStatus('completed')
+        clearInterval(pollInterval)
         // Aguardar webhook atualizar e redirecionar para página de sucesso
         setTimeout(() => {
           router.push(`/${locale}/sucesso`)
@@ -137,7 +166,10 @@ export default function ProteoKycEmbed() {
     }
 
     window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      clearInterval(pollInterval)
+    }
   }, [locale, router])
 
   if (loading || status === 'loading') {

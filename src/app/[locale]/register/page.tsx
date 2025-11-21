@@ -578,9 +578,9 @@ export default function RegisterPage() {
                                 handleCEPChange(formatted)
                               }}
                               maxLength={9}
-                              disabled={isLoading || isCEPLoading}
+                              disabled={isLoading || isLoadingCEP}
                             />
-                            {isCEPLoading && (
+                            {isLoadingCEP && (
                               <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-blue-500" />
                             )}
                           </div>
@@ -603,7 +603,7 @@ export default function RegisterPage() {
                             placeholder="Rua, Avenida..."
                             className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
                             {...field}
-                            disabled={isLoading || isCEPLoading}
+                            disabled={isLoading || isLoadingCEP}
                           />
                         </FormControl>
                         <FormMessage />
@@ -625,7 +625,7 @@ export default function RegisterPage() {
                               placeholder="123"
                               className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
                               {...field}
-                              disabled={isLoading || isCEPLoading}
+                              disabled={isLoading || isLoadingCEP}
                             />
                           </FormControl>
                           <FormMessage />
@@ -646,7 +646,7 @@ export default function RegisterPage() {
                               placeholder="Apto, Bloco... (opcional)"
                               className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
                               {...field}
-                              disabled={isLoading || isCEPLoading}
+                              disabled={isLoading || isLoadingCEP}
                             />
                           </FormControl>
                           <FormMessage />
@@ -669,7 +669,7 @@ export default function RegisterPage() {
                               placeholder="Cidade"
                               className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
                               {...field}
-                              disabled={isLoading || isCEPLoading}
+                              disabled={isLoading || isLoadingCEP}
                             />
                           </FormControl>
                           <FormMessage />
@@ -695,7 +695,7 @@ export default function RegisterPage() {
                                 field.onChange(value)
                               }}
                               maxLength={2}
-                              disabled={isLoading || isCEPLoading}
+                              disabled={isLoading || isLoadingCEP}
                             />
                           </FormControl>
                           <FormMessage />

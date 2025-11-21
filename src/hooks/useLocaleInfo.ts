@@ -1,19 +1,20 @@
-'use client';
+'use client'
 
-import { useLocale } from 'next-intl';
-import { Locale } from '@/lib/types';
+import { useLocale } from 'next-intl'
+
 import {
-  isRTL,
   getTextDirection,
-  localeNames,
+  isRTL,
   localeFlags,
-} from '@/lib/i18n-utils';
+  localeNames,
+} from '@/lib/i18n-utils'
+import { Locale } from '@/lib/types'
 
 /**
  * Hook customizado para obter informações sobre a locale atual
  */
 export function useLocaleInfo() {
-  const locale = useLocale() as Locale;
+  const locale = useLocale() as Locale
 
   return {
     locale,
@@ -21,5 +22,5 @@ export function useLocaleInfo() {
     flag: localeFlags[locale],
     isRTL: isRTL(locale),
     direction: getTextDirection(locale),
-  };
+  }
 }

@@ -1,13 +1,24 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  Copy,
+  Loader2,
+  QrCode,
+  Wallet,
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
+import { useEffect, useState } from 'react'
+
 import {
   completeFirstDeposit,
   getOnboardingStatus,
-} from "@/app/actions/onboarding";
-import { Button } from "@/components/ui/button";
+} from '@/app/actions/onboarding'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -15,95 +26,87 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Loader2,
-  CheckCircle2,
-  Wallet,
-  Copy,
-  QrCode,
-  ArrowRight,
-  AlertCircle,
-} from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
 
 export default function DepositPage() {
-  const t = useTranslations();
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const locale = useLocale();
+  const t = useTranslations()
+  const router = useRouter()
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true)
+  const locale = useLocale()
 
   // Exemplo de chave PIX (em produção viria do backend)
-  const pixKey = "pix@plataformap2p.com.br";
+  const pixKey = 'pix@plataformap2p.com.br'
 
   useEffect(() => {
     async function checkStatus() {
-      const status = await getOnboardingStatus();
+      const status = await getOnboardingStatus()
 
       if (!status) {
-        router.push(`/${locale}/login`);
-        return;
+        router.push(`/${locale}/login`)
+        return
       }
 
       // Se não completou KYC ainda, voltar
       if (!status.kycCompleted) {
-        router.push(`/${locale}/kyc`);
-        return;
+        router.push(`/${locale}/kyc`)
+        return
       }
 
       // Se já completou depósito, ir para próximo passo
       if (status.depositCompleted) {
-        router.push(`/${locale}${status.nextStep.startsWith('/') ? '' : '/'}${status.nextStep.replace(/^\/(pt-BR|en|es)/, '')}`);
+        router.push(
+          `/${locale}${status.nextStep.startsWith('/') ? '' : '/'}${status.nextStep.replace(/^\/(pt-BR|en|es)/, '')}`,
+        )
       }
 
-      setIsCheckingStatus(false);
+      setIsCheckingStatus(false)
     }
 
-    checkStatus();
-  }, [router]);
+    checkStatus()
+  }, [router])
 
   function copyPixKey() {
-    navigator.clipboard.writeText(pixKey);
+    navigator.clipboard.writeText(pixKey)
     toast({
-      title: "Copiado!",
-      description: "Chave PIX copiada para área de transferência",
-    });
+      title: 'Copiado!',
+      description: 'Chave PIX copiada para área de transferência',
+    })
   }
 
   async function handleConfirmDeposit() {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      const result = await completeFirstDeposit();
+      const result = await completeFirstDeposit()
 
       if (result.success) {
         toast({
-          title: "Depósito Confirmado!",
-          description: "Seu primeiro depósito foi registrado com sucesso.",
-        });
+          title: 'Depósito Confirmado!',
+          description: 'Seu primeiro depósito foi registrado com sucesso.',
+        })
 
         setTimeout(() => {
-          router.push(`/${locale}/wallet`);
-        }, 1000);
+          router.push(`/${locale}/wallet`)
+        }, 1000)
       } else {
         toast({
-          title: "Erro",
-          description: result.error || "Erro ao confirmar depósito",
-          variant: "destructive",
-        });
-        setIsLoading(false);
+          title: 'Erro',
+          description: result.error || 'Erro ao confirmar depósito',
+          variant: 'destructive',
+        })
+        setIsLoading(false)
       }
     } catch (error) {
-      console.error("Erro:", error);
+      console.error('Erro:', error)
       toast({
-        title: "Erro",
-        description: "Erro ao confirmar depósito. Tente novamente.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
+        title: 'Erro',
+        description: 'Erro ao confirmar depósito. Tente novamente.',
+        variant: 'destructive',
+      })
+      setIsLoading(false)
     }
   }
 
@@ -112,7 +115,7 @@ export default function DepositPage() {
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    );
+    )
   }
 
   return (
@@ -137,13 +140,13 @@ export default function DepositPage() {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <strong>MVP - Versão Simplificada:</strong> Por enquanto, apenas
-              confirme que fez o depósito clicando no botão abaixo. O sistema
-              de depósito real será implementado em breve.
+              confirme que fez o depósito clicando no botão abaixo. O sistema de
+              depósito real será implementado em breve.
             </AlertDescription>
           </Alert>
 
           <div className="space-y-4">
-            <div className="rounded-lg border p-4 space-y-4">
+            <div className="space-y-4 rounded-lg border p-4">
               <div className="flex items-center gap-2">
                 <QrCode className="h-5 w-5 text-muted-foreground" />
                 <h3 className="font-medium">Depósito via PIX</h3>
@@ -157,19 +160,15 @@ export default function DepositPage() {
                   <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">
                     {pixKey}
                   </code>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={copyPixKey}
-                  >
+                  <Button variant="outline" size="sm" onClick={copyPixKey}>
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
 
-              <div className="rounded bg-muted/50 p-3 space-y-2">
+              <div className="space-y-2 rounded bg-muted/50 p-3">
                 <h4 className="text-sm font-medium">Instruções:</h4>
-                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <ol className="list-inside list-decimal space-y-1 text-sm text-muted-foreground">
                   <li>Copie a chave PIX acima</li>
                   <li>Abra o app do seu banco</li>
                   <li>Selecione PIX → Pagar</li>
@@ -180,11 +179,11 @@ export default function DepositPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border p-4 bg-blue-50 dark:bg-blue-950/20">
-              <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+            <div className="rounded-lg border bg-blue-50 p-4 dark:bg-blue-950/20">
+              <h3 className="mb-2 font-medium text-blue-900 dark:text-blue-100">
                 Depósito Mínimo
               </h3>
-              <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+              <p className="mb-3 text-sm text-blue-800 dark:text-blue-200">
                 O valor mínimo para primeiro depósito é R$ 50,00. O saldo ficará
                 disponível em até 5 minutos após a confirmação do PIX.
               </p>
@@ -218,11 +217,11 @@ export default function DepositPage() {
             )}
           </Button>
 
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-center text-xs text-muted-foreground">
             Após a confirmação, você poderá configurar suas carteiras cripto
           </p>
         </CardFooter>
       </Card>
     </div>
-  );
+  )
 }

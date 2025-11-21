@@ -1,86 +1,95 @@
-import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  Shield,
+  Upload,
+  XCircle,
+} from 'lucide-react'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  CheckCircle2,
-  Clock,
-  XCircle,
-  AlertTriangle,
-  Shield,
-  Upload,
-  ExternalLink,
-} from "lucide-react";
-import Link from "next/link";
+} from '@/components/ui/card'
+import { createClient } from '@/lib/supabase/server'
 
 interface KYCPageProps {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string }>
 }
 
 export default async function KYCPage({ params }: KYCPageProps) {
-  const { locale } = await params;
-  const t = await getTranslations();
-  const supabase = await createClient();
+  const { locale } = await params
+  const t = await getTranslations()
+  const supabase = await createClient()
 
   // Verificar autenticação
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/${locale}/login`);
+    redirect(`/${locale}/login`)
   }
 
   // Buscar perfil do usuário
   const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
 
   // Buscar verificação KYC mais recente
   const { data: kycVerification } = await supabase
-    .from("kyc_verifications")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
+    .from('kyc_verifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .single()
 
   const getStatusIcon = (status: string | undefined) => {
     switch (status) {
-      case "approved":
-        return <CheckCircle2 className="h-8 w-8 text-green-500" />;
-      case "in_review":
-        return <Clock className="h-8 w-8 text-yellow-500" />;
-      case "rejected":
-        return <XCircle className="h-8 w-8 text-red-500" />;
-      default:
-        return <AlertTriangle className="h-8 w-8 text-gray-500" />;
+      case 'approved': {
+        return <CheckCircle2 className="h-8 w-8 text-green-500" />
+      }
+      case 'in_review': {
+        return <Clock className="h-8 w-8 text-yellow-500" />
+      }
+      case 'rejected': {
+        return <XCircle className="h-8 w-8 text-red-500" />
+      }
+      default: {
+        return <AlertTriangle className="h-8 w-8 text-gray-500" />
+      }
     }
-  };
+  }
 
   const getStatusBadge = (status: string | undefined) => {
     switch (status) {
-      case "approved":
-        return <Badge className="bg-green-500">Aprovado</Badge>;
-      case "in_review":
-        return <Badge className="bg-yellow-500">Em Análise</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-500">Rejeitado</Badge>;
-      default:
-        return <Badge variant="outline">Pendente</Badge>;
+      case 'approved': {
+        return <Badge className="bg-green-500">Aprovado</Badge>
+      }
+      case 'in_review': {
+        return <Badge className="bg-yellow-500">Em Análise</Badge>
+      }
+      case 'rejected': {
+        return <Badge className="bg-red-500">Rejeitado</Badge>
+      }
+      default: {
+        return <Badge variant="outline">Pendente</Badge>
+      }
     }
-  };
+  }
 
   return (
     <div className="container mx-auto max-w-4xl space-y-8 p-4 py-8">
@@ -107,9 +116,9 @@ export default async function KYCPage({ params }: KYCPageProps) {
               <CardDescription>
                 {kycVerification
                   ? `Última atualização: ${new Date(
-                      kycVerification.updated_at || ""
-                    ).toLocaleDateString("pt-BR")}`
-                  : "Nenhuma verificação iniciada"}
+                      kycVerification.updated_at || '',
+                    ).toLocaleDateString('pt-BR')}`
+                  : 'Nenhuma verificação iniciada'}
               </CardDescription>
             </div>
             {getStatusBadge(kycVerification?.status)}
@@ -120,26 +129,26 @@ export default async function KYCPage({ params }: KYCPageProps) {
             {getStatusIcon(kycVerification?.status)}
             <div className="flex-1 space-y-1">
               <p className="font-medium">
-                {kycVerification?.status === "approved" &&
-                  "Sua identidade foi verificada com sucesso!"}
-                {kycVerification?.status === "in_review" &&
-                  "Sua documentação está sendo analisada"}
-                {kycVerification?.status === "rejected" &&
-                  "Verificação rejeitada"}
+                {kycVerification?.status === 'approved' &&
+                  'Sua identidade foi verificada com sucesso!'}
+                {kycVerification?.status === 'in_review' &&
+                  'Sua documentação está sendo analisada'}
+                {kycVerification?.status === 'rejected' &&
+                  'Verificação rejeitada'}
                 {!kycVerification?.status &&
-                  "Você ainda não iniciou a verificação"}
+                  'Você ainda não iniciou a verificação'}
               </p>
               <p className="text-sm text-muted-foreground">
-                {kycVerification?.status === "approved" &&
+                {kycVerification?.status === 'approved' &&
                   `Verificado em ${new Date(
-                    kycVerification.verified_at || ""
-                  ).toLocaleDateString("pt-BR")}`}
-                {kycVerification?.status === "in_review" &&
-                  "Aguarde a análise da nossa equipe"}
-                {kycVerification?.status === "rejected" &&
+                    kycVerification.verified_at || '',
+                  ).toLocaleDateString('pt-BR')}`}
+                {kycVerification?.status === 'in_review' &&
+                  'Aguarde a análise da nossa equipe'}
+                {kycVerification?.status === 'rejected' &&
                   kycVerification.rejection_reason}
                 {!kycVerification?.status &&
-                  "Clique no botão abaixo para começar"}
+                  'Clique no botão abaixo para começar'}
               </p>
             </div>
           </div>
@@ -178,14 +187,14 @@ export default async function KYCPage({ params }: KYCPageProps) {
             </Alert>
           )}
 
-          {kycVerification?.status === "rejected" && (
+          {kycVerification?.status === 'rejected' && (
             <Alert variant="destructive">
               <XCircle className="h-4 w-4" />
               <AlertDescription>
-                Sua verificação foi rejeitada.{" "}
+                Sua verificação foi rejeitada.{' '}
                 {kycVerification.rejection_reason && (
                   <>Motivo: {kycVerification.rejection_reason}.</>
-                )}{" "}
+                )}{' '}
                 Entre em contato com o suporte para mais informações.
               </AlertDescription>
             </Alert>
@@ -237,15 +246,16 @@ export default async function KYCPage({ params }: KYCPageProps) {
 
       {/* Action Buttons */}
       <div className="flex gap-4">
-        {(!kycVerification || kycVerification.status === "rejected") && (
-          process.env.NEXT_PUBLIC_PROTEO_KYC_URL ? (
+        {(!kycVerification || kycVerification.status === 'rejected') &&
+          (process.env.NEXT_PUBLIC_PROTEO_KYC_URL ? (
             <Button size="lg" className="flex-1" asChild>
               <a
                 href={process.env.NEXT_PUBLIC_PROTEO_KYC_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <ExternalLink className="mr-2 h-4 w-4" /> Iniciar verificação via Proteo
+                <ExternalLink className="mr-2 h-4 w-4" /> Iniciar verificação
+                via Proteo
               </a>
             </Button>
           ) : (
@@ -253,11 +263,12 @@ export default async function KYCPage({ params }: KYCPageProps) {
               <Upload className="mr-2 h-4 w-4" />
               Enviar Documentos (Em breve)
             </Button>
-          )
-        )}
+          ))}
 
         <Button size="lg" variant="outline" asChild>
-          <Link href={`/${locale}/kyc/proteo`}>Abrir verificação embutida (iframe)</Link>
+          <Link href={`/${locale}/kyc/proteo`}>
+            Abrir verificação embutida (iframe)
+          </Link>
         </Button>
         <Button variant="outline" size="lg" asChild>
           <Link href={`/${locale}/dashboard`}>Voltar ao Dashboard</Link>
@@ -275,5 +286,5 @@ export default async function KYCPage({ params }: KYCPageProps) {
         </AlertDescription>
       </Alert>
     </div>
-  );
+  )
 }

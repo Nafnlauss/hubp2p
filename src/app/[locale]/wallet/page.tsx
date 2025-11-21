@@ -1,17 +1,25 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  ArrowRight,
+  Bitcoin,
+  CheckCircle2,
+  Loader2,
+  Wallet as WalletIcon,
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+
 import {
   addWallet,
-  getOnboardingStatus,
   completeOnboarding,
-} from "@/app/actions/onboarding";
-import { Button } from "@/components/ui/button";
+  getOnboardingStatus,
+} from '@/app/actions/onboarding'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -19,7 +27,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -28,82 +36,75 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Loader2,
-  CheckCircle2,
-  Wallet as WalletIcon,
-  ArrowRight,
-  Bitcoin,
-} from "lucide-react";
+} from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
 
 const walletSchema = z.object({
-  currency: z.string().min(1, "Selecione uma criptomoeda"),
-  address: z.string().min(10, "Endereço inválido"),
+  currency: z.string().min(1, 'Selecione uma criptomoeda'),
+  address: z.string().min(10, 'Endereço inválido'),
   label: z.string().optional(),
-});
+})
 
-type WalletFormData = z.infer<typeof walletSchema>;
+type WalletFormData = z.infer<typeof walletSchema>
 
 export default function WalletPage() {
-  const t = useTranslations();
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const locale = useLocale();
+  const t = useTranslations()
+  const router = useRouter()
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true)
+  const locale = useLocale()
 
   const form = useForm<WalletFormData>({
     resolver: zodResolver(walletSchema),
     defaultValues: {
-      currency: "",
-      address: "",
-      label: "",
+      currency: '',
+      address: '',
+      label: '',
     },
-  });
+  })
 
   useEffect(() => {
     async function checkStatus() {
-      const status = await getOnboardingStatus();
+      const status = await getOnboardingStatus()
 
       if (!status) {
-        router.push(`/${locale}/login`);
-        return;
+        router.push(`/${locale}/login`)
+        return
       }
 
       // Se não completou etapas anteriores, voltar
       if (!status.kycCompleted) {
-        router.push(`/${locale}/kyc`);
-        return;
+        router.push(`/${locale}/kyc`)
+        return
       }
 
       if (!status.depositCompleted) {
-        router.push(`/${locale}/deposit`);
-        return;
+        router.push(`/${locale}/deposit`)
+        return
       }
 
       // Se já configurou carteira, ir para dashboard
       if (status.walletConfigured) {
-        router.push(`/${locale}/dashboard`);
+        router.push(`/${locale}/dashboard`)
       }
 
-      setIsCheckingStatus(false);
+      setIsCheckingStatus(false)
     }
 
-    checkStatus();
-  }, [router]);
+    checkStatus()
+  }, [router])
 
   async function onSubmit(data: WalletFormData) {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
       const result = await addWallet({
@@ -111,36 +112,36 @@ export default function WalletPage() {
         address: data.address,
         label: data.label,
         isPrimary: true,
-      });
+      })
 
       if (result.success) {
         // Completar onboarding
-        await completeOnboarding();
+        await completeOnboarding()
 
         toast({
-          title: "Carteira Configurada!",
-          description: "Sua carteira foi adicionada com sucesso.",
-        });
+          title: 'Carteira Configurada!',
+          description: 'Sua carteira foi adicionada com sucesso.',
+        })
 
         setTimeout(() => {
-          router.push(`/${locale}/dashboard`);
-        }, 1000);
+          router.push(`/${locale}/dashboard`)
+        }, 1000)
       } else {
         toast({
-          title: "Erro",
-          description: result.error || "Erro ao adicionar carteira",
-          variant: "destructive",
-        });
-        setIsLoading(false);
+          title: 'Erro',
+          description: result.error || 'Erro ao adicionar carteira',
+          variant: 'destructive',
+        })
+        setIsLoading(false)
       }
     } catch (error) {
-      console.error("Erro:", error);
+      console.error('Erro:', error)
       toast({
-        title: "Erro",
-        description: "Erro ao adicionar carteira. Tente novamente.",
-        variant: "destructive",
-      });
-      setIsLoading(false);
+        title: 'Erro',
+        description: 'Erro ao adicionar carteira. Tente novamente.',
+        variant: 'destructive',
+      })
+      setIsLoading(false)
     }
   }
 
@@ -149,7 +150,7 @@ export default function WalletPage() {
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    );
+    )
   }
 
   return (
@@ -172,9 +173,9 @@ export default function WalletPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-6">
-              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 p-4">
+              <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950/20">
                 <div className="flex items-start gap-3">
-                  <Bitcoin className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <Bitcoin className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
                   <div className="space-y-1">
                     <h3 className="font-medium text-blue-900 dark:text-blue-100">
                       Configure sua primeira carteira
@@ -258,8 +259,8 @@ export default function WalletPage() {
                 )}
               />
 
-              <div className="rounded-lg border p-4 bg-muted/50">
-                <h3 className="font-medium mb-2">Dica de Segurança</h3>
+              <div className="rounded-lg border bg-muted/50 p-4">
+                <h3 className="mb-2 font-medium">Dica de Segurança</h3>
                 <p className="text-sm text-muted-foreground">
                   Verifique sempre o endereço da carteira antes de confirmar.
                   Transações de criptomoedas são irreversíveis. Recomendamos
@@ -288,7 +289,7 @@ export default function WalletPage() {
                 )}
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground">
+              <p className="text-center text-xs text-muted-foreground">
                 Após concluir, você será direcionado para o dashboard
               </p>
             </CardFooter>
@@ -296,5 +297,5 @@ export default function WalletPage() {
         </Form>
       </Card>
     </div>
-  );
+  )
 }

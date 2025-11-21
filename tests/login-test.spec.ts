@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('login flow test', async ({ page }) => {
   console.log('🔵 [TEST] Iniciando teste de login...')
@@ -13,7 +13,10 @@ test('login flow test', async ({ page }) => {
   console.log('✅ [TEST] Credenciais preenchidas')
 
   // Tirar screenshot antes do login
-  await page.screenshot({ path: 'tests/screenshots/before-login.png', fullPage: true })
+  await page.screenshot({
+    path: 'tests/screenshots/before-login.png',
+    fullPage: true,
+  })
 
   // Clicar no botão de login
   await page.click('button[type="submit"]')
@@ -23,7 +26,10 @@ test('login flow test', async ({ page }) => {
   await page.waitForTimeout(3000)
 
   // Tirar screenshot após login
-  await page.screenshot({ path: 'tests/screenshots/after-login.png', fullPage: true })
+  await page.screenshot({
+    path: 'tests/screenshots/after-login.png',
+    fullPage: true,
+  })
 
   // Verificar URL atual
   const currentUrl = page.url()
@@ -38,7 +44,7 @@ test('login flow test', async ({ page }) => {
     isInDashboard,
     isInKyc,
     isStillInLogin,
-    url: currentUrl
+    url: currentUrl,
   })
 
   // O teste passa se não ficou em loop no login

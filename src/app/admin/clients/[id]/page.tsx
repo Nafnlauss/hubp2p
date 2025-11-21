@@ -1,0 +1,388 @@
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Mail,
+  MapPin,
+  Phone,
+  User,
+  Wallet,
+  XCircle,
+} from 'lucide-react'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { createClient } from '@/lib/supabase/server'
+
+interface PageProps {
+  params: Promise<{ id: string }>
+}
+
+export default async function ClientDetailPage({ params }: PageProps) {
+  const resolvedParams = await params
+  const supabase = await createClient()
+
+  // Buscar dados do cliente
+  const { data: client } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('id', resolvedParams.id)
+    .single()
+
+  if (!client) {
+    notFound()
+  }
+
+  // Buscar transações do cliente
+  const { data: transactions } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('client_id', resolvedParams.id)
+    .order('created_at', { ascending: false })
+
+  const statusMap = {
+    pending_payment: { label: 'Aguardando Pagamento', variant: 'warning' },
+    payment_received: { label: 'Pagamento Recebido', variant: 'secondary' },
+    converting: { label: 'Convertendo', variant: 'default' },
+    sent: { label: 'Enviado', variant: 'success' },
+    cancelled: { label: 'Cancelado', variant: 'destructive' },
+    expired: { label: 'Expirado', variant: 'destructive' },
+  } as const
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <Button variant="ghost" asChild className="mb-4">
+          <Link href="/admin/clients">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar para clientes
+          </Link>
+        </Button>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {client.full_name}
+            </h1>
+            <p className="text-muted-foreground">{client.email}</p>
+          </div>
+          {client.kyc_status === 'approved' ? (
+            <Badge
+              variant="default"
+              className="flex items-center gap-1 bg-green-600"
+            >
+              <CheckCircle2 className="h-3 w-3" />
+              KYC Aprovado
+            </Badge>
+          ) : client.kyc_status === 'pending' ? (
+            <Badge variant="warning">KYC Pendente</Badge>
+          ) : client.kyc_status === 'rejected' ? (
+            <Badge variant="destructive" className="flex items-center gap-1">
+              <XCircle className="h-3 w-3" />
+              KYC Rejeitado
+            </Badge>
+          ) : (
+            <Badge variant="secondary">KYC Não Iniciado</Badge>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Informações Pessoais */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Informações Pessoais
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Nome Completo
+                </label>
+                <p className="text-sm">{client.full_name}</p>
+              </div>
+              <Separator />
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  CPF
+                </label>
+                <p className="font-mono text-sm">{client.cpf}</p>
+              </div>
+              <Separator />
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Data de Nascimento
+                </label>
+                <p className="text-sm">
+                  {client.birth_date
+                    ? format(new Date(client.birth_date), 'dd/MM/yyyy', {
+                        locale: ptBR,
+                      })
+                    : '-'}
+                </p>
+              </div>
+              <Separator />
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Cadastrado em
+                </label>
+                <p className="text-sm">
+                  {format(
+                    new Date(client.created_at),
+                    "dd/MM/yyyy 'às' HH:mm",
+                    { locale: ptBR },
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Contato */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Contato
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  E-mail
+                </label>
+                <p className="text-sm">{client.email}</p>
+              </div>
+              <Separator />
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Telefone
+                </label>
+                <p className="text-sm">{client.phone || '-'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Endereço */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Endereço
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Logradouro
+                </label>
+                <p className="text-sm">{client.address_street || '-'}</p>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Número
+                  </label>
+                  <p className="text-sm">{client.address_number || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Complemento
+                  </label>
+                  <p className="text-sm">{client.address_complement || '-'}</p>
+                </div>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Bairro
+                  </label>
+                  <p className="text-sm">
+                    {client.address_neighborhood || '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    CEP
+                  </label>
+                  <p className="font-mono text-sm">
+                    {client.address_zip_code || '-'}
+                  </p>
+                </div>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Cidade
+                  </label>
+                  <p className="text-sm">{client.address_city || '-'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Estado
+                  </label>
+                  <p className="text-sm">{client.address_state || '-'}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Carteiras */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5" />
+              Carteiras de Criptomoedas
+            </CardTitle>
+            <CardDescription>
+              Endereços de carteira cadastrados pelo cliente
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {transactions && transactions.length > 0 ? (
+              <div className="space-y-3">
+                {Array.from(
+                  new Set(
+                    transactions.map((t) => ({
+                      network: t.crypto_network,
+                      address: t.wallet_address,
+                    })),
+                  ),
+                ).map((wallet, index) => (
+                  <div key={index} className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground uppercase">
+                      {wallet.network}
+                    </label>
+                    <p className="break-all rounded-md bg-muted px-3 py-2 font-mono text-xs">
+                      {wallet.address}
+                    </p>
+                    {index <
+                      Array.from(
+                        new Set(
+                          transactions.map((t) => ({
+                            network: t.crypto_network,
+                            address: t.wallet_address,
+                          })),
+                        ),
+                      ).length -
+                        1 && <Separator className="my-2" />}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma carteira cadastrada
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Histórico de Transações */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Histórico de Transações</CardTitle>
+          <CardDescription>
+            Todas as transações realizadas por este cliente
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {transactions && transactions.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Transação</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Método</TableHead>
+                  <TableHead>Rede</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.map((transaction) => {
+                  const status =
+                    statusMap[
+                      transaction.status as keyof typeof statusMap
+                    ] || statusMap.pending_payment
+                  return (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">
+                        #{transaction.transaction_number}
+                      </TableCell>
+                      <TableCell>
+                        {format(
+                          new Date(transaction.created_at),
+                          'dd/MM/yyyy HH:mm',
+                          { locale: ptBR },
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(transaction.amount_brl)}
+                      </TableCell>
+                      <TableCell className="uppercase">
+                        {transaction.payment_method}
+                      </TableCell>
+                      <TableCell className="uppercase">
+                        {transaction.crypto_network}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            status.variant as
+                              | 'default'
+                              | 'secondary'
+                              | 'destructive'
+                              | 'outline'
+                          }
+                        >
+                          {status.label}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="flex h-32 items-center justify-center text-muted-foreground">
+              Nenhuma transação encontrada
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

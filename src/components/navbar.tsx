@@ -1,72 +1,93 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useUser } from '@/hooks/use-user';
-import { createClient } from '@/lib/supabase/client';
+import { Menu, X } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { useUser } from '@/hooks/use-user'
+import { createClient } from '@/lib/supabase/client'
 
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const router = useRouter();
-  const { user, loading } = useUser();
-  const supabase = createClient();
+  const [isOpen, setIsOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+  const router = useRouter()
+  const { user, loading } = useUser()
+  const supabase = createClient()
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    setIsMounted(true)
+  }, [])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
-    setIsOpen(false);
-  };
+    await supabase.auth.signOut()
+    router.push('/')
+    setIsOpen(false)
+  }
 
   const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
+    setIsOpen(!isOpen)
+  }
 
   if (!isMounted) {
-    return null;
+    return null
   }
 
   return (
-    <nav className="fixed top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className="fixed top-0 z-50 w-full border-b border-gray-200 bg-white shadow-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-blue-600">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-xl font-bold text-blue-600"
+          >
             <span className="text-2xl">₿</span>
             P2P Crypto
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-gray-700 hover:text-blue-600 transition">
+          <div className="hidden items-center gap-8 md:flex">
+            <Link
+              href="/"
+              className="text-gray-700 transition hover:text-blue-600"
+            >
               Home
             </Link>
-            <Link href="/how-it-works" className="text-gray-700 hover:text-blue-600 transition">
+            <Link
+              href="/how-it-works"
+              className="text-gray-700 transition hover:text-blue-600"
+            >
               Como Funciona
             </Link>
 
             {!loading && !user ? (
               <>
-                <Link href="/login" className="text-gray-700 hover:text-blue-600 transition">
+                <Link
+                  href="/login"
+                  className="text-gray-700 transition hover:text-blue-600"
+                >
                   Login
                 </Link>
                 <Link href="/register">
-                  <Button className="bg-blue-600 hover:bg-blue-700">Registrar</Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    Registrar
+                  </Button>
                 </Link>
               </>
             ) : (
               <>
-                <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 transition">
+                <Link
+                  href="/dashboard"
+                  className="text-gray-700 transition hover:text-blue-600"
+                >
                   Dashboard
                 </Link>
-                <Link href="/profile" className="text-gray-700 hover:text-blue-600 transition">
+                <Link
+                  href="/profile"
+                  className="text-gray-700 transition hover:text-blue-600"
+                >
                   Perfil
                 </Link>
                 <Button
@@ -82,7 +103,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2"
+            className="p-2 md:hidden"
             onClick={toggleMenu}
             aria-label="Toggle menu"
           >
@@ -92,18 +113,18 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
-            <div className="px-4 py-4 space-y-4">
+          <div className="border-t border-gray-200 bg-white md:hidden">
+            <div className="space-y-4 px-4 py-4">
               <Link
                 href="/"
-                className="block text-gray-700 hover:text-blue-600 transition py-2"
+                className="block py-2 text-gray-700 transition hover:text-blue-600"
                 onClick={() => setIsOpen(false)}
               >
                 Home
               </Link>
               <Link
                 href="/how-it-works"
-                className="block text-gray-700 hover:text-blue-600 transition py-2"
+                className="block py-2 text-gray-700 transition hover:text-blue-600"
                 onClick={() => setIsOpen(false)}
               >
                 Como Funciona
@@ -113,7 +134,7 @@ export function Navbar() {
                 <>
                   <Link
                     href="/login"
-                    className="block text-gray-700 hover:text-blue-600 transition py-2"
+                    className="block py-2 text-gray-700 transition hover:text-blue-600"
                     onClick={() => setIsOpen(false)}
                   >
                     Login
@@ -128,14 +149,14 @@ export function Navbar() {
                 <>
                   <Link
                     href="/dashboard"
-                    className="block text-gray-700 hover:text-blue-600 transition py-2"
+                    className="block py-2 text-gray-700 transition hover:text-blue-600"
                     onClick={() => setIsOpen(false)}
                   >
                     Dashboard
                   </Link>
                   <Link
                     href="/profile"
-                    className="block text-gray-700 hover:text-blue-600 transition py-2"
+                    className="block py-2 text-gray-700 transition hover:text-blue-600"
                     onClick={() => setIsOpen(false)}
                   >
                     Perfil
@@ -154,5 +175,5 @@ export function Navbar() {
         )}
       </div>
     </nav>
-  );
+  )
 }

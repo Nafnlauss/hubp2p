@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
 /**
  * Configuração do Playwright para testes E2E
@@ -12,7 +12,7 @@ export default defineConfig({
 
   /* Expect timeout */
   expect: {
-    timeout: 10000,
+    timeout: 10_000,
   },
 
   /* Executar testes em paralelo */
@@ -28,10 +28,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 1,
 
   /* Reporter */
-  reporter: [
-    ['html'],
-    ['list'],
-  ],
+  reporter: [['html'], ['list']],
 
   /* Configuração compartilhada entre todos os projetos */
   use: {
@@ -48,10 +45,10 @@ export default defineConfig({
     video: 'retain-on-failure',
 
     /* Timeout para ações */
-    actionTimeout: 15000,
+    actionTimeout: 15_000,
 
     /* Timeout para navegação */
-    navigationTimeout: 30000,
+    navigationTimeout: 30_000,
   },
 
   /* Configurar projetos para diferentes browsers */
@@ -71,4 +68,4 @@ export default defineConfig({
   //   url: 'http://localhost:3000',
   //   reuseExistingServer: !process.env.CI,
   // },
-});
+})

@@ -1,7 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getDashboardStats } from "@/app/actions/admin"
-import { createClient } from "@/lib/supabase/server"
-import { Badge } from "@/components/ui/badge"
+import { CheckCircle, Clock, DollarSign, TrendingUp } from 'lucide-react'
+import Link from 'next/link'
+
+import { getDashboardStats } from '@/app/actions/admin'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -9,9 +11,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { DollarSign, TrendingUp, Clock, CheckCircle } from "lucide-react"
-import Link from "next/link"
+} from '@/components/ui/table'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function AdminDashboard({
   params,
@@ -24,44 +25,59 @@ export default async function AdminDashboard({
 
   // Buscar transações pendentes
   const { data: pendingTransactions } = await supabase
-    .from("transactions")
-    .select(`
+    .from('transactions')
+    .select(
+      `
       *,
       profiles (
         full_name,
         cpf
       )
-    `)
-    .in("status", ["pending_payment", "payment_received", "converting"])
-    .order("created_at", { ascending: false })
+    `,
+    )
+    .in('status', ['pending_payment', 'payment_received', 'converting'])
+    .order('created_at', { ascending: false })
     .limit(10)
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
     }).format(value)
   }
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "success" | "warning" }> = {
-      pending_payment: { label: "Aguardando Pagamento", variant: "warning" },
-      payment_received: { label: "Pagamento Recebido", variant: "secondary" },
-      converting: { label: "Convertendo", variant: "default" },
-      sent: { label: "Enviado", variant: "success" },
-      cancelled: { label: "Cancelado", variant: "destructive" },
-      expired: { label: "Expirado", variant: "destructive" },
+    const statusMap: Record<
+      string,
+      {
+        label: string
+        variant: 'default' | 'secondary' | 'destructive' | 'success' | 'warning'
+      }
+    > = {
+      pending_payment: { label: 'Aguardando Pagamento', variant: 'warning' },
+      payment_received: { label: 'Pagamento Recebido', variant: 'secondary' },
+      converting: { label: 'Convertendo', variant: 'default' },
+      sent: { label: 'Enviado', variant: 'success' },
+      cancelled: { label: 'Cancelado', variant: 'destructive' },
+      expired: { label: 'Expirado', variant: 'destructive' },
     }
 
-    const status_info = statusMap[status] || { label: status, variant: "default" as const }
+    const status_info = statusMap[status] || {
+      label: status,
+      variant: 'default' as const,
+    }
     return <Badge variant={status_info.variant}>{status_info.label}</Badge>
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
-        <p className="mt-2 text-gray-600">Visão geral das operações da plataforma</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Dashboard Administrativo
+        </h1>
+        <p className="mt-2 text-gray-600">
+          Visão geral das operações da plataforma
+        </p>
       </div>
 
       {/* Cards de Estatísticas */}
@@ -86,7 +102,9 @@ export default async function AdminDashboard({
             <DollarSign className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.todayTotal)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(stats.todayTotal)}
+            </div>
           </CardContent>
         </Card>
 
@@ -98,7 +116,9 @@ export default async function AdminDashboard({
             <Clock className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.pendingCount}</div>
+            <div className="text-2xl font-bold text-orange-600">
+              {stats.pendingCount}
+            </div>
           </CardContent>
         </Card>
 
@@ -110,7 +130,9 @@ export default async function AdminDashboard({
             <CheckCircle className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.approvedCount}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.approvedCount}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -128,15 +150,19 @@ export default async function AdminDashboard({
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <div
-                      className="h-8 bg-blue-600 rounded"
+                      className="h-8 rounded bg-blue-600"
                       style={{
-                        width: `${(item.count / Math.max(...stats.chartData.map(d => d.count))) * 100}%`,
-                        minWidth: "2rem"
+                        width: `${(item.count / Math.max(...stats.chartData.map((d) => d.count))) * 100}%`,
+                        minWidth: '2rem',
                       }}
                     />
-                    <span className="text-sm font-medium">{item.count} transações</span>
+                    <span className="text-sm font-medium">
+                      {item.count} transações
+                    </span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{formatCurrency(item.value)}</div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {formatCurrency(item.value)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -179,19 +205,25 @@ export default async function AdminDashboard({
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{transaction.profiles.full_name}</div>
-                        <div className="text-xs text-gray-500">{transaction.profiles.cpf}</div>
+                        <div className="font-medium">
+                          {transaction.profiles.full_name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {transaction.profiles.cpf}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="font-semibold">
                       {formatCurrency(transaction.amount_brl)}
                     </TableCell>
-                    <TableCell className="uppercase text-sm">
+                    <TableCell className="text-sm uppercase">
                       {transaction.payment_method}
                     </TableCell>
                     <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                     <TableCell className="text-sm text-gray-600">
-                      {new Date(transaction.created_at).toLocaleDateString("pt-BR")}
+                      {new Date(transaction.created_at).toLocaleDateString(
+                        'pt-BR',
+                      )}
                     </TableCell>
                     <TableCell>
                       <Link
@@ -205,7 +237,10 @@ export default async function AdminDashboard({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                  <TableCell
+                    colSpan={7}
+                    className="py-8 text-center text-gray-500"
+                  >
                     Nenhuma transação pendente
                   </TableCell>
                 </TableRow>

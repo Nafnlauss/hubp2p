@@ -62,13 +62,19 @@ export async function updateSession(request: NextRequest) {
   )
   console.log('🔍 [MIDDLEWARE] Path:', pathname)
 
+  // Skip ALL authentication logic for admin routes (they use admin_session cookie)
+  if (pathname.startsWith('/admin')) {
+    console.log('✅ [MIDDLEWARE] Rota admin - pulando verificação Supabase')
+    return supabaseResponse
+  }
+
   // List of protected routes that require authentication
   // NOTE: /kyc removed from here because auth verification is done in the page component
+  // NOTE: /admin removed from here because it uses separate admin authentication (admin_session cookie)
   const protectedRoutes = [
     '/dashboard',
     '/deposit',
     '/wallet',
-    '/admin',
     '/transactions',
     '/offers',
     '/settings',

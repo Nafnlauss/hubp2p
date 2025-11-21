@@ -1,48 +1,49 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { differenceInSeconds, format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  Copy,
+  QrCode,
+} from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  ArrowLeft,
-  Copy,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  QrCode,
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/utils/format';
-import { format, differenceInSeconds } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
+import { createClient } from '@/lib/supabase/client'
+import { formatCurrency } from '@/lib/utils/format'
 
 interface Transaction {
-  id: string;
-  transaction_number: string;
-  payment_method: 'pix' | 'ted';
-  amount_brl: number;
-  crypto_network: string;
-  wallet_address: string;
-  status: string;
-  expires_at: string;
-  created_at: string;
-  pix_key: string | null;
-  pix_qr_code: string | null;
-  bank_name: string | null;
-  bank_account_holder: string | null;
-  bank_account_number: string | null;
-  bank_account_agency: string | null;
+  id: string
+  transaction_number: string
+  payment_method: 'pix' | 'ted'
+  amount_brl: number
+  crypto_network: string
+  wallet_address: string
+  status: string
+  expires_at: string
+  created_at: string
+  pix_key: string | null
+  pix_qr_code: string | null
+  bank_name: string | null
+  bank_account_holder: string | null
+  bank_account_number: string | null
+  bank_account_agency: string | null
 }
 
 const statusMap = {
@@ -56,7 +57,11 @@ const statusMap = {
     variant: 'secondary' as const,
     icon: CheckCircle2,
   },
-  converting: { label: 'Convertendo', variant: 'default' as const, icon: Clock },
+  converting: {
+    label: 'Convertendo',
+    variant: 'default' as const,
+    icon: Clock,
+  },
   sent: {
     label: 'Enviado',
     variant: 'success' as const,
@@ -72,27 +77,27 @@ const statusMap = {
     variant: 'destructive' as const,
     icon: AlertCircle,
   },
-};
+}
 
 export default function PaymentPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { toast } = useToast();
-  const supabase = createClient();
+  const parameters = useParams()
+  const router = useRouter()
+  const { toast } = useToast()
+  const supabase = createClient()
 
-  const [transaction, setTransaction] = useState<Transaction | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [confirming, setConfirming] = useState(false);
+  const [transaction, setTransaction] = useState<Transaction | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [timeRemaining, setTimeRemaining] = useState<number>(0)
+  const [confirming, setConfirming] = useState(false)
 
   useEffect(() => {
-    loadTransaction();
+    loadTransaction()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.id]);
+  }, [parameters.id])
 
   // Realtime subscription
   useEffect(() => {
-    if (!transaction) return;
+    if (!transaction) return
 
     const channel = supabase
       .channel(`transaction-${transaction.id}`)
@@ -105,94 +110,93 @@ export default function PaymentPage() {
           filter: `id=eq.${transaction.id}`,
         },
         (payload) => {
-          setTransaction(payload.new as Transaction);
-        }
+          setTransaction(payload.new as Transaction)
+        },
       )
-      .subscribe();
+      .subscribe()
 
     return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [transaction, supabase]);
+      supabase.removeChannel(channel)
+    }
+  }, [transaction, supabase])
 
   // Countdown timer
   useEffect(() => {
-    if (!transaction || transaction.status !== 'pending_payment') return;
+    if (!transaction || transaction.status !== 'pending_payment') return
 
     const interval = setInterval(() => {
-      const now = new Date();
-      const expiresAt = new Date(transaction.expires_at);
-      const seconds = differenceInSeconds(expiresAt, now);
+      const now = new Date()
+      const expiresAt = new Date(transaction.expires_at)
+      const seconds = differenceInSeconds(expiresAt, now)
 
       if (seconds <= 0) {
-        setTimeRemaining(0);
-        clearInterval(interval);
+        setTimeRemaining(0)
+        clearInterval(interval)
       } else {
-        setTimeRemaining(seconds);
+        setTimeRemaining(seconds)
       }
-    }, 1000);
+    }, 1000)
 
-    return () => clearInterval(interval);
-  }, [transaction]);
+    return () => clearInterval(interval)
+  }, [transaction])
 
   const loadTransaction = async () => {
     try {
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .eq('id', params.id)
-        .single();
+        .eq('id', parameters.id)
+        .single()
 
-      if (error) throw error;
+      if (error) throw error
 
-      setTransaction(data);
+      setTransaction(data)
     } catch (error) {
-      console.error('Erro ao carregar transação:', error);
+      console.error('Erro ao carregar transação:', error)
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar os dados da transação.',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text)
     toast({
       title: 'Copiado!',
       description: `${label} copiado para a área de transferência.`,
-    });
-  };
+    })
+  }
 
   const confirmPayment = async () => {
-    setConfirming(true);
+    setConfirming(true)
     try {
       // Aqui você notificaria o admin via Pushover ou outro sistema
       // Por enquanto, apenas mostramos uma mensagem
       toast({
         title: 'Confirmação enviada!',
-        description:
-          'Nossa equipe foi notificada e verificará seu pagamento em breve.',
-      });
+        description: 'O pagamento será validado em breve.',
+      })
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('Erro:', error)
       toast({
         title: 'Erro',
         description: 'Não foi possível enviar a confirmação.',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setConfirming(false);
+      setConfirming(false)
     }
-  };
+  }
 
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+    const minutes = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
 
   if (loading) {
     return (
@@ -209,7 +213,7 @@ export default function PaymentPage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   if (!transaction) {
@@ -227,11 +231,11 @@ export default function PaymentPage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
-  const statusInfo = statusMap[transaction.status as keyof typeof statusMap];
-  const StatusIcon = statusInfo.icon;
+  const statusInfo = statusMap[transaction.status as keyof typeof statusMap]
+  const StatusIcon = statusInfo.icon
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -250,7 +254,10 @@ export default function PaymentPage() {
               Transação #{transaction.transaction_number}
             </p>
           </div>
-          <Badge variant={statusInfo.variant} className="flex items-center gap-1">
+          <Badge
+            variant={statusInfo.variant}
+            className="flex items-center gap-1"
+          >
             <StatusIcon className="h-3 w-3" />
             {statusInfo.label}
           </Badge>
@@ -262,8 +269,8 @@ export default function PaymentPage() {
         <Card className="border-warning bg-warning/5">
           <CardContent className="flex items-center justify-between pt-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warning/20">
-                <Clock className="h-6 w-6 text-warning" />
+              <div className="bg-warning/20 flex h-12 w-12 items-center justify-center rounded-full">
+                <Clock className="text-warning h-6 w-6" />
               </div>
               <div>
                 <p className="font-semibold">Tempo restante para pagamento</p>
@@ -309,7 +316,7 @@ export default function PaymentPage() {
                 {transaction.pix_qr_code && (
                   <div className="flex flex-col items-center gap-4">
                     <div className="rounded-lg border-2 border-border p-4">
-                      <div className="h-64 w-64 bg-muted flex items-center justify-center">
+                      <div className="flex h-64 w-64 items-center justify-center bg-muted">
                         {/* Aqui você colocaria a imagem do QR Code */}
                         <QrCode className="h-32 w-32 text-muted-foreground" />
                       </div>
@@ -335,7 +342,7 @@ export default function PaymentPage() {
                       onClick={() =>
                         copyToClipboard(
                           transaction.pix_key || 'pix@example.com',
-                          'Chave PIX'
+                          'Chave PIX',
                         )
                       }
                     >
@@ -349,7 +356,10 @@ export default function PaymentPage() {
                   <label className="text-sm font-medium">Valor</label>
                   <div className="flex gap-2">
                     <div className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm">
-                      {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(transaction.amount_brl)}
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(transaction.amount_brl)}
                     </div>
                     <Button
                       variant="outline"
@@ -357,7 +367,7 @@ export default function PaymentPage() {
                       onClick={() =>
                         copyToClipboard(
                           transaction.amount_brl.toFixed(2),
-                          'Valor'
+                          'Valor',
                         )
                       }
                     >
@@ -398,7 +408,10 @@ export default function PaymentPage() {
                 <div>
                   <label className="text-sm font-medium">Valor</label>
                   <p className="mt-1 rounded-md border bg-muted px-3 py-2 text-sm">
-                    {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(transaction.amount_brl)}
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(transaction.amount_brl)}
                   </p>
                 </div>
               </div>
@@ -433,7 +446,10 @@ export default function PaymentPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Valor em BRL:</span>
               <span className="font-medium">
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(transaction.amount_brl)}
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                }).format(transaction.amount_brl)}
               </span>
             </div>
             <Separator />
@@ -445,7 +461,9 @@ export default function PaymentPage() {
             </div>
             <Separator />
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Endereço da Carteira:</span>
+              <span className="text-muted-foreground">
+                Endereço da Carteira:
+              </span>
               <div className="flex items-center gap-2">
                 <span className="max-w-[200px] truncate font-mono text-xs">
                   {transaction.wallet_address}
@@ -469,7 +487,7 @@ export default function PaymentPage() {
                 {format(
                   new Date(transaction.created_at),
                   "dd/MM/yyyy 'às' HH:mm",
-                  { locale: ptBR }
+                  { locale: ptBR },
                 )}
               </span>
             </div>
@@ -482,7 +500,7 @@ export default function PaymentPage() {
                     {format(
                       new Date(transaction.expires_at),
                       "dd/MM/yyyy 'às' HH:mm",
-                      { locale: ptBR }
+                      { locale: ptBR },
                     )}
                   </span>
                 </div>
@@ -492,5 +510,5 @@ export default function PaymentPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

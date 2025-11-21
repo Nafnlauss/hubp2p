@@ -1,14 +1,15 @@
-"use server";
+'use server'
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { redirect } from 'next/navigation'
+
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 
 export interface OnboardingStatus {
-  kycCompleted: boolean;
-  depositCompleted: boolean;
-  walletConfigured: boolean;
-  onboardingCompleted: boolean;
-  nextStep: string;
+  kycCompleted: boolean
+  depositCompleted: boolean
+  walletConfigured: boolean
+  onboardingCompleted: boolean
+  nextStep: string
 }
 
 /**
@@ -16,40 +17,42 @@ export interface OnboardingStatus {
  */
 export async function getOnboardingStatus(): Promise<OnboardingStatus | null> {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      return null;
+      return null
     }
 
     const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("kyc_status, first_deposit_completed, wallet_configured, onboarding_completed")
-      .eq("id", user.id)
-      .single();
+      .from('profiles')
+      .select(
+        'kyc_status, first_deposit_completed, wallet_configured, onboarding_completed',
+      )
+      .eq('id', user.id)
+      .single()
 
     if (profileError || !profile) {
-      return null;
+      return null
     }
 
-    const kycCompleted = profile.kyc_status === "approved";
-    const depositCompleted = profile.first_deposit_completed === true;
-    const walletConfigured = profile.wallet_configured === true;
-    const onboardingCompleted = profile.onboarding_completed === true;
+    const kycCompleted = profile.kyc_status === 'approved'
+    const depositCompleted = profile.first_deposit_completed === true
+    const walletConfigured = profile.wallet_configured === true
+    const onboardingCompleted = profile.onboarding_completed === true
 
-    let nextStep = "/dashboard";
+    let nextStep = '/dashboard'
 
     if (!kycCompleted) {
-      nextStep = "/kyc";
+      nextStep = '/kyc'
     } else if (!depositCompleted) {
-      nextStep = "/deposit";
+      nextStep = '/deposit'
     } else if (!walletConfigured) {
-      nextStep = "/wallet";
+      nextStep = '/wallet'
     }
 
     return {
@@ -58,10 +61,10 @@ export async function getOnboardingStatus(): Promise<OnboardingStatus | null> {
       walletConfigured,
       onboardingCompleted,
       nextStep,
-    };
+    }
   } catch (error) {
-    console.error("Erro ao obter status do onboarding:", error);
-    return null;
+    console.error('Erro ao obter status do onboarding:', error)
+    return null
   }
 }
 
@@ -70,36 +73,36 @@ export async function getOnboardingStatus(): Promise<OnboardingStatus | null> {
  */
 export async function completeKYC() {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      return { success: false, error: "Usuário não autenticado" };
+      return { success: false, error: 'Usuário não autenticado' }
     }
 
-    const supabaseAdmin = await createAdminClient();
+    const supabaseAdmin = await createAdminClient()
 
     const { error } = await supabaseAdmin
-      .from("profiles")
+      .from('profiles')
       .update({
-        kyc_status: "approved",
+        kyc_status: 'approved',
         kyc_completed_at: new Date().toISOString(),
       })
-      .eq("id", user.id);
+      .eq('id', user.id)
 
     if (error) {
-      console.error("Erro ao completar KYC:", error);
-      return { success: false, error: error.message };
+      console.error('Erro ao completar KYC:', error)
+      return { success: false, error: error.message }
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Erro ao completar KYC:", error);
-    return { success: false, error: "Erro ao completar KYC" };
+    console.error('Erro ao completar KYC:', error)
+    return { success: false, error: 'Erro ao completar KYC' }
   }
 }
 
@@ -108,36 +111,36 @@ export async function completeKYC() {
  */
 export async function completeFirstDeposit() {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      return { success: false, error: "Usuário não autenticado" };
+      return { success: false, error: 'Usuário não autenticado' }
     }
 
-    const supabaseAdmin = await createAdminClient();
+    const supabaseAdmin = await createAdminClient()
 
     const { error } = await supabaseAdmin
-      .from("profiles")
+      .from('profiles')
       .update({
         first_deposit_completed: true,
         first_deposit_at: new Date().toISOString(),
       })
-      .eq("id", user.id);
+      .eq('id', user.id)
 
     if (error) {
-      console.error("Erro ao completar depósito:", error);
-      return { success: false, error: error.message };
+      console.error('Erro ao completar depósito:', error)
+      return { success: false, error: error.message }
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Erro ao completar depósito:", error);
-    return { success: false, error: "Erro ao completar depósito" };
+    console.error('Erro ao completar depósito:', error)
+    return { success: false, error: 'Erro ao completar depósito' }
   }
 }
 
@@ -145,60 +148,58 @@ export async function completeFirstDeposit() {
  * Adicionar carteira
  */
 export async function addWallet(data: {
-  currency: string;
-  address: string;
-  network?: string;
-  label?: string;
-  isPrimary?: boolean;
+  currency: string
+  address: string
+  network?: string
+  label?: string
+  isPrimary?: boolean
 }) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      return { success: false, error: "Usuário não autenticado" };
+      return { success: false, error: 'Usuário não autenticado' }
     }
 
-    const supabaseAdmin = await createAdminClient();
+    const supabaseAdmin = await createAdminClient()
 
     // Inserir carteira
-    const { error: walletError } = await supabaseAdmin
-      .from("wallets")
-      .insert({
-        user_id: user.id,
-        currency: data.currency,
-        address: data.address,
-        network: data.network,
-        label: data.label,
-        is_primary: data.isPrimary || false,
-      });
+    const { error: walletError } = await supabaseAdmin.from('wallets').insert({
+      user_id: user.id,
+      currency: data.currency,
+      address: data.address,
+      network: data.network,
+      label: data.label,
+      is_primary: data.isPrimary || false,
+    })
 
     if (walletError) {
-      console.error("Erro ao adicionar carteira:", walletError);
-      return { success: false, error: walletError.message };
+      console.error('Erro ao adicionar carteira:', walletError)
+      return { success: false, error: walletError.message }
     }
 
     // Atualizar status de carteira configurada
     const { error: profileError } = await supabaseAdmin
-      .from("profiles")
+      .from('profiles')
       .update({
         wallet_configured: true,
         wallet_configured_at: new Date().toISOString(),
       })
-      .eq("id", user.id);
+      .eq('id', user.id)
 
     if (profileError) {
-      console.error("Erro ao atualizar perfil:", profileError);
+      console.error('Erro ao atualizar perfil:', profileError)
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Erro ao adicionar carteira:", error);
-    return { success: false, error: "Erro ao adicionar carteira" };
+    console.error('Erro ao adicionar carteira:', error)
+    return { success: false, error: 'Erro ao adicionar carteira' }
   }
 }
 
@@ -207,35 +208,35 @@ export async function addWallet(data: {
  */
 export async function completeOnboarding() {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      return { success: false, error: "Usuário não autenticado" };
+      return { success: false, error: 'Usuário não autenticado' }
     }
 
-    const supabaseAdmin = await createAdminClient();
+    const supabaseAdmin = await createAdminClient()
 
     const { error } = await supabaseAdmin
-      .from("profiles")
+      .from('profiles')
       .update({
         onboarding_completed: true,
         onboarding_completed_at: new Date().toISOString(),
       })
-      .eq("id", user.id);
+      .eq('id', user.id)
 
     if (error) {
-      console.error("Erro ao completar onboarding:", error);
-      return { success: false, error: error.message };
+      console.error('Erro ao completar onboarding:', error)
+      return { success: false, error: error.message }
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Erro ao completar onboarding:", error);
-    return { success: false, error: "Erro ao completar onboarding" };
+    console.error('Erro ao completar onboarding:', error)
+    return { success: false, error: 'Erro ao completar onboarding' }
   }
 }

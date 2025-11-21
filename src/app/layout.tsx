@@ -1,15 +1,17 @@
-import type { Metadata } from 'next';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, getLocale } from 'next-intl/server';
-import { ReactNode } from 'react';
+import './globals.css'
+
+import type { Metadata } from 'next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
+import { ReactNode } from 'react'
 
 export const metadata: Metadata = {
   title: 'Aplicação P2P',
   description: 'Plataforma de transações peer-to-peer',
-};
+}
 
 interface RootLayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 /**
@@ -19,18 +21,18 @@ interface RootLayoutProps {
  * para Client Components em toda a aplicação
  */
 export default async function RootLayout({ children }: RootLayoutProps) {
-  const locale = await getLocale();
-  const messages = await getMessages();
+  const locale = await getLocale()
+  const messages = await getMessages()
 
   return (
-    <html lang={locale} dir={getTextDirection(locale)}>
+    <html lang={locale} dir={getTextDirection(locale)} suppressHydrationWarning>
       <body>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
       </body>
     </html>
-  );
+  )
 }
 
 /**
@@ -38,6 +40,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
  * Útil para suporte futuro a árabe, hebraico, etc.
  */
 function getTextDirection(locale: string): 'ltr' | 'rtl' {
-  const rtlLocales = ['ar', 'he', 'ur', 'fa'];
-  return rtlLocales.some(rtl => locale.startsWith(rtl)) ? 'rtl' : 'ltr';
+  const rtlLocales = ['ar', 'he', 'ur', 'fa']
+  return rtlLocales.some((rtl) => locale.startsWith(rtl)) ? 'rtl' : 'ltr'
 }

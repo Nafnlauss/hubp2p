@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { useLocale } from 'next-intl';
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation'
+import { useLocale } from 'next-intl'
+import { useTransition } from 'react'
 
-type Locale = 'pt-BR' | 'en' | 'es';
+type Locale = 'pt-BR' | 'en' | 'es'
 
 const LANGUAGES: Record<Locale, { name: string; flag: string }> = {
   'pt-BR': { name: 'Português (Brasil)', flag: '🇧🇷' },
-  'en': { name: 'English', flag: '🇺🇸' },
-  'es': { name: 'Español', flag: '🇪🇸' },
-};
+  en: { name: 'English', flag: '🇺🇸' },
+  es: { name: 'Español', flag: '🇪🇸' },
+}
 
 /**
  * Componente para alternar entre linguagens
@@ -22,12 +22,12 @@ const LANGUAGES: Record<Locale, { name: string; flag: string }> = {
  * Neste exemplo sem roteamento por locale, seria implementado via cookie
  */
 export function LanguageSwitcher() {
-  const locale = useLocale() as Locale;
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const locale = useLocale() as Locale
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   const handleLanguageChange = (newLocale: Locale) => {
-    if (newLocale === locale) return;
+    if (newLocale === locale) return
 
     startTransition(() => {
       // Em produção com roteamento por locale:
@@ -37,29 +37,29 @@ export function LanguageSwitcher() {
       // Para este exemplo, salvamos a preferência em localStorage
       // (em produção, use cookies para SSR)
       if (typeof window !== 'undefined') {
-        localStorage.setItem('preferredLocale', newLocale);
-        window.location.reload();
+        localStorage.setItem('preferredLocale', newLocale)
+        window.location.reload()
       }
-    });
-  };
+    })
+  }
 
   return (
-    <div className="flex gap-2 mb-6 flex-wrap">
+    <div className="mb-6 flex flex-wrap gap-2">
       {Object.entries(LANGUAGES).map(([code, { name, flag }]) => (
         <button
           key={code}
           onClick={() => handleLanguageChange(code as Locale)}
           disabled={isPending}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
+          className={`rounded-lg px-4 py-2 font-medium transition-all ${
             locale === code
               ? 'bg-indigo-600 text-white shadow-lg'
-              : 'bg-white text-gray-700 border border-gray-300 hover:border-indigo-600'
-          } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+              : 'border border-gray-300 bg-white text-gray-700 hover:border-indigo-600'
+          } ${isPending ? 'cursor-not-allowed opacity-50' : ''}`}
         >
           <span className="mr-2">{flag}</span>
           {name}
         </button>
       ))}
     </div>
-  );
+  )
 }

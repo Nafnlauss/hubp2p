@@ -1,17 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { createClient } from "@/lib/supabase/client"
-import { updateTransactionStatus, sendNotification } from "@/app/actions/admin"
-import { ArrowLeft, CheckCircle, Clock, Send, X } from "lucide-react"
-import Link from "next/link"
+import { ArrowLeft, CheckCircle, Clock, Send, X } from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+
+import { sendNotification, updateTransactionStatus } from '@/app/actions/admin'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { createClient } from '@/lib/supabase/client'
 
 interface TransactionDetail {
   id: string
@@ -43,15 +44,15 @@ interface TransactionDetail {
 }
 
 export default function TransactionDetailPage() {
-  const params = useParams()
+  const parameters = useParams()
   const router = useRouter()
-  const locale = params.locale as string
-  const transactionId = params.id as string
+  const locale = parameters.locale as string
+  const transactionId = parameters.id as string
 
   const [transaction, setTransaction] = useState<TransactionDetail | null>(null)
   const [loading, setLoading] = useState(true)
-  const [txHash, setTxHash] = useState("")
-  const [notes, setNotes] = useState("")
+  const [txHash, setTxHash] = useState('')
+  const [notes, setNotes] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
@@ -62,22 +63,24 @@ export default function TransactionDetailPage() {
     const supabase = createClient()
 
     const { data, error } = await supabase
-      .from("transactions")
-      .select(`
+      .from('transactions')
+      .select(
+        `
         *,
         profiles (
           full_name,
           cpf,
           phone
         )
-      `)
-      .eq("id", transactionId)
+      `,
+      )
+      .eq('id', transactionId)
       .single()
 
     if (!error && data) {
       const transactionData = data as any
       setTransaction(transactionData)
-      setNotes(transactionData.admin_notes || "")
+      setNotes(transactionData.admin_notes || '')
     }
 
     setLoading(false)
@@ -85,7 +88,7 @@ export default function TransactionDetailPage() {
 
   async function handleStatusUpdate(newStatus: string, requiresTxHash = false) {
     if (requiresTxHash && !txHash.trim()) {
-      alert("Por favor, insira o TX Hash")
+      alert('Por favor, insira o TX Hash')
       return
     }
 
@@ -108,23 +111,32 @@ export default function TransactionDetailPage() {
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
     }).format(value)
   }
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "success" | "warning" }> = {
-      pending_payment: { label: "Aguardando Pagamento", variant: "warning" },
-      payment_received: { label: "Pagamento Recebido", variant: "secondary" },
-      converting: { label: "Convertendo", variant: "default" },
-      sent: { label: "Enviado", variant: "success" },
-      cancelled: { label: "Cancelado", variant: "destructive" },
-      expired: { label: "Expirado", variant: "destructive" },
+    const statusMap: Record<
+      string,
+      {
+        label: string
+        variant: 'default' | 'secondary' | 'destructive' | 'success' | 'warning'
+      }
+    > = {
+      pending_payment: { label: 'Aguardando Pagamento', variant: 'warning' },
+      payment_received: { label: 'Pagamento Recebido', variant: 'secondary' },
+      converting: { label: 'Convertendo', variant: 'default' },
+      sent: { label: 'Enviado', variant: 'success' },
+      cancelled: { label: 'Cancelado', variant: 'destructive' },
+      expired: { label: 'Expirado', variant: 'destructive' },
     }
 
-    const status_info = statusMap[status] || { label: status, variant: "default" as const }
+    const status_info = statusMap[status] || {
+      label: status,
+      variant: 'default' as const,
+    }
     return <Badge variant={status_info.variant}>{status_info.label}</Badge>
   }
 
@@ -151,7 +163,7 @@ export default function TransactionDetailPage() {
         <div className="flex items-center gap-4">
           <Link href={`/${locale}/admin/transactions`}>
             <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Button>
           </Link>
@@ -160,12 +172,13 @@ export default function TransactionDetailPage() {
               Transação #{transaction.transaction_number}
             </h1>
             <p className="mt-1 text-gray-600">
-              Criada em {new Date(transaction.created_at).toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
+              Criada em{' '}
+              {new Date(transaction.created_at).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
               })}
             </p>
           </div>
@@ -173,9 +186,9 @@ export default function TransactionDetailPage() {
         {getStatusBadge(transaction.status)}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Informações da Transação */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
               <CardTitle>Informações da Transação</CardTitle>
@@ -184,12 +197,14 @@ export default function TransactionDetailPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-gray-600">Valor em BRL</Label>
-                  <div className="text-2xl font-bold">{formatCurrency(transaction.amount_brl)}</div>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(transaction.amount_brl)}
+                  </div>
                 </div>
                 <div>
                   <Label className="text-gray-600">Valor em Crypto</Label>
                   <div className="text-2xl font-bold">
-                    {transaction.crypto_amount || "Calculando..."}
+                    {transaction.crypto_amount || 'Calculando...'}
                   </div>
                 </div>
               </div>
@@ -197,17 +212,21 @@ export default function TransactionDetailPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-gray-600">Método de Pagamento</Label>
-                  <div className="font-medium uppercase">{transaction.payment_method}</div>
+                  <div className="font-medium uppercase">
+                    {transaction.payment_method}
+                  </div>
                 </div>
                 <div>
                   <Label className="text-gray-600">Rede Blockchain</Label>
-                  <div className="font-medium capitalize">{transaction.crypto_network}</div>
+                  <div className="font-medium capitalize">
+                    {transaction.crypto_network}
+                  </div>
                 </div>
               </div>
 
               <div>
                 <Label className="text-gray-600">Endereço da Carteira</Label>
-                <div className="font-mono text-sm bg-gray-100 p-2 rounded break-all">
+                <div className="break-all rounded bg-gray-100 p-2 font-mono text-sm">
                   {transaction.wallet_address}
                 </div>
               </div>
@@ -215,7 +234,7 @@ export default function TransactionDetailPage() {
               {transaction.tx_hash && (
                 <div>
                   <Label className="text-gray-600">TX Hash</Label>
-                  <div className="font-mono text-sm bg-gray-100 p-2 rounded break-all">
+                  <div className="break-all rounded bg-gray-100 p-2 font-mono text-sm">
                     {transaction.tx_hash}
                   </div>
                 </div>
@@ -229,20 +248,22 @@ export default function TransactionDetailPage() {
               <CardTitle>Dados de Pagamento</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {transaction.payment_method === "pix" ? (
+              {transaction.payment_method === 'pix' ? (
                 <>
                   <div>
                     <Label className="text-gray-600">Chave PIX</Label>
-                    <div className="font-mono text-sm">{transaction.pix_key}</div>
+                    <div className="font-mono text-sm">
+                      {transaction.pix_key}
+                    </div>
                   </div>
                   {transaction.pix_qr_code && (
                     <div>
                       <Label className="text-gray-600">QR Code PIX</Label>
-                      <div className="mt-2 bg-gray-100 p-4 rounded">
+                      <div className="mt-2 rounded bg-gray-100 p-4">
                         <img
                           src={transaction.pix_qr_code}
                           alt="QR Code"
-                          className="w-48 h-48"
+                          className="h-48 w-48"
                         />
                       </div>
                     </div>
@@ -283,7 +304,9 @@ export default function TransactionDetailPage() {
             <CardContent className="space-y-3">
               <div>
                 <Label className="text-gray-600">Nome Completo</Label>
-                <div className="font-medium">{transaction.profiles.full_name}</div>
+                <div className="font-medium">
+                  {transaction.profiles.full_name}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -292,7 +315,7 @@ export default function TransactionDetailPage() {
                 </div>
                 <div>
                   <Label className="text-gray-600">Telefone</Label>
-                  <div>{transaction.profiles.phone || "Não informado"}</div>
+                  <div>{transaction.profiles.phone || 'Não informado'}</div>
                 </div>
               </div>
             </CardContent>
@@ -307,29 +330,30 @@ export default function TransactionDetailPage() {
               <CardTitle>Ações</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {transaction.status === "pending_payment" && (
+              {transaction.status === 'pending_payment' && (
                 <Button
-                  onClick={() => handleStatusUpdate("payment_received")}
+                  onClick={() => handleStatusUpdate('payment_received')}
                   disabled={actionLoading}
                   className="w-full"
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="mr-2 h-4 w-4" />
                   Pagamento Recebido
                 </Button>
               )}
 
-              {transaction.status === "payment_received" && (
+              {transaction.status === 'payment_received' && (
                 <Button
-                  onClick={() => handleStatusUpdate("converting")}
+                  onClick={() => handleStatusUpdate('converting')}
                   disabled={actionLoading}
                   className="w-full"
                 >
-                  <Clock className="h-4 w-4 mr-2" />
+                  <Clock className="mr-2 h-4 w-4" />
                   Marcar como Convertendo
                 </Button>
               )}
 
-              {(transaction.status === "payment_received" || transaction.status === "converting") && (
+              {(transaction.status === 'payment_received' ||
+                transaction.status === 'converting') && (
                 <div className="space-y-2">
                   <Label>TX Hash</Label>
                   <Input
@@ -338,27 +362,28 @@ export default function TransactionDetailPage() {
                     onChange={(e) => setTxHash(e.target.value)}
                   />
                   <Button
-                    onClick={() => handleStatusUpdate("sent", true)}
+                    onClick={() => handleStatusUpdate('sent', true)}
                     disabled={actionLoading || !txHash.trim()}
                     className="w-full"
                   >
-                    <Send className="h-4 w-4 mr-2" />
+                    <Send className="mr-2 h-4 w-4" />
                     Marcar como Enviado
                   </Button>
                 </div>
               )}
 
-              {transaction.status !== "cancelled" && transaction.status !== "sent" && (
-                <Button
-                  onClick={() => handleStatusUpdate("cancelled")}
-                  disabled={actionLoading}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancelar Transação
-                </Button>
-              )}
+              {transaction.status !== 'cancelled' &&
+                transaction.status !== 'sent' && (
+                  <Button
+                    onClick={() => handleStatusUpdate('cancelled')}
+                    disabled={actionLoading}
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Cancelar Transação
+                  </Button>
+                )}
             </CardContent>
           </Card>
 
@@ -385,22 +410,26 @@ export default function TransactionDetailPage() {
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-600 mt-2" />
+                  <div className="mt-2 h-2 w-2 rounded-full bg-blue-600" />
                   <div className="flex-1">
                     <div className="text-sm font-medium">Transação Criada</div>
                     <div className="text-xs text-gray-500">
-                      {new Date(transaction.created_at).toLocaleString("pt-BR")}
+                      {new Date(transaction.created_at).toLocaleString('pt-BR')}
                     </div>
                   </div>
                 </div>
 
                 {transaction.payment_confirmed_at && (
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-green-600 mt-2" />
+                    <div className="mt-2 h-2 w-2 rounded-full bg-green-600" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium">Pagamento Confirmado</div>
+                      <div className="text-sm font-medium">
+                        Pagamento Confirmado
+                      </div>
                       <div className="text-xs text-gray-500">
-                        {new Date(transaction.payment_confirmed_at).toLocaleString("pt-BR")}
+                        {new Date(
+                          transaction.payment_confirmed_at,
+                        ).toLocaleString('pt-BR')}
                       </div>
                     </div>
                   </div>
@@ -408,11 +437,13 @@ export default function TransactionDetailPage() {
 
                 {transaction.crypto_sent_at && (
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-purple-600 mt-2" />
+                    <div className="mt-2 h-2 w-2 rounded-full bg-purple-600" />
                     <div className="flex-1">
                       <div className="text-sm font-medium">Crypto Enviado</div>
                       <div className="text-xs text-gray-500">
-                        {new Date(transaction.crypto_sent_at).toLocaleString("pt-BR")}
+                        {new Date(transaction.crypto_sent_at).toLocaleString(
+                          'pt-BR',
+                        )}
                       </div>
                     </div>
                   </div>

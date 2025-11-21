@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge'
 
 export type TransactionStatus =
   | 'pending_payment'
@@ -8,20 +8,20 @@ export type TransactionStatus =
   | 'converting'
   | 'sent'
   | 'cancelled'
-  | 'expired';
+  | 'expired'
 
 interface StatusBadgeProps {
-  status: TransactionStatus;
-  className?: string;
+  status: TransactionStatus
+  className?: string
 }
 
 const statusConfig: Record<
   TransactionStatus,
   {
-    label: string;
-    className: string;
-    bgColor: string;
-    textColor: string;
+    label: string
+    className: string
+    bgColor: string
+    textColor: string
   }
 > = {
   pending_payment: {
@@ -60,10 +60,10 @@ const statusConfig: Record<
     bgColor: 'bg-red-100',
     textColor: 'text-red-800',
   },
-};
+}
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = statusConfig[status];
+  const config = statusConfig[status]
 
   return (
     <Badge
@@ -72,5 +72,5 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     >
       {config.label}
     </Badge>
-  );
+  )
 }

@@ -1,10 +1,13 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Search, Shield, ShieldOff } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { toggleAdmin } from '@/app/actions/admin'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
   Table,
   TableBody,
@@ -12,10 +15,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { createClient } from "@/lib/supabase/client"
-import { toggleAdmin } from "@/app/actions/admin"
-import { Search, Shield, ShieldOff } from "lucide-react"
+} from '@/components/ui/table'
+import { createClient } from '@/lib/supabase/client'
 
 interface User {
   id: string
@@ -32,7 +33,7 @@ interface User {
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
@@ -43,14 +44,16 @@ export default function UsersPage() {
     const supabase = createClient()
 
     const { data, error } = await supabase
-      .from("profiles")
-      .select(`
+      .from('profiles')
+      .select(
+        `
         *,
         kyc_verifications (
           status
         )
-      `)
-      .order("created_at", { ascending: false })
+      `,
+      )
+      .order('created_at', { ascending: false })
 
     if (!error && data) {
       setUsers(data as any)
@@ -91,16 +94,21 @@ export default function UsersPage() {
     const latestKyc = user.kyc_verifications[0]
 
     switch (latestKyc.status) {
-      case "approved":
+      case 'approved': {
         return <Badge variant="success">Aprovado</Badge>
-      case "pending":
+      }
+      case 'pending': {
         return <Badge variant="warning">Pendente</Badge>
-      case "in_review":
+      }
+      case 'in_review': {
         return <Badge variant="default">Em Análise</Badge>
-      case "rejected":
+      }
+      case 'rejected': {
         return <Badge variant="destructive">Rejeitado</Badge>
-      default:
+      }
+      default: {
         return <Badge variant="secondary">Não Verificado</Badge>
+      }
     }
   }
 
@@ -108,7 +116,9 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Gerenciar Usuários</h1>
-        <p className="mt-2 text-gray-600">Visualize e gerencie todos os usuários da plataforma</p>
+        <p className="mt-2 text-gray-600">
+          Visualize e gerencie todos os usuários da plataforma
+        </p>
       </div>
 
       {/* Busca */}
@@ -118,7 +128,7 @@ export default function UsersPage() {
         </CardHeader>
         <CardContent>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
               placeholder="Buscar por nome ou CPF..."
               value={search}
@@ -133,7 +143,7 @@ export default function UsersPage() {
       <Card>
         <CardContent className="pt-6">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Carregando...</div>
+            <div className="py-8 text-center text-gray-500">Carregando...</div>
           ) : (
             <Table>
               <TableHeader>
@@ -151,14 +161,18 @@ export default function UsersPage() {
                 {filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.full_name}</TableCell>
-                      <TableCell className="font-mono text-sm">{user.cpf}</TableCell>
-                      <TableCell>{user.phone || "Não informado"}</TableCell>
+                      <TableCell className="font-medium">
+                        {user.full_name}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {user.cpf}
+                      </TableCell>
+                      <TableCell>{user.phone || 'Não informado'}</TableCell>
                       <TableCell>{getKycStatus(user)}</TableCell>
                       <TableCell>
                         {user.is_admin ? (
                           <Badge variant="success">
-                            <Shield className="h-3 w-3 mr-1" />
+                            <Shield className="mr-1 h-3 w-3" />
                             Admin
                           </Badge>
                         ) : (
@@ -166,23 +180,25 @@ export default function UsersPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
-                        {new Date(user.created_at).toLocaleDateString("pt-BR")}
+                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
                       </TableCell>
                       <TableCell>
                         <Button
-                          variant={user.is_admin ? "destructive" : "default"}
+                          variant={user.is_admin ? 'destructive' : 'default'}
                           size="sm"
-                          onClick={() => handleToggleAdmin(user.id, user.is_admin)}
+                          onClick={() =>
+                            handleToggleAdmin(user.id, user.is_admin)
+                          }
                           disabled={actionLoading === user.id}
                         >
                           {user.is_admin ? (
                             <>
-                              <ShieldOff className="h-4 w-4 mr-2" />
+                              <ShieldOff className="mr-2 h-4 w-4" />
                               Remover Admin
                             </>
                           ) : (
                             <>
-                              <Shield className="h-4 w-4 mr-2" />
+                              <Shield className="mr-2 h-4 w-4" />
                               Tornar Admin
                             </>
                           )}
@@ -192,7 +208,10 @@ export default function UsersPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                    <TableCell
+                      colSpan={7}
+                      className="py-8 text-center text-gray-500"
+                    >
                       Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
@@ -204,7 +223,7 @@ export default function UsersPage() {
       </Card>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-gray-600">
@@ -237,9 +256,11 @@ export default function UsersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {users.filter((u) =>
-                u.kyc_verifications?.[0]?.status === "approved"
-              ).length}
+              {
+                users.filter(
+                  (u) => u.kyc_verifications?.[0]?.status === 'approved',
+                ).length
+              }
             </div>
           </CardContent>
         </Card>

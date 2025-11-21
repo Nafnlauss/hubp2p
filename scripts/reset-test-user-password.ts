@@ -23,7 +23,7 @@ async function resetPassword() {
   // Atualizar senha do usuário
   const { data, error } = await supabase.auth.admin.updateUserById(
     'dc09bf00-8659-48e3-baa2-31aa146b5463',
-    { password: 'Test123!' }
+    { password: 'Test123!' },
   )
 
   if (error) {

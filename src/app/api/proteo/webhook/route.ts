@@ -1,6 +1,7 @@
 export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
+
 import { createAdminClient } from '@/lib/supabase/server'
 
 type KycStatus = 'pending' | 'in_review' | 'approved' | 'rejected'
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
     if (!secret) {
       return NextResponse.json(
         { success: false, error: 'Missing PROTEO_WEBHOOK_SECRET' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
       return unauthorized()
     }
 
-    const body = await request.json().catch(() => ({} as any))
+    const body = await request.json().catch(() => ({}) as any)
 
     // Try to resolve status and identifiers with flexible keys
     const status =
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
     if (!status) {
       return NextResponse.json(
         { success: false, error: 'Missing or invalid KYC status' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
       const cpf: string | null =
         body.document || body.cpf || body?.event?.document || null
       if (cpf) {
-        const digits = String(cpf).replace(/\D/g, '')
+        const digits = String(cpf).replaceAll(/\D/g, '')
         if (digits) {
           const { data: byCpf } = await supabase
             .from('profiles')
@@ -129,7 +130,7 @@ export async function POST(request: Request) {
           error:
             'Unable to resolve user_id. Send user_id or a known proteo_verification_id.',
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -144,21 +145,20 @@ export async function POST(request: Request) {
         .limit(1)
         .maybeSingle()
 
-      if (existing?.id) {
-        await supabase
-          .from('kyc_verifications')
-          .update({ status, updated_at: new Date().toISOString() })
-          .eq('id', existing.id)
-      } else {
-        await supabase.from('kyc_verifications').insert({
-          user_id: resolvedUserId,
-          status,
-          proteo_verification_id: proteoVerificationId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          verified_at: status === 'approved' ? new Date().toISOString() : null,
-        })
-      }
+      await (existing?.id
+        ? supabase
+            .from('kyc_verifications')
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq('id', existing.id)
+        : supabase.from('kyc_verifications').insert({
+            user_id: resolvedUserId,
+            status,
+            proteo_verification_id: proteoVerificationId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            verified_at:
+              status === 'approved' ? new Date().toISOString() : null,
+          }))
     } else {
       await supabase.from('kyc_verifications').insert({
         user_id: resolvedUserId,
@@ -174,14 +174,17 @@ export async function POST(request: Request) {
     if (status === 'approved') {
       profileUpdate.kyc_completed_at = new Date().toISOString()
     }
-    await supabase.from('profiles').update(profileUpdate as any).eq('id', resolvedUserId)
+    await supabase
+      .from('profiles')
+      .update(profileUpdate as any)
+      .eq('id', resolvedUserId)
 
     return NextResponse.json({ success: true })
-  } catch (err) {
-    console.error('[Proteo Webhook] Error:', err)
+  } catch (error) {
+    console.error('[Proteo Webhook] Error:', error)
     return NextResponse.json(
       { success: false, error: 'Internal error' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

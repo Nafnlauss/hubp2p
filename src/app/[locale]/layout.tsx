@@ -1,23 +1,26 @@
-import type { Metadata } from 'next';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-import { ReactNode } from 'react';
-import { getTextDirection } from '@/lib/i18n-utils';
-import { QueryProvider } from '@/components/providers/query-provider';
-import { ThemeProvider } from '@/components/providers/theme-provider';
-import { Toaster } from '@/components/ui/toaster';
-import '../globals.css';
+import '../globals.css'
+
+import type { Metadata } from 'next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from 'next-intl/server'
+import { ReactNode } from 'react'
+
+import { QueryProvider } from '@/components/providers/query-provider'
+import { ThemeProvider } from '@/components/providers/theme-provider'
+import { Toaster } from '@/components/ui/toaster'
+import { getTextDirection } from '@/lib/i18n-utils'
 
 export const metadata: Metadata = {
   title: 'Plataforma P2P - Compra de Criptomoedas',
-  description: 'Plataforma P2P de compra de criptomoedas com Pix e TED, KYC integrado e transações seguras',
-};
+  description:
+    'Plataforma P2P de compra de criptomoedas com Pix e TED, KYC integrado e transações seguras',
+}
 
 interface LocaleLayoutProps {
-  children: ReactNode;
+  children: ReactNode
   params: Promise<{
-    locale: string;
-  }>;
+    locale: string
+  }>
 }
 
 /**
@@ -28,9 +31,9 @@ export default async function LocaleLayout({
   children,
   params,
 }: LocaleLayoutProps) {
-  const { locale } = await params;
-  const messages = await getMessages();
-  const direction = getTextDirection(locale);
+  const { locale } = await params
+  const messages = await getMessages()
+  const direction = getTextDirection(locale)
 
   return (
     <html lang={locale} dir={direction} suppressHydrationWarning>
@@ -50,5 +53,5 @@ export default async function LocaleLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

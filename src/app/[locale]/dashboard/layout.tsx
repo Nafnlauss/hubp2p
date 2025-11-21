@@ -1,4 +1,4 @@
-import { LayoutDashboard, Menu, PlusCircle, Receipt, User } from 'lucide-react'
+import { LayoutDashboard, Menu, PlusCircle, Receipt } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ReactNode } from 'react'
@@ -101,11 +101,6 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
       label: 'Minhas Transações',
       icon: Receipt,
     },
-    {
-      href: `/${locale}/dashboard/profile`,
-      label: 'Perfil',
-      icon: User,
-    },
   ]
 
   return (
@@ -119,12 +114,10 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
               href={`/${locale}/dashboard`}
               className="flex items-center gap-2"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <span className="text-lg font-bold">P2P</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
+                <span className="text-xl font-bold text-white">₿</span>
               </div>
-              <span className="hidden font-semibold sm:inline-block">
-                Plataforma P2P
-              </span>
+              <span className="text-xl font-bold text-gray-900">HubP2P</span>
             </Link>
           </div>
 
@@ -173,14 +166,14 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href={`/${locale}/dashboard/profile`}>
-                    <User className="mr-2 h-4 w-4" />
-                    Perfil
-                  </Link>
-                </DropdownMenuItem>
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{userName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <LogoutButton />

@@ -1,23 +1,23 @@
-'use client';
+'use client'
 
-import { useFormatter } from 'next-intl';
+import { useFormatter } from 'next-intl'
 
 /**
  * Componente demonstrando formatação programática
  * (sem usar ICU syntax nas mensagens)
  */
 export function FormattingDemo() {
-  const format = useFormatter();
+  const format = useFormatter()
 
   return (
     <div>
-      <h3 className="text-xl font-semibold mb-4">Formatação Programática</h3>
+      <h3 className="mb-4 text-xl font-semibold">Formatação Programática</h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Formatação de Data */}
-        <div className="bg-yellow-50 p-4 rounded">
-          <h4 className="font-semibold text-sm mb-2">Datas</h4>
-          <div className="space-y-2 text-sm font-mono">
+        <div className="rounded bg-yellow-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold">Datas</h4>
+          <div className="space-y-2 font-mono text-sm">
             <p>
               <span className="text-gray-600">Curta:</span>{' '}
               {format.dateTime(new Date(), 'short')}
@@ -34,9 +34,9 @@ export function FormattingDemo() {
         </div>
 
         {/* Formatação de Números */}
-        <div className="bg-orange-50 p-4 rounded">
-          <h4 className="font-semibold text-sm mb-2">Números</h4>
-          <div className="space-y-2 text-sm font-mono">
+        <div className="rounded bg-orange-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold">Números</h4>
+          <div className="space-y-2 font-mono text-sm">
             <p>
               <span className="text-gray-600">Decimal:</span>{' '}
               {format.number(1234.567, 'decimal')}
@@ -53,33 +53,42 @@ export function FormattingDemo() {
         </div>
 
         {/* Hora Relativa */}
-        <div className="bg-pink-50 p-4 rounded">
-          <h4 className="font-semibold text-sm mb-2">Tempo Relativo</h4>
-          <div className="space-y-2 text-sm font-mono">
+        <div className="rounded bg-pink-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold">Tempo Relativo</h4>
+          <div className="space-y-2 font-mono text-sm">
             <p>
-              {format.relativeTime(new Date(Date.now() - 3600000), new Date())}
+              {format.relativeTime(
+                new Date(Date.now() - 3_600_000),
+                new Date(),
+              )}
             </p>
             <p>
-              {format.relativeTime(new Date(Date.now() - 86400000), new Date())}
+              {format.relativeTime(
+                new Date(Date.now() - 86_400_000),
+                new Date(),
+              )}
             </p>
             <p>
-              {format.relativeTime(new Date(Date.now() + 604800000), new Date())}
+              {format.relativeTime(
+                new Date(Date.now() + 604_800_000),
+                new Date(),
+              )}
             </p>
           </div>
         </div>
 
         {/* Range de Datas */}
-        <div className="bg-teal-50 p-4 rounded">
-          <h4 className="font-semibold text-sm mb-2">Range de Datas</h4>
-          <p className="text-sm font-mono">
+        <div className="rounded bg-teal-50 p-4">
+          <h4 className="mb-2 text-sm font-semibold">Range de Datas</h4>
+          <p className="font-mono text-sm">
             {format.dateTimeRange(
               new Date(2025, 0, 15),
               new Date(2025, 0, 31),
-              'medium'
+              'medium',
             )}
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

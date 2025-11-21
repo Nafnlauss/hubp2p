@@ -7,20 +7,20 @@
  */
 export function formatCPF(value: string): string {
   // Remove tudo que não é dígito
-  const numbers = value.replace(/\D/g, "");
+  const numbers = value.replaceAll(/\D/g, '')
 
   // Limita a 11 dígitos
-  const limited = numbers.slice(0, 11);
+  const limited = numbers.slice(0, 11)
 
   // Aplica a formatação
   if (limited.length <= 3) {
-    return limited;
+    return limited
   } else if (limited.length <= 6) {
-    return `${limited.slice(0, 3)}.${limited.slice(3)}`;
+    return `${limited.slice(0, 3)}.${limited.slice(3)}`
   } else if (limited.length <= 9) {
-    return `${limited.slice(0, 3)}.${limited.slice(3, 6)}.${limited.slice(6)}`;
+    return `${limited.slice(0, 3)}.${limited.slice(3, 6)}.${limited.slice(6)}`
   } else {
-    return `${limited.slice(0, 3)}.${limited.slice(3, 6)}.${limited.slice(6, 9)}-${limited.slice(9)}`;
+    return `${limited.slice(0, 3)}.${limited.slice(3, 6)}.${limited.slice(6, 9)}-${limited.slice(9)}`
   }
 }
 
@@ -29,24 +29,24 @@ export function formatCPF(value: string): string {
  */
 export function formatPhone(value: string): string {
   // Remove tudo que não é dígito
-  const numbers = value.replace(/\D/g, "");
+  const numbers = value.replaceAll(/\D/g, '')
 
   // Limita a 11 dígitos
-  const limited = numbers.slice(0, 11);
+  const limited = numbers.slice(0, 11)
 
   // Aplica a formatação
   if (limited.length === 0) {
-    return "";
+    return ''
   } else if (limited.length <= 2) {
-    return `(${limited}`;
+    return `(${limited}`
   } else if (limited.length <= 6) {
-    return `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
+    return `(${limited.slice(0, 2)}) ${limited.slice(2)}`
   } else if (limited.length <= 10) {
     // Celular com 8 dígitos ou fixo
-    return `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`;
+    return `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`
   } else {
     // Celular com 9 dígitos
-    return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
+    return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`
   }
 }
 
@@ -55,36 +55,34 @@ export function formatPhone(value: string): string {
  */
 export function formatCEP(value: string): string {
   // Remove tudo que não é dígito
-  const numbers = value.replace(/\D/g, "");
+  const numbers = value.replaceAll(/\D/g, '')
 
   // Limita a 8 dígitos
-  const limited = numbers.slice(0, 8);
+  const limited = numbers.slice(0, 8)
 
   // Aplica a formatação
-  if (limited.length <= 5) {
-    return limited;
-  } else {
-    return `${limited.slice(0, 5)}-${limited.slice(5)}`;
-  }
+  return limited.length <= 5
+    ? limited
+    : `${limited.slice(0, 5)}-${limited.slice(5)}`
 }
 
 /**
  * Remove formatação de CPF
  */
 export function unformatCPF(value: string): string {
-  return value.replace(/\D/g, "");
+  return value.replaceAll(/\D/g, '')
 }
 
 /**
  * Remove formatação de telefone
  */
 export function unformatPhone(value: string): string {
-  return value.replace(/\D/g, "");
+  return value.replaceAll(/\D/g, '')
 }
 
 /**
  * Remove formatação de CEP
  */
 export function unformatCEP(value: string): string {
-  return value.replace(/\D/g, "");
+  return value.replaceAll(/\D/g, '')
 }

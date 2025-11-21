@@ -1,13 +1,14 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { AlertCircle, Clock } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Clock } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface TransactionTimerProps {
-  expiresAt: Date | string;
-  onExpire?: () => void;
-  className?: string;
+  expiresAt: Date | string
+  onExpire?: () => void
+  className?: string
 }
 
 export function TransactionTimer({
@@ -15,72 +16,74 @@ export function TransactionTimer({
   onExpire,
   className = '',
 }: TransactionTimerProps) {
-  const [timeLeft, setTimeLeft] = useState<string>('');
-  const [isExpiring, setIsExpiring] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('')
+  const [isExpiring, setIsExpiring] = useState(false)
+  const [isExpired, setIsExpired] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted) return
 
     const calculateTimeLeft = () => {
-      const expiresDate = new Date(expiresAt);
-      const now = new Date();
-      const difference = expiresDate.getTime() - now.getTime();
+      const expiresDate = new Date(expiresAt)
+      const now = new Date()
+      const difference = expiresDate.getTime() - now.getTime()
 
       if (difference <= 0) {
-        setTimeLeft('00:00');
-        setIsExpired(true);
-        setIsExpiring(false);
-        onExpire?.();
-        return;
+        setTimeLeft('00:00')
+        setIsExpired(true)
+        setIsExpiring(false)
+        onExpire?.()
+        return
       }
 
       // Check if less than 5 minutes (300000 ms)
-      if (difference < 300000) {
-        setIsExpiring(true);
+      if (difference < 300_000) {
+        setIsExpiring(true)
       } else {
-        setIsExpiring(false);
+        setIsExpiring(false)
       }
 
-      const minutes = Math.floor(difference / 60000);
-      const seconds = Math.floor((difference % 60000) / 1000);
-      const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      setTimeLeft(formattedTime);
-    };
+      const minutes = Math.floor(difference / 60_000)
+      const seconds = Math.floor((difference % 60_000) / 1000)
+      const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      setTimeLeft(formattedTime)
+    }
 
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
+    calculateTimeLeft()
+    const timer = setInterval(calculateTimeLeft, 1000)
 
-    return () => clearInterval(timer);
-  }, [expiresAt, isMounted, onExpire]);
+    return () => clearInterval(timer)
+  }, [expiresAt, isMounted, onExpire])
 
   if (!isMounted) {
-    return null;
+    return null
   }
 
   if (isExpired) {
     return (
       <Alert variant="destructive" className={className}>
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>Transação expirada. Por favor, crie uma nova transação.</AlertDescription>
+        <AlertDescription>
+          Transação expirada. Por favor, crie uma nova transação.
+        </AlertDescription>
       </Alert>
-    );
+    )
   }
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <Clock
-        className={`h-5 w-5 ${isExpiring ? 'text-red-500 animate-pulse' : 'text-blue-500'}`}
+        className={`h-5 w-5 ${isExpiring ? 'animate-pulse text-red-500' : 'text-blue-500'}`}
       />
       <div>
-        <p className="text-sm text-gray-700 font-medium">Tempo Restante:</p>
+        <p className="text-sm font-medium text-gray-700">Tempo Restante:</p>
         <p
-          className={`text-2xl font-mono font-bold ${isExpiring ? 'text-red-500' : 'text-gray-900'}`}
+          className={`font-mono text-2xl font-bold ${isExpiring ? 'text-red-500' : 'text-gray-900'}`}
         >
           {timeLeft}
         </p>
@@ -92,5 +95,5 @@ export function TransactionTimer({
         </Alert>
       )}
     </div>
-  );
+  )
 }

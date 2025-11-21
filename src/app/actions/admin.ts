@@ -1,26 +1,29 @@
-"use server"
+'use server'
 
-import { createClient } from "@/lib/supabase/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath } from 'next/cache'
+
+import { createClient } from '@/lib/supabase/server'
 
 // Helper para verificar se usuário é admin
 async function checkAdminAccess() {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    throw new Error("Não autenticado")
+    throw new Error('Não autenticado')
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
     .single()
 
   if (!profile?.is_admin) {
-    throw new Error("Acesso negado: apenas administradores")
+    throw new Error('Acesso negado: apenas administradores')
   }
 
   return { user, supabase }
@@ -33,7 +36,7 @@ export async function updateTransactionStatus(
   data?: {
     tx_hash?: string
     admin_notes?: string
-  }
+  },
 ) {
   try {
     const { supabase } = await checkAdminAccess()
@@ -44,9 +47,9 @@ export async function updateTransactionStatus(
     }
 
     // Adicionar timestamps específicos baseado no status
-    if (status === "payment_received") {
+    if (status === 'payment_received') {
       updateData.payment_confirmed_at = new Date().toISOString()
-    } else if (status === "sent") {
+    } else if (status === 'sent') {
       updateData.crypto_sent_at = new Date().toISOString()
       if (data?.tx_hash) {
         updateData.tx_hash = data.tx_hash
@@ -58,21 +61,21 @@ export async function updateTransactionStatus(
     }
 
     const { error } = await supabase
-      .from("transactions")
+      .from('transactions')
       .update(updateData)
-      .eq("id", transactionId)
+      .eq('id', transactionId)
 
     if (error) throw error
 
-    revalidatePath("/admin/transactions")
+    revalidatePath('/admin/transactions')
     revalidatePath(`/admin/transactions/${transactionId}`)
 
     return { success: true }
   } catch (error) {
-    console.error("Erro ao atualizar transação:", error)
+    console.error('Erro ao atualizar transação:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Erro desconhecido"
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
     }
   }
 }
@@ -83,24 +86,24 @@ export async function approveKYC(kycId: string) {
     const { supabase } = await checkAdminAccess()
 
     const { error } = await supabase
-      .from("kyc_verifications")
+      .from('kyc_verifications')
       .update({
-        status: "approved",
+        status: 'approved',
         verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq("id", kycId)
+      .eq('id', kycId)
 
     if (error) throw error
 
-    revalidatePath("/admin/kyc")
+    revalidatePath('/admin/kyc')
 
     return { success: true }
   } catch (error) {
-    console.error("Erro ao aprovar KYC:", error)
+    console.error('Erro ao aprovar KYC:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Erro desconhecido"
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
     }
   }
 }
@@ -111,24 +114,24 @@ export async function rejectKYC(kycId: string, reason: string) {
     const { supabase } = await checkAdminAccess()
 
     const { error } = await supabase
-      .from("kyc_verifications")
+      .from('kyc_verifications')
       .update({
-        status: "rejected",
+        status: 'rejected',
         rejection_reason: reason,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", kycId)
+      .eq('id', kycId)
 
     if (error) throw error
 
-    revalidatePath("/admin/kyc")
+    revalidatePath('/admin/kyc')
 
     return { success: true }
   } catch (error) {
-    console.error("Erro ao rejeitar KYC:", error)
+    console.error('Erro ao rejeitar KYC:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Erro desconhecido"
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
     }
   }
 }
@@ -139,23 +142,23 @@ export async function toggleAdmin(userId: string, isAdmin: boolean) {
     const { supabase } = await checkAdminAccess()
 
     const { error } = await supabase
-      .from("profiles")
+      .from('profiles')
       .update({
         is_admin: isAdmin,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", userId)
+      .eq('id', userId)
 
     if (error) throw error
 
-    revalidatePath("/admin/users")
+    revalidatePath('/admin/users')
 
     return { success: true }
   } catch (error) {
-    console.error("Erro ao alterar status de admin:", error)
+    console.error('Erro ao alterar status de admin:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Erro desconhecido"
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
     }
   }
 }
@@ -167,13 +170,13 @@ export async function sendNotification(transactionId: string) {
 
     // Buscar dados da transação
     const { data: transaction } = await supabase
-      .from("transactions")
-      .select("*, profiles(*)")
-      .eq("id", transactionId)
+      .from('transactions')
+      .select('*, profiles(*)')
+      .eq('id', transactionId)
       .single()
 
     if (!transaction) {
-      throw new Error("Transação não encontrada")
+      throw new Error('Transação não encontrada')
     }
 
     // Mock de integração Pushover
@@ -191,21 +194,21 @@ export async function sendNotification(transactionId: string) {
     // })
 
     // Registrar log de notificação
-    await supabase.from("notification_logs").insert({
+    await supabase.from('notification_logs').insert({
       transaction_id: transactionId,
-      type: "pushover",
-      recipient: "admin",
+      type: 'pushover',
+      recipient: 'admin',
       message: message,
-      status: "sent",
+      status: 'sent',
       sent_at: new Date().toISOString(),
     })
 
     return { success: true }
   } catch (error) {
-    console.error("Erro ao enviar notificação:", error)
+    console.error('Erro ao enviar notificação:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Erro desconhecido"
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
     }
   }
 }
@@ -220,30 +223,31 @@ export async function getDashboardStats() {
 
     // Total de transações hoje
     const { count: todayCount } = await supabase
-      .from("transactions")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", today.toISOString())
+      .from('transactions')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', today.toISOString())
 
     // Valor total hoje
     const { data: todayTransactions } = await supabase
-      .from("transactions")
-      .select("amount_brl")
-      .gte("created_at", today.toISOString())
+      .from('transactions')
+      .select('amount_brl')
+      .gte('created_at', today.toISOString())
 
-    const todayTotal = todayTransactions?.reduce((sum, t) => sum + t.amount_brl, 0) || 0
+    const todayTotal =
+      todayTransactions?.reduce((sum, t) => sum + t.amount_brl, 0) || 0
 
     // Transações pendentes
     const { count: pendingCount } = await supabase
-      .from("transactions")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "pending_payment")
+      .from('transactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending_payment')
 
     // Transações aprovadas hoje
     const { count: approvedCount } = await supabase
-      .from("transactions")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "sent")
-      .gte("created_at", today.toISOString())
+      .from('transactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'sent')
+      .gte('created_at', today.toISOString())
 
     // Transações dos últimos 7 dias para gráfico
     const sevenDaysAgo = new Date()
@@ -251,29 +255,32 @@ export async function getDashboardStats() {
     sevenDaysAgo.setHours(0, 0, 0, 0)
 
     const { data: weekTransactions } = await supabase
-      .from("transactions")
-      .select("created_at, amount_brl")
-      .gte("created_at", sevenDaysAgo.toISOString())
-      .order("created_at", { ascending: true })
+      .from('transactions')
+      .select('created_at, amount_brl')
+      .gte('created_at', sevenDaysAgo.toISOString())
+      .order('created_at', { ascending: true })
 
     // Agrupar por dia
-    const chartData = weekTransactions?.reduce((acc: any[], transaction) => {
-      const date = new Date(transaction.created_at!).toLocaleDateString("pt-BR")
-      const existing = acc.find((item) => item.date === date)
+    const chartData =
+      weekTransactions?.reduce((accumulator: any[], transaction) => {
+        const date = new Date(transaction.created_at!).toLocaleDateString(
+          'pt-BR',
+        )
+        const existing = accumulator.find((item) => item.date === date)
 
-      if (existing) {
-        existing.count += 1
-        existing.value += transaction.amount_brl
-      } else {
-        acc.push({
-          date,
-          count: 1,
-          value: transaction.amount_brl,
-        })
-      }
+        if (existing) {
+          existing.count += 1
+          existing.value += transaction.amount_brl
+        } else {
+          accumulator.push({
+            date,
+            count: 1,
+            value: transaction.amount_brl,
+          })
+        }
 
-      return acc
-    }, []) || []
+        return accumulator
+      }, []) || []
 
     return {
       todayCount: todayCount || 0,
@@ -283,7 +290,7 @@ export async function getDashboardStats() {
       chartData,
     }
   } catch (error) {
-    console.error("Erro ao buscar estatísticas:", error)
+    console.error('Erro ao buscar estatísticas:', error)
     throw error
   }
 }

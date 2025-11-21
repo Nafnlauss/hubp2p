@@ -1,33 +1,34 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation'
+
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { createClient } from '@/lib/supabase/server'
 
 interface ProfilePageProps {
   params: Promise<{
-    locale: string;
-  }>;
+    locale: string
+  }>
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const { locale } = await params;
-  const supabase = await createClient();
+  const { locale } = await params
+  const supabase = await createClient()
 
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    redirect(`/${locale}/login`);
+    redirect(`/${locale}/login`)
   }
 
   // Buscar perfil
@@ -35,7 +36,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single();
+    .single()
 
   // Buscar KYC
   const { data: kyc } = await supabase
@@ -44,7 +45,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .single()
 
   const userInitials = profile?.full_name
     ? profile.full_name
@@ -53,14 +54,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         .join('')
         .toUpperCase()
         .slice(0, 2)
-    : 'U';
+    : 'U'
 
   const kycStatusMap = {
     pending: { label: 'Pendente', variant: 'warning' as const },
     in_review: { label: 'Em Análise', variant: 'info' as const },
     approved: { label: 'Aprovado', variant: 'success' as const },
     rejected: { label: 'Rejeitado', variant: 'destructive' as const },
-  };
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -77,7 +78,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <CardHeader>
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
+              <AvatarFallback className="text-2xl">
+                {userInitials}
+              </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <CardTitle>{profile?.full_name || 'Usuário'}</CardTitle>
@@ -102,7 +105,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 {profile?.cpf
                   ? profile.cpf.replace(
                       /(\d{3})(\d{3})(\d{3})(\d{2})/,
-                      '$1.$2.$3-$4'
+                      '$1.$2.$3-$4',
                     )
                   : '-'}
               </p>
@@ -134,10 +137,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 {kyc ? (
                   <Badge
                     variant={
-                      kycStatusMap[kyc.status as keyof typeof kycStatusMap].variant
+                      kycStatusMap[kyc.status as keyof typeof kycStatusMap]
+                        .variant
                     }
                   >
-                    {kycStatusMap[kyc.status as keyof typeof kycStatusMap].label}
+                    {
+                      kycStatusMap[kyc.status as keyof typeof kycStatusMap]
+                        .label
+                    }
                   </Badge>
                 ) : (
                   <Badge variant="outline">Não Iniciado</Badge>
@@ -156,7 +163,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 <p className="mt-1 font-medium">
                   {profile.address_street}
                   {profile.address_number && `, ${profile.address_number}`}
-                  {profile.address_complement && ` - ${profile.address_complement}`}
+                  {profile.address_complement &&
+                    ` - ${profile.address_complement}`}
                 </p>
                 {profile.address_city && profile.address_state && (
                   <p className="text-sm text-muted-foreground">
@@ -174,7 +182,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       <Card>
         <CardHeader>
           <CardTitle>Informações da Conta</CardTitle>
-          <CardDescription>Detalhes sobre sua conta na plataforma</CardDescription>
+          <CardDescription>
+            Detalhes sobre sua conta na plataforma
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="flex justify-between">
@@ -219,5 +229,5 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

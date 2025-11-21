@@ -1,6 +1,7 @@
-import createMiddleware from 'next-intl/middleware';
-import { type NextRequest } from 'next/server';
-import { updateSession } from '@/lib/supabase/middleware';
+import { type NextRequest } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
+
+import { updateSession } from '@/lib/supabase/middleware'
 
 /**
  * Middleware para roteamento baseado em locale e autenticação Supabase
@@ -25,34 +26,37 @@ const intlMiddleware = createMiddleware({
 
   // Detectar linguagem automaticamente do Accept-Language header
   localeDetection: true,
-});
+})
 
 export async function middleware(request: NextRequest) {
-  // Skip intl middleware for API routes
-  if (request.nextUrl.pathname.startsWith('/api')) {
-    return await updateSession(request);
+  // Skip intl middleware for API routes and admin routes
+  if (
+    request.nextUrl.pathname.startsWith('/api') ||
+    request.nextUrl.pathname.startsWith('/admin')
+  ) {
+    return await updateSession(request)
   }
 
   // 1. Atualizar sessão do Supabase (importante fazer primeiro)
-  const supabaseResponse = await updateSession(request);
+  const supabaseResponse = await updateSession(request)
 
   // Se o updateSession decidiu redirecionar, respeite esse redirect
   // (casos: usuário não autenticado em rota protegida ou já autenticado em rotas de auth)
   const hasRedirect =
     supabaseResponse.status === 307 ||
     supabaseResponse.status === 308 ||
-    Boolean(supabaseResponse.headers.get('location'));
-  if (hasRedirect) return supabaseResponse;
+    Boolean(supabaseResponse.headers.get('location'))
+  if (hasRedirect) return supabaseResponse
 
   // 2. Aplicar middleware de internacionalização
-  const intlResponse = intlMiddleware(request);
+  const intlResponse = intlMiddleware(request)
 
   // 3. Combinar cookies do Supabase com a resposta de i18n
-  supabaseResponse.cookies.getAll().forEach((cookie) => {
-    intlResponse.cookies.set(cookie.name, cookie.value);
-  });
+  for (const cookie of supabaseResponse.cookies.getAll()) {
+    intlResponse.cookies.set(cookie.name, cookie.value)
+  }
 
-  return intlResponse;
+  return intlResponse
 }
 
 export const config = {
@@ -63,4 +67,4 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
-};
+}

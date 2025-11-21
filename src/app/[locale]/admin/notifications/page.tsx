@@ -1,8 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Bell, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -10,9 +12,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { createClient } from "@/lib/supabase/client"
-import { Bell, CheckCircle, XCircle, Clock } from "lucide-react"
+} from '@/components/ui/table'
+import { createClient } from '@/lib/supabase/client'
 
 interface Notification {
   id: string
@@ -41,14 +42,16 @@ export default function NotificationsPage() {
     const supabase = createClient()
 
     const { data, error } = await supabase
-      .from("notification_logs")
-      .select(`
+      .from('notification_logs')
+      .select(
+        `
         *,
         transactions (
           transaction_number
         )
-      `)
-      .order("created_at", { ascending: false })
+      `,
+      )
+      .order('created_at', { ascending: false })
       .limit(100)
 
     if (!error && data) {
@@ -60,48 +63,60 @@ export default function NotificationsPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "sent":
+      case 'sent': {
         return <CheckCircle className="h-4 w-4 text-green-600" />
-      case "failed":
+      }
+      case 'failed': {
         return <XCircle className="h-4 w-4 text-red-600" />
-      case "pending":
+      }
+      case 'pending': {
         return <Clock className="h-4 w-4 text-yellow-600" />
-      default:
+      }
+      default: {
         return null
+      }
     }
   }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "sent":
+      case 'sent': {
         return <Badge variant="success">Enviado</Badge>
-      case "failed":
+      }
+      case 'failed': {
         return <Badge variant="destructive">Falhou</Badge>
-      case "pending":
+      }
+      case 'pending': {
         return <Badge variant="warning">Pendente</Badge>
-      default:
+      }
+      default: {
         return <Badge variant="secondary">{status}</Badge>
+      }
     }
   }
 
   const getTypeBadge = (type: string) => {
     switch (type) {
-      case "pushover":
+      case 'pushover': {
         return <Badge variant="default">Pushover</Badge>
-      case "email":
+      }
+      case 'email': {
         return <Badge variant="secondary">Email</Badge>
-      case "sms":
+      }
+      case 'sms': {
         return <Badge variant="outline">SMS</Badge>
-      default:
+      }
+      default: {
         return <Badge>{type}</Badge>
+      }
     }
   }
 
   const stats = {
     total: notifications.length,
-    sent: notifications.filter((n) => n.status === "sent").length,
-    failed: notifications.filter((n) => n.status === "failed").length,
-    pending: notifications.filter((n) => n.status === "pending").length,
+    sent: notifications.filter((n) => n.status === 'sent').length,
+    failed: notifications.filter((n) => n.status === 'failed').length,
+    pending: notifications.filter((n) => n.status === 'pending').length,
   }
 
   return (
@@ -114,7 +129,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
@@ -135,7 +150,9 @@ export default function NotificationsPage() {
             <CheckCircle className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.sent}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.sent}
+            </div>
           </CardContent>
         </Card>
 
@@ -147,7 +164,9 @@ export default function NotificationsPage() {
             <XCircle className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.failed}
+            </div>
           </CardContent>
         </Card>
 
@@ -159,7 +178,9 @@ export default function NotificationsPage() {
             <Clock className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {stats.pending}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -168,7 +189,7 @@ export default function NotificationsPage() {
       <Card>
         <CardContent className="pt-6">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Carregando...</div>
+            <div className="py-8 text-center text-gray-500">Carregando...</div>
           ) : (
             <Table>
               <TableHeader>
@@ -194,7 +215,9 @@ export default function NotificationsPage() {
                           <span className="text-gray-400">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm">{notification.recipient}</TableCell>
+                      <TableCell className="text-sm">
+                        {notification.recipient}
+                      </TableCell>
                       <TableCell className="max-w-md truncate text-sm">
                         {notification.message}
                       </TableCell>
@@ -206,17 +229,22 @@ export default function NotificationsPage() {
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {notification.sent_at
-                          ? new Date(notification.sent_at).toLocaleString("pt-BR")
-                          : "-"}
+                          ? new Date(notification.sent_at).toLocaleString(
+                              'pt-BR',
+                            )
+                          : '-'}
                       </TableCell>
                       <TableCell className="max-w-xs truncate text-sm text-red-600">
-                        {notification.error_message || "-"}
+                        {notification.error_message || '-'}
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                    <TableCell
+                      colSpan={7}
+                      className="py-8 text-center text-gray-500"
+                    >
                       Nenhuma notificação encontrada
                     </TableCell>
                   </TableRow>
@@ -228,18 +256,20 @@ export default function NotificationsPage() {
       </Card>
 
       {/* Informações sobre Pushover */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
           <CardTitle className="text-blue-900">Sobre Pushover</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-blue-800 space-y-2">
+        <CardContent className="space-y-2 text-sm text-blue-800">
           <p>
-            Pushover é um serviço de notificações push que permite enviar alertas em tempo real
-            para dispositivos móveis e desktop.
+            Pushover é um serviço de notificações push que permite enviar
+            alertas em tempo real para dispositivos móveis e desktop.
           </p>
           <p>
-            Para configurar, adicione as variáveis de ambiente <code className="bg-blue-100 px-1 rounded">PUSHOVER_TOKEN</code> e{" "}
-            <code className="bg-blue-100 px-1 rounded">PUSHOVER_USER</code> no seu arquivo .env
+            Para configurar, adicione as variáveis de ambiente{' '}
+            <code className="rounded bg-blue-100 px-1">PUSHOVER_TOKEN</code> e{' '}
+            <code className="rounded bg-blue-100 px-1">PUSHOVER_USER</code> no
+            seu arquivo .env
           </p>
         </CardContent>
       </Card>

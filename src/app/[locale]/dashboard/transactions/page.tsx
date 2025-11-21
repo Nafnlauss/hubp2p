@@ -1,17 +1,30 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import Link from 'next/link';
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { ArrowLeft, Copy, ExternalLink, Filter, Search } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -19,46 +32,37 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { formatCurrency } from '@/lib/utils/format';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, Search, Filter, Copy, ExternalLink } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
+} from '@/components/ui/table'
+import { useToast } from '@/hooks/use-toast'
+import { createClient } from '@/lib/supabase/client'
+import { formatCurrency } from '@/lib/utils/format'
 
 interface Transaction {
-  id: string;
-  transaction_number: string;
-  payment_method: 'pix' | 'ted';
-  amount_brl: number;
-  crypto_network: string;
-  crypto_amount: number | null;
-  wallet_address: string;
-  status: string;
-  tx_hash: string | null;
-  created_at: string;
-  payment_confirmed_at: string | null;
-  crypto_sent_at: string | null;
+  id: string
+  transaction_number: string
+  payment_method: 'pix' | 'ted'
+  amount_brl: number
+  crypto_network: string
+  crypto_amount: number | null
+  wallet_address: string
+  status: string
+  tx_hash: string | null
+  created_at: string
+  payment_confirmed_at: string | null
+  crypto_sent_at: string | null
 }
 
 const statusMap = {
-  pending_payment: { label: 'Aguardando Pagamento', variant: 'warning' as const },
+  pending_payment: {
+    label: 'Aguardando Pagamento',
+    variant: 'warning' as const,
+  },
   payment_received: { label: 'Pagamento Recebido', variant: 'info' as const },
   converting: { label: 'Convertendo', variant: 'info' as const },
   sent: { label: 'Enviado', variant: 'success' as const },
   cancelled: { label: 'Cancelado', variant: 'destructive' as const },
   expired: { label: 'Expirado', variant: 'destructive' as const },
-};
+}
 
 const networkMap = {
   bitcoin: 'Bitcoin',
@@ -66,98 +70,102 @@ const networkMap = {
   polygon: 'Polygon',
   bsc: 'BSC',
   solana: 'Solana',
-};
+}
 
 const paymentMethodMap = {
   pix: 'PIX',
   ted: 'TED',
-};
+}
 
 export default function TransactionsPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { toast } = useToast();
-  const supabase = createClient();
+  const router = useRouter()
+  const searchParameters = useSearchParams()
+  const { toast } = useToast()
+  const supabase = createClient()
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  useEffect(() => {
-    loadTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    Transaction[]
+  >([])
+  const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   useEffect(() => {
-    filterTransactions();
+    loadTransactions()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions, statusFilter, searchQuery]);
+  }, [])
+
+  useEffect(() => {
+    filterTransactions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions, statusFilter, searchQuery])
 
   const loadTransactions = async () => {
     try {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await supabase.auth.getUser()
 
       if (!user) {
-        router.push('/login');
-        return;
+        router.push('/login')
+        return
       }
 
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
 
-      if (error) throw error;
+      if (error) throw error
 
-      setTransactions(data || []);
+      setTransactions(data || [])
     } catch (error) {
-      console.error('Erro ao carregar transações:', error);
+      console.error('Erro ao carregar transações:', error)
       toast({
         title: 'Erro',
         description: 'Não foi possível carregar suas transações.',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const filterTransactions = () => {
-    let filtered = [...transactions];
+    let filtered = [...transactions]
 
     // Filtro por status
     if (statusFilter !== 'all') {
-      filtered = filtered.filter((t) => t.status === statusFilter);
+      filtered = filtered.filter((t) => t.status === statusFilter)
     }
 
     // Filtro por busca
     if (searchQuery) {
       filtered = filtered.filter(
         (t) =>
-          t.transaction_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          t.transaction_number
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
           t.wallet_address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          t.tx_hash?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+          t.tx_hash?.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
     }
 
-    setFilteredTransactions(filtered);
-    setCurrentPage(1);
-  };
+    setFilteredTransactions(filtered)
+    setCurrentPage(1)
+  }
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text)
     toast({
       title: 'Copiado!',
       description: `${label} copiado para a área de transferência.`,
-    });
-  };
+    })
+  }
 
   const getExplorerUrl = (network: string, txHash: string) => {
     const explorers: Record<string, string> = {
@@ -166,15 +174,15 @@ export default function TransactionsPage() {
       polygon: `https://polygonscan.com/tx/${txHash}`,
       bsc: `https://bscscan.com/tx/${txHash}`,
       solana: `https://solscan.io/tx/${txHash}`,
-    };
-    return explorers[network] || '#';
-  };
+    }
+    return explorers[network] || '#'
+  }
 
   // Paginação
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentTransactions = filteredTransactions.slice(startIndex, endIndex)
 
   if (loading) {
     return (
@@ -189,32 +197,40 @@ export default function TransactionsPage() {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-8">
       {/* Header */}
       <div>
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className="mb-6 transition-all hover:bg-blue-50 hover:text-blue-600"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Minhas Transações</h1>
-        <p className="text-muted-foreground">
+        <h1 className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-4xl font-bold tracking-tight text-transparent">
+          Minhas Transações
+        </h1>
+        <p className="mt-2 text-lg text-gray-600">
           Acompanhe o histórico completo de suas transações
         </p>
       </div>
 
       {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-          <CardDescription>
+      <Card className="border-none shadow-2xl">
+        <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-slate-50">
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Filtros
+          </CardTitle>
+          <CardDescription className="text-base text-gray-600">
             Filtre suas transações por status ou pesquise por número
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="flex flex-col gap-4 sm:flex-row">
             {/* Busca */}
             <div className="relative flex-1">
@@ -235,8 +251,12 @@ export default function TransactionsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="pending_payment">Aguardando Pagamento</SelectItem>
-                <SelectItem value="payment_received">Pagamento Recebido</SelectItem>
+                <SelectItem value="pending_payment">
+                  Aguardando Pagamento
+                </SelectItem>
+                <SelectItem value="payment_received">
+                  Pagamento Recebido
+                </SelectItem>
                 <SelectItem value="converting">Convertendo</SelectItem>
                 <SelectItem value="sent">Enviado</SelectItem>
                 <SelectItem value="cancelled">Cancelado</SelectItem>
@@ -248,26 +268,35 @@ export default function TransactionsPage() {
           {/* Resultados */}
           <div className="mt-4">
             <p className="text-sm text-muted-foreground">
-              Mostrando {currentTransactions.length} de {filteredTransactions.length} transações
+              Mostrando {currentTransactions.length} de{' '}
+              {filteredTransactions.length} transações
             </p>
           </div>
         </CardContent>
       </Card>
 
       {/* Tabela de Transações */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Transações</CardTitle>
+      <Card className="border-none shadow-2xl">
+        <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-slate-50">
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Transações
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {currentTransactions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="mb-4 text-sm text-muted-foreground">
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 py-16 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600">
+                <Search className="h-8 w-8 text-white" />
+              </div>
+              <p className="mb-6 text-lg font-medium text-gray-700">
                 {searchQuery || statusFilter !== 'all'
                   ? 'Nenhuma transação encontrada com os filtros aplicados.'
                   : 'Você ainda não possui transações.'}
               </p>
-              <Button asChild>
+              <Button
+                asChild
+                className="h-11 bg-gradient-to-r from-blue-600 to-purple-600 px-6 text-base font-semibold shadow-lg transition-all hover:scale-105 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
+              >
                 <Link href="/dashboard/deposit">Criar Novo Depósito</Link>
               </Button>
             </div>
@@ -289,7 +318,10 @@ export default function TransactionsPage() {
                   </TableHeader>
                   <TableBody>
                     {currentTransactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
+                      <TableRow
+                        key={transaction.id}
+                        className="transition-colors hover:bg-gray-50"
+                      >
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className="font-mono text-xs">
@@ -302,7 +334,7 @@ export default function TransactionsPage() {
                               onClick={() =>
                                 copyToClipboard(
                                   transaction.transaction_number,
-                                  'Número da transação'
+                                  'Número da transação',
                                 )
                               }
                             >
@@ -314,7 +346,7 @@ export default function TransactionsPage() {
                           {format(
                             new Date(transaction.created_at),
                             'dd/MM/yyyy HH:mm',
-                            { locale: ptBR }
+                            { locale: ptBR },
                           )}
                         </TableCell>
                         <TableCell>
@@ -323,10 +355,18 @@ export default function TransactionsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium">
-                          {formatCurrency(transaction.amount_brl, 'pt-BR', 'BRL')}
+                          {formatCurrency(
+                            transaction.amount_brl,
+                            'pt-BR',
+                            'BRL',
+                          )}
                         </TableCell>
                         <TableCell>
-                          {networkMap[transaction.crypto_network as keyof typeof networkMap]}
+                          {
+                            networkMap[
+                              transaction.crypto_network as keyof typeof networkMap
+                            ]
+                          }
                         </TableCell>
                         <TableCell>
                           {transaction.crypto_amount ? (
@@ -340,28 +380,26 @@ export default function TransactionsPage() {
                         <TableCell>
                           <Badge
                             variant={
-                              statusMap[transaction.status as keyof typeof statusMap]
-                                .variant
+                              statusMap[
+                                transaction.status as keyof typeof statusMap
+                              ].variant
                             }
                           >
                             {
-                              statusMap[transaction.status as keyof typeof statusMap]
-                                .label
+                              statusMap[
+                                transaction.status as keyof typeof statusMap
+                              ].label
                             }
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             {transaction.tx_hash && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                asChild
-                              >
+                              <Button variant="ghost" size="sm" asChild>
                                 <a
                                   href={getExplorerUrl(
                                     transaction.crypto_network,
-                                    transaction.tx_hash
+                                    transaction.tx_hash,
                                   )}
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -373,7 +411,9 @@ export default function TransactionsPage() {
                             )}
                             {transaction.status === 'pending_payment' && (
                               <Button variant="outline" size="sm" asChild>
-                                <Link href={`/dashboard/deposit/${transaction.id}`}>
+                                <Link
+                                  href={`/dashboard/deposit/${transaction.id}`}
+                                >
                                   Pagar
                                 </Link>
                               </Button>
@@ -404,7 +444,9 @@ export default function TransactionsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={currentPage === totalPages}
                     >
                       Próxima
@@ -417,5 +459,5 @@ export default function TransactionsPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

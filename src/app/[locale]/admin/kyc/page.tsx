@@ -1,14 +1,15 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { createClient } from "@/lib/supabase/client"
-import { approveKYC, rejectKYC } from "@/app/actions/admin"
-import { CheckCircle, XCircle, FileText, Camera, User } from "lucide-react"
+import { Camera, CheckCircle, FileText, User, XCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+import { approveKYC, rejectKYC } from '@/app/actions/admin'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { createClient } from '@/lib/supabase/client'
 
 interface KYCVerification {
   id: string
@@ -31,7 +32,9 @@ export default function KYCPage() {
   const [verifications, setVerifications] = useState<KYCVerification[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [rejectionReason, setRejectionReason] = useState<{ [key: string]: string }>({})
+  const [rejectionReason, setRejectionReason] = useState<{
+    [key: string]: string
+  }>({})
   const [selectedKyc, setSelectedKyc] = useState<KYCVerification | null>(null)
 
   useEffect(() => {
@@ -42,17 +45,19 @@ export default function KYCPage() {
     const supabase = createClient()
 
     const { data, error } = await supabase
-      .from("kyc_verifications")
-      .select(`
+      .from('kyc_verifications')
+      .select(
+        `
         *,
         profiles (
           full_name,
           cpf,
           date_of_birth
         )
-      `)
-      .in("status", ["pending", "in_review"])
-      .order("created_at", { ascending: false })
+      `,
+      )
+      .in('status', ['pending', 'in_review'])
+      .order('created_at', { ascending: false })
 
     if (!error && data) {
       setVerifications(data as any)
@@ -80,7 +85,9 @@ export default function KYCPage() {
     const reason = rejectionReason[kycId]
 
     if (!reason || reason.trim().length < 10) {
-      alert("Por favor, forneça um motivo detalhado para a rejeição (mínimo 10 caracteres)")
+      alert(
+        'Por favor, forneça um motivo detalhado para a rejeição (mínimo 10 caracteres)',
+      )
       return
     }
 
@@ -91,7 +98,7 @@ export default function KYCPage() {
     if (result.success) {
       loadVerifications()
       setSelectedKyc(null)
-      setRejectionReason({ ...rejectionReason, [kycId]: "" })
+      setRejectionReason({ ...rejectionReason, [kycId]: '' })
     } else {
       alert(`Erro: ${result.error}`)
     }
@@ -101,30 +108,37 @@ export default function KYCPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "pending":
+      case 'pending': {
         return <Badge variant="warning">Pendente</Badge>
-      case "in_review":
+      }
+      case 'in_review': {
         return <Badge variant="default">Em Análise</Badge>
-      case "approved":
+      }
+      case 'approved': {
         return <Badge variant="success">Aprovado</Badge>
-      case "rejected":
+      }
+      case 'rejected': {
         return <Badge variant="destructive">Rejeitado</Badge>
-      default:
+      }
+      default: {
         return <Badge variant="secondary">{status}</Badge>
+      }
     }
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Verificações KYC Pendentes</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Verificações KYC Pendentes
+        </h1>
         <p className="mt-2 text-gray-600">
           Analise e aprove ou rejeite as verificações de identidade
         </p>
       </div>
 
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Carregando...</div>
+        <div className="py-8 text-center text-gray-500">Carregando...</div>
       ) : verifications.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-gray-500">
@@ -132,43 +146,48 @@ export default function KYCPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {verifications.map((kyc) => (
             <Card key={kyc.id} className="overflow-hidden">
               <CardHeader className="bg-gray-50">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{kyc.profiles.full_name}</CardTitle>
+                  <CardTitle className="text-lg">
+                    {kyc.profiles.full_name}
+                  </CardTitle>
                   {getStatusBadge(kyc.status)}
                 </div>
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="space-y-1 text-sm text-gray-600">
                   <div>CPF: {kyc.profiles.cpf}</div>
                   <div>
-                    Enviado em: {new Date(kyc.created_at).toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
+                    Enviado em:{' '}
+                    {new Date(kyc.created_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
                     })}
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent className="pt-6 space-y-6">
+              <CardContent className="space-y-6 pt-6">
                 {/* Documentos */}
                 <div className="space-y-4">
                   <div>
-                    <Label className="flex items-center gap-2 mb-2">
+                    <Label className="mb-2 flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       Documento - Frente
                     </Label>
                     {kyc.document_front_url ? (
-                      <div className="border rounded-lg overflow-hidden">
+                      <div className="overflow-hidden rounded-lg border">
                         <img
                           src={kyc.document_front_url}
                           alt="Documento Frente"
-                          className="w-full h-48 object-cover cursor-pointer hover:opacity-90"
-                          onClick={() => window.open(kyc.document_front_url!, "_blank")}
+                          className="h-48 w-full cursor-pointer object-cover hover:opacity-90"
+                          onClick={() =>
+                            window.open(kyc.document_front_url!, '_blank')
+                          }
                         />
                       </div>
                     ) : (
@@ -177,17 +196,19 @@ export default function KYCPage() {
                   </div>
 
                   <div>
-                    <Label className="flex items-center gap-2 mb-2">
+                    <Label className="mb-2 flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       Documento - Verso
                     </Label>
                     {kyc.document_back_url ? (
-                      <div className="border rounded-lg overflow-hidden">
+                      <div className="overflow-hidden rounded-lg border">
                         <img
                           src={kyc.document_back_url}
                           alt="Documento Verso"
-                          className="w-full h-48 object-cover cursor-pointer hover:opacity-90"
-                          onClick={() => window.open(kyc.document_back_url!, "_blank")}
+                          className="h-48 w-full cursor-pointer object-cover hover:opacity-90"
+                          onClick={() =>
+                            window.open(kyc.document_back_url!, '_blank')
+                          }
                         />
                       </div>
                     ) : (
@@ -196,17 +217,17 @@ export default function KYCPage() {
                   </div>
 
                   <div>
-                    <Label className="flex items-center gap-2 mb-2">
+                    <Label className="mb-2 flex items-center gap-2">
                       <Camera className="h-4 w-4" />
                       Selfie
                     </Label>
                     {kyc.selfie_url ? (
-                      <div className="border rounded-lg overflow-hidden">
+                      <div className="overflow-hidden rounded-lg border">
                         <img
                           src={kyc.selfie_url}
                           alt="Selfie"
-                          className="w-full h-48 object-cover cursor-pointer hover:opacity-90"
-                          onClick={() => window.open(kyc.selfie_url!, "_blank")}
+                          className="h-48 w-full cursor-pointer object-cover hover:opacity-90"
+                          onClick={() => window.open(kyc.selfie_url!, '_blank')}
                         />
                       </div>
                     ) : (
@@ -217,28 +238,34 @@ export default function KYCPage() {
 
                 {/* Informações do Documento */}
                 {kyc.document_type && (
-                  <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 rounded-lg bg-gray-50 p-4">
                     <div>
-                      <Label className="text-xs text-gray-600">Tipo de Documento</Label>
-                      <div className="text-sm font-medium uppercase">{kyc.document_type}</div>
+                      <Label className="text-xs text-gray-600">
+                        Tipo de Documento
+                      </Label>
+                      <div className="text-sm font-medium uppercase">
+                        {kyc.document_type}
+                      </div>
                     </div>
                     <div>
                       <Label className="text-xs text-gray-600">Número</Label>
-                      <div className="text-sm font-medium">{kyc.document_number}</div>
+                      <div className="text-sm font-medium">
+                        {kyc.document_number}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Integração Proteo (Mock) */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                  <div className="mb-2 flex items-center gap-2">
                     <User className="h-4 w-4 text-blue-600" />
                     <Label className="text-blue-900">Verificação Proteo</Label>
                   </div>
                   <div className="text-sm text-blue-800">
                     Status: Verificação manual necessária
                   </div>
-                  <div className="text-xs text-blue-600 mt-1">
+                  <div className="mt-1 text-xs text-blue-600">
                     Integração com API Proteo em desenvolvimento
                   </div>
                 </div>
@@ -248,7 +275,7 @@ export default function KYCPage() {
                   <Label>Motivo da Rejeição (se aplicável)</Label>
                   <Textarea
                     placeholder="Descreva o motivo da rejeição..."
-                    value={rejectionReason[kyc.id] || ""}
+                    value={rejectionReason[kyc.id] || ''}
                     onChange={(e) =>
                       setRejectionReason({
                         ...rejectionReason,
@@ -270,14 +297,14 @@ export default function KYCPage() {
                       rejectionReason[kyc.id].trim().length < 10
                     }
                   >
-                    <XCircle className="h-4 w-4 mr-2" />
+                    <XCircle className="mr-2 h-4 w-4" />
                     Rejeitar
                   </Button>
                   <Button
                     onClick={() => handleApprove(kyc.id)}
                     disabled={actionLoading === kyc.id}
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <CheckCircle className="mr-2 h-4 w-4" />
                     Aprovar
                   </Button>
                 </div>
@@ -289,7 +316,7 @@ export default function KYCPage() {
 
       {/* Estatísticas */}
       {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium text-gray-600">
@@ -298,7 +325,7 @@ export default function KYCPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {verifications.filter((v) => v.status === "pending").length}
+                {verifications.filter((v) => v.status === 'pending').length}
               </div>
             </CardContent>
           </Card>
@@ -311,7 +338,7 @@ export default function KYCPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {verifications.filter((v) => v.status === "in_review").length}
+                {verifications.filter((v) => v.status === 'in_review').length}
               </div>
             </CardContent>
           </Card>

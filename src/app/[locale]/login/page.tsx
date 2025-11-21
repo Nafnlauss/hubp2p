@@ -104,80 +104,97 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container flex min-h-screen items-center justify-center px-4 py-16">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
-            {t('auth.login.title')}
-          </CardTitle>
-          <CardDescription>{t('auth.login.subtitle')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('auth.login.email')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder={t('auth.login.emailPlaceholder')}
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 py-16">
+      <div className="container mx-auto flex items-center justify-center">
+        <Card className="w-full max-w-2xl shadow-2xl">
+          <CardHeader className="space-y-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+            <CardTitle className="text-3xl font-bold">
+              {t('auth.login.title')}
+            </CardTitle>
+            <CardDescription className="text-blue-100">
+              {t('auth.login.subtitle')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">
+                        {t('auth.login.email')}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder={t('auth.login.emailPlaceholder')}
+                          className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                          {...field}
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('auth.login.password')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={t('auth.login.passwordPlaceholder')}
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium text-gray-700">
+                        {t('auth.login.password')}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder={t('auth.login.passwordPlaceholder')}
+                          className="h-11 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+                          {...field}
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('common.loading')}
-                  </>
-                ) : (
-                  t('auth.login.submit')
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm text-muted-foreground">
-            {t('auth.login.noAccount')}{' '}
-            <Link
-              href={`/${locale}/register`}
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              {t('auth.login.registerLink')}
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+                <Button
+                  type="submit"
+                  className="h-11 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-lg font-semibold transition-all hover:from-blue-700 hover:to-purple-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      {t('common.loading')}
+                    </>
+                  ) : (
+                    t('auth.login.submit')
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4 border-t bg-gray-50 py-6">
+            <div className="text-center text-sm text-muted-foreground">
+              {t('auth.login.noAccount')}{' '}
+              <Link
+                href={`/${locale}/register`}
+                className="font-medium text-blue-600 underline-offset-4 transition-colors hover:text-blue-700 hover:underline"
+              >
+                {t('auth.login.registerLink')}
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   )
 }

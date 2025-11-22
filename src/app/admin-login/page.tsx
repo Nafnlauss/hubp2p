@@ -47,32 +47,43 @@ export default function AdminLoginPage() {
   })
 
   async function onSubmit(data: LoginFormValues) {
+    console.log('🚀 [LOGIN-PAGE] onSubmit chamado')
+    console.log(`📧 [LOGIN-PAGE] Email: ${data.email}`)
+    console.log(`🔑 [LOGIN-PAGE] Password length: ${data.password?.length}`)
+
     setIsLoading(true)
     try {
+      console.log('📞 [LOGIN-PAGE] Chamando adminLogin...')
+      // adminLogin agora faz redirect automaticamente em caso de sucesso
+      // e lança erro NEXT_REDIRECT que o Next.js trata automaticamente
       const result = await adminLogin(data.email, data.password)
+      console.log('📥 [LOGIN-PAGE] Resultado recebido:', result)
 
-      if (result.success) {
-        toast({
-          title: 'Login realizado!',
-          description: 'Redirecionando para o painel administrativo...',
-        })
-        // Usar window.location para forçar uma navegação completa
-        window.location.href = '/admin'
-      } else {
+      // Se chegou aqui, houve erro no login
+      if (result && !result.success) {
+        console.log('❌ [LOGIN-PAGE] Login falhou:', result.error)
         toast({
           title: 'Erro de autenticação',
           description: result.error || 'Credenciais inválidas',
           variant: 'destructive',
         })
+        setIsLoading(false)
       }
     } catch (error) {
-      console.error('Erro no login:', error)
+      // Se for erro de redirect do Next.js, deixar ele acontecer
+      if (error instanceof Error && error.message?.includes('NEXT_REDIRECT')) {
+        console.log(
+          '🔄 [LOGIN-PAGE] Redirect detectado, deixando Next.js processar...',
+        )
+        return
+      }
+
+      console.error('💥 [LOGIN-PAGE] Erro no login:', error)
       toast({
         title: 'Erro',
         description: 'Erro ao fazer login. Tente novamente.',
         variant: 'destructive',
       })
-    } finally {
       setIsLoading(false)
     }
   }

@@ -63,7 +63,12 @@ export async function updateSession(request: NextRequest) {
   console.log('🔍 [MIDDLEWARE] Path:', pathname)
 
   // Skip ALL authentication logic for admin routes (they use admin_session cookie)
-  if (pathname.startsWith('/admin')) {
+  // Check for both /admin and /{locale}/admin routes
+  if (
+    pathname.startsWith('/admin') ||
+    pathname.includes('/admin/') ||
+    pathname.includes('/admin-login')
+  ) {
     console.log('✅ [MIDDLEWARE] Rota admin - pulando verificação Supabase')
     return supabaseResponse
   }

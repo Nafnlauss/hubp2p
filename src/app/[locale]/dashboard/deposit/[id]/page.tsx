@@ -1,15 +1,9 @@
+/* eslint-disable jsx-a11y/label-has-associated-control, unicorn/no-null, unicorn/consistent-function-scoping */
 'use client'
 
 import { differenceInSeconds, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import {
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle2,
-  Clock,
-  Copy,
-  QrCode,
-} from 'lucide-react'
+import { AlertCircle, ArrowLeft, CheckCircle2, Clock, Copy } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -26,7 +20,6 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
-import { formatCurrency } from '@/lib/utils/format'
 
 interface Transaction {
   id: string
@@ -295,40 +288,20 @@ export default function PaymentPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {transaction.payment_method === 'pix' ? (
-                <>
-                  <QrCode className="h-5 w-5" />
-                  Dados para Pagamento PIX
-                </>
+                <>Dados para Pagamento PIX</>
               ) : (
                 <>Dados para TED</>
               )}
             </CardTitle>
             <CardDescription>
               {transaction.payment_method === 'pix'
-                ? 'Use o QR Code ou a chave PIX abaixo para realizar o pagamento'
+                ? 'Use a chave PIX abaixo para realizar o pagamento'
                 : 'Realize a transferência bancária com os dados abaixo'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {transaction.payment_method === 'pix' ? (
               <>
-                {/* QR Code PIX */}
-                {transaction.pix_qr_code && (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="rounded-lg border-2 border-border p-4">
-                      <div className="flex h-64 w-64 items-center justify-center bg-muted">
-                        {/* Aqui você colocaria a imagem do QR Code */}
-                        <QrCode className="h-32 w-32 text-muted-foreground" />
-                      </div>
-                    </div>
-                    <p className="text-center text-sm text-muted-foreground">
-                      Escaneie o QR Code com o app do seu banco
-                    </p>
-                  </div>
-                )}
-
-                <Separator />
-
                 {/* Chave PIX */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Chave PIX</label>

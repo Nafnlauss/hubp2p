@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Mail,
   MapPin,
-  Phone,
   User,
   Wallet,
   XCircle,
@@ -43,7 +42,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
 
   // Buscar dados do cliente
   const { data: client } = await supabase
-    .from('clients')
+    .from('profiles')
     .select('*')
     .eq('id', resolvedParameters.id)
     .single()
@@ -52,11 +51,14 @@ export default async function ClientDetailPage({ params }: PageProps) {
     notFound()
   }
 
+  // Buscar email do auth.users
+  const { data: userData } = await supabase.auth.admin.getUserById(client.id)
+
   // Buscar transações do cliente
   const { data: transactions } = await supabase
     .from('transactions')
     .select('*')
-    .eq('client_id', resolvedParameters.id)
+    .eq('user_id', resolvedParameters.id)
     .order('created_at', { ascending: false })
 
   const statusMap = {
@@ -83,7 +85,9 @@ export default async function ClientDetailPage({ params }: PageProps) {
             <h1 className="text-3xl font-bold tracking-tight">
               {client.full_name}
             </h1>
-            <p className="text-muted-foreground">{client.email}</p>
+            <p className="text-muted-foreground">
+              {userData?.user?.email || ''}
+            </p>
           </div>
           {client.kyc_status === 'approved' ? (
             <Badge
@@ -118,23 +122,23 @@ export default async function ClientDetailPage({ params }: PageProps) {
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium text-muted-foreground">
                   Nome Completo
-                </label>
+                </div>
                 <p className="text-sm">{client.full_name}</p>
               </div>
               <Separator />
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium text-muted-foreground">
                   CPF
-                </label>
+                </div>
                 <p className="font-mono text-sm">{client.cpf}</p>
               </div>
               <Separator />
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium text-muted-foreground">
                   Data de Nascimento
-                </label>
+                </div>
                 <p className="text-sm">
                   {client.birth_date
                     ? format(new Date(client.birth_date), 'dd/MM/yyyy', {
@@ -145,9 +149,9 @@ export default async function ClientDetailPage({ params }: PageProps) {
               </div>
               <Separator />
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium text-muted-foreground">
                   Cadastrado em
-                </label>
+                </div>
                 <p className="text-sm">
                   {format(
                     new Date(client.created_at),
@@ -171,16 +175,16 @@ export default async function ClientDetailPage({ params }: PageProps) {
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium text-muted-foreground">
                   E-mail
-                </label>
-                <p className="text-sm">{client.email}</p>
+                </div>
+                <p className="text-sm">{userData?.user?.email || ''}</p>
               </div>
               <Separator />
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium text-muted-foreground">
                   Telefone
-                </label>
+                </div>
                 <p className="text-sm">{client.phone || '-'}</p>
               </div>
             </div>
@@ -198,40 +202,40 @@ export default async function ClientDetailPage({ params }: PageProps) {
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium text-muted-foreground">
                   Logradouro
-                </label>
+                </div>
                 <p className="text-sm">{client.address_street || '-'}</p>
               </div>
               <Separator />
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <div className="text-sm font-medium text-muted-foreground">
                     Número
-                  </label>
+                  </div>
                   <p className="text-sm">{client.address_number || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <div className="text-sm font-medium text-muted-foreground">
                     Complemento
-                  </label>
+                  </div>
                   <p className="text-sm">{client.address_complement || '-'}</p>
                 </div>
               </div>
               <Separator />
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <div className="text-sm font-medium text-muted-foreground">
                     Bairro
-                  </label>
+                  </div>
                   <p className="text-sm">
                     {client.address_neighborhood || '-'}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <div className="text-sm font-medium text-muted-foreground">
                     CEP
-                  </label>
+                  </div>
                   <p className="font-mono text-sm">
                     {client.address_zip_code || '-'}
                   </p>
@@ -240,15 +244,15 @@ export default async function ClientDetailPage({ params }: PageProps) {
               <Separator />
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <div className="text-sm font-medium text-muted-foreground">
                     Cidade
-                  </label>
+                  </div>
                   <p className="text-sm">{client.address_city || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <div className="text-sm font-medium text-muted-foreground">
                     Estado
-                  </label>
+                  </div>
                   <p className="text-sm">{client.address_state || '-'}</p>
                 </div>
               </div>

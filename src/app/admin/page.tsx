@@ -31,7 +31,7 @@ export default async function AdminDashboard() {
 
   // Buscar estatísticas
   const { count: totalClients } = await supabase
-    .from('clients')
+    .from('profiles')
     .select('*', { count: 'exact', head: true })
 
   const { count: totalTransactions } = await supabase
@@ -61,9 +61,8 @@ export default async function AdminDashboard() {
     .select(
       `
       *,
-      clients (
-        full_name,
-        email
+      profiles (
+        full_name
       )
     `,
     )
@@ -231,19 +230,10 @@ export default async function AdminDashboard() {
                           <p className="font-medium">
                             {
                               (
-                                transaction.clients as unknown as {
+                                transaction.profiles as unknown as {
                                   full_name: string
                                 }
                               )?.full_name
-                            }
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {
-                              (
-                                transaction.clients as unknown as {
-                                  email: string
-                                }
-                              )?.email
                             }
                           </p>
                         </div>

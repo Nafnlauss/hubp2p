@@ -131,6 +131,24 @@ function parseCurrencyBRL(value: string): number {
   return Number.isNaN(parsed) ? 0 : parsed
 }
 
+function formatCurrencyInput(value: string): string {
+  // Remove tudo exceto números
+  const numbers = value.replaceAll(/\D/g, '')
+
+  if (numbers.length === 0) return ''
+
+  // Converte para número de centavos
+  const cents = Number.parseInt(numbers, 10)
+
+  // Converte para formato BRL
+  const reais = cents / 100
+
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(reais)
+}
+
 export default function NewDepositPage() {
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -459,35 +477,21 @@ export default function NewDepositPage() {
                           </span>
                           <Input
                             type="text"
-                            inputMode="decimal"
+                            inputMode="numeric"
                             placeholder="0,00"
                             className="pl-10 text-lg"
                             value={amountDisplay}
                             onChange={(event) => {
                               const value = event.target.value
-                              // Permitir apenas números e vírgula
-                              const cleaned = value.replaceAll(/[^\d,]/g, '')
-                              setAmountDisplay(cleaned)
+                              // Formatar em tempo real
+                              const formatted = formatCurrencyInput(value)
+                              setAmountDisplay(formatted)
 
                               // Converter para número e atualizar o form
-                              const numericValue = parseCurrencyBRL(cleaned)
+                              const numericValue = parseCurrencyBRL(formatted)
                               field.onChange(numericValue)
                             }}
-                            onBlur={() => {
-                              // Formatar o valor quando o campo perde o foco
-                              if (field.value) {
-                                setAmountDisplay(formatCurrencyBRL(field.value))
-                              }
-                              field.onBlur()
-                            }}
-                            onFocus={() => {
-                              // Remover formatação quando o campo recebe foco
-                              if (field.value) {
-                                setAmountDisplay(
-                                  field.value.toString().replace('.', ','),
-                                )
-                              }
-                            }}
+                            onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
                           />

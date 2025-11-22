@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-null */
 import { NextResponse } from 'next/server'
 
 import { createAdminClient } from '@/lib/supabase/server'

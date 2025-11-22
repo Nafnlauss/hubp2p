@@ -60,13 +60,22 @@ src/
 ├── app/                          # App Router do Next.js
 │   ├── [locale]/                 # Rotas com internacionalização
 │   │   ├── admin/                # Painel administrativo (rotas protegidas)
+│   │   │   ├── transactions/     # Gestão de transações
+│   │   │   └── layout.tsx        # Layout com autenticação admin
 │   │   ├── dashboard/            # Dashboard do usuário (rotas protegidas)
+│   │   │   └── deposit/          # Página de depósito
 │   │   ├── login/                # Autenticação
 │   │   └── register/             # Registro de usuário
-│   └── actions/                  # Server Actions
-│       ├── admin.ts              # Ações administrativas
-│       ├── auth.ts               # Ações de autenticação
-│       └── onboarding.ts         # Ações de cadastro/KYC
+│   ├── actions/                  # Server Actions
+│   │   ├── admin.ts              # Ações administrativas (usa createAdminClient)
+│   │   ├── admin-auth.ts         # Autenticação admin (cookie admin_session)
+│   │   ├── auth.ts               # Ações de autenticação de usuário
+│   │   ├── get-admin-transactions.ts  # Buscar transações (admin)
+│   │   ├── get-transaction-detail.ts  # Detalhes de transação
+│   │   └── onboarding.ts         # Ações de cadastro/KYC
+│   └── api/                      # API Routes
+│       ├── proteo/webhook/       # Webhook para callbacks da Proteo
+│       └── test-helpers/         # Helpers para testes E2E
 ├── components/                   # Componentes React
 │   ├── ui/                       # Componentes do shadcn/ui
 │   └── providers/                # Context providers
@@ -78,17 +87,19 @@ src/
 ├── lib/                          # Bibliotecas e utilitários
 │   ├── supabase/                 # Configuração do Supabase
 │   │   ├── client.ts             # Cliente Supabase (client-side)
-│   │   ├── server.ts             # Cliente Supabase (server-side)
+│   │   ├── server.ts             # createClient + createAdminClient (bypassa RLS)
 │   │   └── middleware.ts         # Middleware de autenticação
 │   ├── utils/                    # Funções utilitárias
+│   │   └── format.ts             # Formatação de números e moeda
 │   ├── validations/              # Schemas de validação Zod
 │   │   └── auth.ts               # Validações de autenticação
-│   ├── utils.ts                  # Funções utilitárias gerais
+│   ├── utils.ts                  # Funções utilitárias gerais (cn, etc)
 │   ├── cep.ts                    # Validação/busca de CEP
 │   ├── masks.ts                  # Máscaras de input (CPF, telefone, etc)
+│   ├── bitget.ts                 # Cliente para API Bitget (exchange)
 │   └── i18n-utils.ts             # Utilitários de internacionalização
 ├── types/                        # Definições de tipos TypeScript
-│   ├── supabase.ts               # Tipos do banco Supabase
+│   ├── supabase.ts               # Tipos do banco Supabase (gerados)
 │   ├── auth.ts                   # Tipos de autenticação
 │   └── transactions.ts           # Tipos de transações
 ├── i18n/                         # Configuração de internacionalização
@@ -96,17 +107,43 @@ src/
 └── middleware.ts                 # Middleware de i18n + autenticação
 ```
 
+### Padrões de Arquitetura Importantes
+
+**Admin vs. User Access:**
+- **User actions**: Usam `createClient()` do `@/lib/supabase/server` - respeitam RLS
+- **Admin actions**: Usam `createAdminClient()` - bypassa RLS usando SUPABASE_SERVICE_ROLE_KEY
+- **Admin auth**: Sistema separado com cookie `admin_session` e tabela `admin_users`
+- Sempre verificar `checkAdminAccess()` antes de operações administrativas
+
+**Middleware Flow:**
+1. Request → `middleware.ts`
+2. Para rotas admin/API: apenas `updateSession()` (Supabase auth)
+3. Para rotas localizadas: `updateSession()` + `intlMiddleware` (next-intl)
+4. Cookies do Supabase são preservados na resposta do intl middleware
+
 ### Fluxo de Autenticação
 
-O projeto usa **Supabase Auth** com middleware customizado que:
-1. Atualiza sessão automaticamente (refresh de tokens)
-2. Aplica roteamento de internacionalização
-3. Protege rotas administrativas e de dashboard
+O projeto usa **Supabase Auth** com dois sistemas distintos:
+
+**1. Autenticação de Usuários (Cliente Final):**
+- Via Supabase Auth padrão (JWT tokens em cookies)
+- Middleware atualiza sessão automaticamente (refresh de tokens)
+- Server Actions em `src/app/actions/auth.ts`
+- Usa `createClient()` para operações que respeitam RLS
+
+**2. Autenticação Administrativa:**
+- Sistema separado com cookie `admin_session`
+- Tabela `admin_users` no banco
+- Server Actions em `src/app/actions/admin-auth.ts`
+- Usa `createAdminClient()` para bypass de RLS
+- Função `checkAdminAccess()` valida sessão admin
 
 **Arquivos principais:**
-- `src/lib/supabase/middleware.ts` - Lógica de autenticação
-- `src/middleware.ts` - Combina auth + i18n
-- `src/app/actions/auth.ts` - Server Actions de login/logout
+- `src/lib/supabase/middleware.ts` - Lógica de atualização de sessão
+- `src/middleware.ts` - Combina auth + i18n, trata rotas admin/API separadamente
+- `src/app/actions/auth.ts` - Server Actions de login/logout de usuário
+- `src/app/actions/admin-auth.ts` - Server Actions de login admin
+- `src/app/actions/admin.ts` - Operações admin (usa checkAdminAccess)
 
 ### Internacionalização (i18n)
 
@@ -132,9 +169,16 @@ Usa **shadcn/ui** com TailwindCSS:
 ### Server Actions
 
 Next.js Server Actions para operações do servidor:
-- `src/app/actions/auth.ts` - Login, logout, registro
-- `src/app/actions/admin.ts` - Operações administrativas
+- `src/app/actions/auth.ts` - Login, logout, registro de usuários
+- `src/app/actions/admin.ts` - Operações administrativas (updateTransactionStatus, approveKYC, etc)
+- `src/app/actions/admin-auth.ts` - Login/logout de admin
+- `src/app/actions/get-admin-transactions.ts` - Buscar lista de transações (admin)
+- `src/app/actions/get-transaction-detail.ts` - Detalhes de uma transação específica
 - `src/app/actions/onboarding.ts` - KYC e onboarding
+- `src/app/actions/payment-accounts.ts` - Gerenciar contas de pagamento
+- `src/app/actions/get-active-accounts.ts` - Buscar contas de pagamento ativas
+
+**Padrão importante**: Server Actions de admin DEVEM usar `createAdminClient()` para bypass de RLS
 
 ## Requisitos de Conformidade
 
@@ -210,12 +254,24 @@ Configurado com regras rigorosas:
 
 ## Painel Administrativo
 
+### Sistema de Autenticação Separado
+O painel admin usa autenticação própria:
+- Cookie `admin_session` com ID do admin
+- Tabela `admin_users` no banco
+- Login/logout via `src/app/actions/admin-auth.ts`
+- Verificação via `checkAdminAccess()` em todas as operações
+
+### Rotas Administrativas
 Rotas em `src/app/[locale]/admin/`:
 - `/admin` - Dashboard com visão geral
 - `/admin/transactions` - Gerenciamento de transações
+- `/admin/transactions/[id]` - Detalhes de transação específica
 - `/admin/kyc` - Aprovação de KYC
 - `/admin/users` - Gerenciamento de usuários
 - `/admin/notifications` - Configuração de notificações Pushover
+- `/admin/payment-accounts` - Gerenciar contas de pagamento
+
+**IMPORTANTE:** Todas as rotas admin devem validar autenticação via `checkAdminAccess()` antes de realizar operações
 
 ## Requisitos de Segurança
 
@@ -239,12 +295,58 @@ Consultar `.env.local.example` para lista completa. Principais:
 - `PUSHOVER_USER_KEY` - Chave de usuário Pushover
 - `TRANSACTION_EXPIRY_MINUTES` - Tempo de expiração da transação (padrão: 40)
 
+## Testes
+
+### Testes Unitários (Vitest)
+- Framework: Vitest com @testing-library/react
+- Configuração: Automática via Next.js
+- Localização: Arquivos `*.test.ts` ou `*.test.tsx` ao lado do código testado
+- Exemplo: `src/lib/utils/format.test.ts`
+
+### Testes E2E (Playwright)
+- Framework: Playwright
+- Configuração: `playwright.config.ts`
+- Localização: Pasta `tests/` na raiz
+- Exemplos:
+  - `tests/testCryptoSentButton.spec.ts` - Testa fluxo de envio de cripto
+  - `tests/debugAdminAccess.spec.ts` - Debug de acesso admin
+  - `tests/testAdminLoginSimple.spec.ts` - Teste de login admin
+
+**Padrões de Teste:**
+- Use helper routes em `src/app/api/test-helpers/` para resetar estado
+- Exemplo: `/api/test-helpers/reset-transaction/route.ts` para resetar transações em testes
+
+## Troubleshooting Comum
+
+### Problemas de Autenticação Admin
+- **Sintoma**: "Não autenticado" ao acessar rotas admin
+- **Causa**: Cookie `admin_session` não está presente ou inválido
+- **Solução**:
+  1. Verificar se `checkAdminAccess()` está sendo chamado
+  2. Verificar se cookie foi setado corretamente no login
+  3. Verificar se admin existe na tabela `admin_users`
+
+### Problemas com RLS (Row Level Security)
+- **Sintoma**: Operações admin não funcionam ou retornam dados vazios
+- **Causa**: Usando `createClient()` em vez de `createAdminClient()`
+- **Solução**: Server Actions de admin DEVEM usar `createAdminClient()` para bypass de RLS
+
+### Problemas de Middleware
+- **Sintoma**: Rotas admin sendo redirecionadas incorretamente
+- **Causa**: Middleware de i18n está sendo aplicado a rotas admin
+- **Solução**: Verificar que `middleware.ts` está skipando intl para rotas `/admin` e `/api`
+
 ## Documentação de Referência
 
+### APIs Externas
 - Backpack: https://docs.backpack.exchange/
 - MiniMax M2: https://platform.minimax.io/docs/api-reference/text-anthropic-api
 - MiniMax Text Generation: https://platform.minimax.io/docs/guides/text-generation
+- Bitget: Cliente em `src/lib/bitget.ts`
+
+### Documentação do Projeto
 - Next.js 15: Consultar `NEXTJS_15_BEST_PRACTICES.md` e `NEXTJS_15_CONFIGURATION.md`
 - Internacionalização: Consultar `README_I18N.md` e `I18N_GUIDE.md`
 - shadcn/ui: Consultar `SHADCN_README.md` e `SHADCN_QUICK_START.md`
 - Notificações: Consultar `README_NOTIFICATIONS.md`
+- Estratégia geral: Consultar `estrategia.md` para contexto de negócio

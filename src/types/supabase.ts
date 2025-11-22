@@ -257,7 +257,7 @@ export type Database = {
       generate_transaction_number: { Args: never; Returns: string }
     }
     Enums: {
-      crypto_network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana'
+      crypto_network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana' | 'tron'
       kyc_status: 'pending' | 'in_review' | 'approved' | 'rejected'
       notification_status: 'sent' | 'failed' | 'pending'
       notification_type: 'pushover' | 'email' | 'sms'
@@ -396,7 +396,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      crypto_network: ['bitcoin', 'ethereum', 'polygon', 'bsc', 'solana'],
+      crypto_network: ['bitcoin', 'ethereum', 'polygon', 'bsc', 'solana', 'tron'],
       kyc_status: ['pending', 'in_review', 'approved', 'rejected'],
       notification_status: ['sent', 'failed', 'pending'],
       notification_type: ['pushover', 'email', 'sms'],

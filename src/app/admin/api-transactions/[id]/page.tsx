@@ -5,51 +5,49 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { sendNotification, updateTransactionStatus } from '@/app/actions/admin'
+import { getApiTransaction, updateApiTransactionStatus } from '@/app/actions/api-transactions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { createClient } from '@/lib/supabase/client'
 
-interface TransactionDetail {
+interface ApiTransactionDetail {
   id: string
   transaction_number: string
   amount_brl: number
-  crypto_amount: number | null
-  payment_method: string
-  crypto_network: string
-  status: string
+  amount_usd: number | null
+  exchange_rate: number | null
+  crypto_network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana' | 'tron'
   wallet_address: string
+  status: 'pending_payment' | 'payment_received' | 'converting' | 'sent' | 'cancelled' | 'expired'
+  pix_key: string | null
   tx_hash: string | null
-  admin_notes: string | null
   created_at: string
+  expires_at: string
   payment_confirmed_at: string | null
   crypto_sent_at: string | null
-  expires_at: string
-  pix_key: string | null
-  pix_qr_code: string | null
-  bank_name: string | null
-  bank_account_holder: string | null
-  bank_account_number: string | null
-  bank_account_agency: string | null
-  profiles: {
-    full_name: string
-    cpf: string
-    phone: string | null
-    email: string
-  }
+  updated_at: string
+  admin_notes: string | null
 }
 
-export default function TransactionDetailPage() {
+const networkLabels: Record<string, string> = {
+  bitcoin: 'Bitcoin (BTC)',
+  ethereum: 'Ethereum (ETH)',
+  polygon: 'Polygon (MATIC)',
+  bsc: 'Binance Smart Chain (BNB)',
+  solana: 'Solana (SOL)',
+  tron: 'Tron (TRX)',
+}
+
+export default function ApiTransactionDetailPage() {
   const parameters = useParams()
   const router = useRouter()
   const locale = parameters.locale as string
   const transactionId = parameters.id as string
 
-  const [transaction, setTransaction] = useState<TransactionDetail | null>(null)
+  const [transaction, setTransaction] = useState<ApiTransactionDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [txHash, setTxHash] = useState('')
   const [notes, setNotes] = useState('')
@@ -60,33 +58,26 @@ export default function TransactionDetailPage() {
   }, [transactionId])
 
   async function loadTransaction() {
-    const supabase = createClient()
-
-    const { data, error } = await supabase
-      .from('transactions')
-      .select(
-        `
-        *,
-        profiles (
-          full_name,
-          cpf,
-          phone
-        )
-      `,
-      )
-      .eq('id', transactionId)
-      .single()
-
-    if (!error && data) {
-      const transactionData = data as any
-      setTransaction(transactionData)
-      setNotes(transactionData.admin_notes || '')
+    try {
+      const data = await getApiTransaction(transactionId)
+      if (data) {
+        setTransaction(data)
+        setNotes(data.admin_notes || '')
+        if (data.tx_hash) {
+          setTxHash(data.tx_hash)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading transaction:', error)
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
-  async function handleStatusUpdate(newStatus: string, requiresTxHash = false) {
+  async function handleStatusUpdate(
+    newStatus: ApiTransactionDetail['status'],
+    requiresTxHash = false
+  ) {
     if (requiresTxHash && !txHash.trim()) {
       alert('Por favor, insira o TX Hash')
       return
@@ -94,20 +85,19 @@ export default function TransactionDetailPage() {
 
     setActionLoading(true)
 
-    const result = await updateTransactionStatus(transactionId, newStatus, {
-      tx_hash: requiresTxHash ? txHash : undefined,
-      admin_notes: notes,
-    })
+    try {
+      await updateApiTransactionStatus(transactionId, newStatus, {
+        tx_hash: requiresTxHash ? txHash : undefined,
+        admin_notes: notes,
+      })
 
-    if (result.success) {
-      await sendNotification(transactionId)
       router.refresh()
-      loadTransaction()
-    } else {
-      alert(`Erro: ${result.error}`)
+      await loadTransaction()
+    } catch (error) {
+      alert(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+    } finally {
+      setActionLoading(false)
     }
-
-    setActionLoading(false)
   }
 
   const formatCurrency = (value: number) => {
@@ -122,13 +112,13 @@ export default function TransactionDetailPage() {
       string,
       {
         label: string
-        variant: 'default' | 'secondary' | 'destructive' | 'success' | 'warning'
+        variant: 'default' | 'secondary' | 'destructive' | 'outline'
       }
     > = {
-      pending_payment: { label: 'Aguardando Pagamento', variant: 'warning' },
+      pending_payment: { label: 'Aguardando Pagamento', variant: 'outline' },
       payment_received: { label: 'Pagamento Recebido', variant: 'secondary' },
       converting: { label: 'Convertendo', variant: 'default' },
-      sent: { label: 'Enviado', variant: 'success' },
+      sent: { label: 'Enviado', variant: 'default' },
       cancelled: { label: 'Cancelado', variant: 'destructive' },
       expired: { label: 'Expirado', variant: 'destructive' },
     }
@@ -161,7 +151,7 @@ export default function TransactionDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href={`/${locale}/admin/transactions`}>
+          <Link href={`/${locale}/admin/api-transactions`}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
@@ -169,7 +159,7 @@ export default function TransactionDetailPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Transação #{transaction.transaction_number}
+              Transação API #{transaction.transaction_number}
             </h1>
             <p className="mt-1 text-gray-600">
               Criada em{' '}
@@ -202,25 +192,28 @@ export default function TransactionDetailPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-gray-600">Valor em Crypto</Label>
+                  <Label className="text-gray-600">Valor em USDT</Label>
                   <div className="text-2xl font-bold">
-                    {transaction.crypto_amount || 'Calculando...'}
+                    {transaction.amount_usd
+                      ? `$${transaction.amount_usd.toFixed(2)}`
+                      : 'Calculando...'}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {transaction.exchange_rate && (
                 <div>
-                  <Label className="text-gray-600">Método de Pagamento</Label>
-                  <div className="font-medium uppercase">
-                    {transaction.payment_method}
+                  <Label className="text-gray-600">Taxa de Câmbio</Label>
+                  <div className="font-medium">
+                    R$ {transaction.exchange_rate.toFixed(2)} / USD
                   </div>
                 </div>
-                <div>
-                  <Label className="text-gray-600">Rede Blockchain</Label>
-                  <div className="font-medium capitalize">
-                    {transaction.crypto_network}
-                  </div>
+              )}
+
+              <div>
+                <Label className="text-gray-600">Rede Blockchain</Label>
+                <div className="font-medium">
+                  {networkLabels[transaction.crypto_network]}
                 </div>
               </div>
 
@@ -242,80 +235,22 @@ export default function TransactionDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Dados de Pagamento */}
+          {/* Dados de Pagamento PIX */}
           <Card>
             <CardHeader>
-              <CardTitle>Dados de Pagamento</CardTitle>
+              <CardTitle>Dados de Pagamento PIX</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {transaction.payment_method === 'pix' ? (
-                <>
-                  <div>
-                    <Label className="text-gray-600">Chave PIX</Label>
-                    <div className="font-mono text-sm">
-                      {transaction.pix_key}
-                    </div>
-                  </div>
-                  {transaction.pix_qr_code && (
-                    <div>
-                      <Label className="text-gray-600">QR Code PIX</Label>
-                      <div className="mt-2 rounded bg-gray-100 p-4">
-                        <img
-                          src={transaction.pix_qr_code}
-                          alt="QR Code"
-                          className="h-48 w-48"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-gray-600">Banco</Label>
-                      <div>{transaction.bank_name}</div>
-                    </div>
-                    <div>
-                      <Label className="text-gray-600">Titular</Label>
-                      <div>{transaction.bank_account_holder}</div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-gray-600">Agência</Label>
-                      <div>{transaction.bank_account_agency}</div>
-                    </div>
-                    <div>
-                      <Label className="text-gray-600">Conta</Label>
-                      <div>{transaction.bank_account_number}</div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Dados do Usuário */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados do Usuário</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
               <div>
-                <Label className="text-gray-600">Nome Completo</Label>
-                <div className="font-medium">
-                  {transaction.profiles.full_name}
+                <Label className="text-gray-600">Chave PIX</Label>
+                <div className="font-mono text-sm">
+                  {transaction.pix_key || 'Não disponível'}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-gray-600">CPF</Label>
-                  <div className="font-mono">{transaction.profiles.cpf}</div>
-                </div>
-                <div>
-                  <Label className="text-gray-600">Telefone</Label>
-                  <div>{transaction.profiles.phone || 'Não informado'}</div>
+              <div>
+                <Label className="text-gray-600">Expira em</Label>
+                <div className="text-sm">
+                  {new Date(transaction.expires_at).toLocaleString('pt-BR')}
                 </div>
               </div>
             </CardContent>
@@ -372,18 +307,17 @@ export default function TransactionDetailPage() {
                 </div>
               )}
 
-              {transaction.status !== 'cancelled' &&
-                transaction.status !== 'sent' && (
-                  <Button
-                    onClick={() => handleStatusUpdate('cancelled')}
-                    disabled={actionLoading}
-                    variant="destructive"
-                    className="w-full"
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Cancelar Transação
-                  </Button>
-                )}
+              {transaction.status !== 'cancelled' && transaction.status !== 'sent' && (
+                <Button
+                  onClick={() => handleStatusUpdate('cancelled')}
+                  disabled={actionLoading}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancelar Transação
+                </Button>
+              )}
             </CardContent>
           </Card>
 
@@ -423,13 +357,9 @@ export default function TransactionDetailPage() {
                   <div className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-green-600" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium">
-                        Pagamento Confirmado
-                      </div>
+                      <div className="text-sm font-medium">Pagamento Confirmado</div>
                       <div className="text-xs text-gray-500">
-                        {new Date(
-                          transaction.payment_confirmed_at,
-                        ).toLocaleString('pt-BR')}
+                        {new Date(transaction.payment_confirmed_at).toLocaleString('pt-BR')}
                       </div>
                     </div>
                   </div>
@@ -441,9 +371,7 @@ export default function TransactionDetailPage() {
                     <div className="flex-1">
                       <div className="text-sm font-medium">Crypto Enviado</div>
                       <div className="text-xs text-gray-500">
-                        {new Date(transaction.crypto_sent_at).toLocaleString(
-                          'pt-BR',
-                        )}
+                        {new Date(transaction.crypto_sent_at).toLocaleString('pt-BR')}
                       </div>
                     </div>
                   </div>

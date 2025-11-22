@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/filename-case */
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/server'

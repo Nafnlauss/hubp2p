@@ -1,32 +1,41 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 
-import { createAdminClient, createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 // Helper para verificar se usuário é admin
 async function checkAdminAccess() {
-  const supabase = await createClient()
+  // Verificar cookie de sessão admin
+  const cookieStore = await cookies()
+  const adminSession = cookieStore.get('admin_session')
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  console.log('🔍 [CHECK-ADMIN] Cookie admin_session:', adminSession?.value)
 
-  if (!user) {
+  if (!adminSession?.value) {
+    console.log('❌ [CHECK-ADMIN] Cookie não encontrado')
     throw new Error('Não autenticado')
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', user.id)
+  // Verificar se o admin existe e é válido
+  const supabase = await createAdminClient()
+  const { data: admin, error } = await supabase
+    .from('admin_users')
+    .select('id, email')
+    .eq('id', adminSession.value)
     .single()
 
-  if (!profile?.is_admin) {
-    throw new Error('Acesso negado: apenas administradores')
+  console.log('📊 [CHECK-ADMIN] Admin data:', admin)
+  console.log('❌ [CHECK-ADMIN] Error:', error)
+
+  if (error || !admin) {
+    console.log('🔴 [CHECK-ADMIN] Sessão inválida')
+    throw new Error('Sessão admin inválida')
   }
 
-  return { user, supabase }
+  console.log('✅ [CHECK-ADMIN] Admin autenticado:', admin.email)
+  return { adminId: admin.id, supabase }
 }
 
 // Atualizar status da transação

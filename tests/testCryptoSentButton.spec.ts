@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, unicorn/prevent-abbreviations */
 import { expect, test } from '@playwright/test'
 
 test.describe('Teste Botão Cripto Enviada', () => {

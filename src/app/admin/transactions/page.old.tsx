@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { getAdminTransactions } from '@/app/actions/get-admin-transactions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,7 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { createClient } from '@/lib/supabase/client'
 
 interface Transaction {
   id: string
@@ -51,37 +51,19 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     loadTransactions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, methodFilter])
 
   async function loadTransactions() {
     setLoading(true)
-    const supabase = createClient()
 
-    let query = supabase
-      .from('transactions')
-      .select(
-        `
-        *,
-        profiles (
-          full_name,
-          cpf
-        )
-      `,
-      )
-      .order('created_at', { ascending: false })
+    const result = await getAdminTransactions({
+      status: statusFilter,
+      method: methodFilter,
+    })
 
-    if (statusFilter !== 'all') {
-      query = query.eq('status', statusFilter)
-    }
-
-    if (methodFilter !== 'all') {
-      query = query.eq('payment_method', methodFilter)
-    }
-
-    const { data, error } = await query
-
-    if (!error && data) {
-      setTransactions(data as any)
+    if (result.success && result.data) {
+      setTransactions(result.data)
     }
 
     setLoading(false)

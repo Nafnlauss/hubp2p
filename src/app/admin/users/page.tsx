@@ -93,6 +93,11 @@ export default function UsersPage() {
 
     const latestKyc = user.kyc_verifications[0]
 
+    // Verifica se latestKyc existe e tem status
+    if (!latestKyc || !latestKyc.status) {
+      return <Badge variant="secondary">Não Verificado</Badge>
+    }
+
     switch (latestKyc.status) {
       case 'approved': {
         return <Badge variant="success">Aprovado</Badge>

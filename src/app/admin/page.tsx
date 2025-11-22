@@ -132,7 +132,7 @@ export default async function AdminDashboard() {
           return (
             <Card
               key={index}
-              className="group relative overflow-hidden border-0 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              className="group relative overflow-hidden border-0 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
               {/* Background gradient sutil */}
               <div
@@ -204,7 +204,7 @@ export default async function AdminDashboard() {
                       </div>
                       <div className="flex min-w-[140px] flex-col items-end">
                         <span className="text-sm font-bold text-gray-900">
-                          {item.count} transação{item.count !== 1 ? 'ões' : ''}
+                          {item.count} transação{item.count === 1 ? '' : 'ões'}
                         </span>
                         <span className="text-xs font-medium text-gray-500">
                           {formatCurrency(item.value)}
@@ -233,10 +233,10 @@ export default async function AdminDashboard() {
             </div>
             <Link
               href="/admin/transactions"
-              className="group flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:shadow-lg hover:scale-105"
+              className="group flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
               Ver todas
-              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
             </Link>
           </div>
         </CardHeader>
@@ -296,7 +296,9 @@ export default async function AdminDashboard() {
                           {transaction.payment_method}
                         </span>
                       </TableCell>
-                      <TableCell>{getStatusBadge(transaction.status)}</TableCell>
+                      <TableCell>
+                        {getStatusBadge(transaction.status)}
+                      </TableCell>
                       <TableCell className="text-sm font-medium text-gray-600">
                         {new Date(transaction.created_at).toLocaleDateString(
                           'pt-BR',
@@ -308,7 +310,7 @@ export default async function AdminDashboard() {
                           className="group inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-colors hover:text-purple-600"
                         >
                           Ver detalhes
-                          <ArrowUpRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                          <ArrowUpRight className="h-3 w-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                         </Link>
                       </TableCell>
                     </TableRow>

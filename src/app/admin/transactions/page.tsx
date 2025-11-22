@@ -18,14 +18,14 @@ import {
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
-import { getAdminTransactions } from '@/app/actions/get-admin-transactions'
 import {
   deleteApiPaymentAccount,
   getApiPaymentAccounts,
   toggleApiAccountActive,
 } from '@/app/actions/api-payment-accounts'
-import { getApiTransactions } from '@/app/actions/api-transactions'
 import type { ApiTransaction } from '@/app/actions/api-transactions'
+import { getApiTransactions } from '@/app/actions/api-transactions'
+import { getAdminTransactions } from '@/app/actions/get-admin-transactions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -127,7 +127,7 @@ export default function TransactionsPage() {
     setApiLoading(true)
     try {
       const data = await getApiTransactions({
-        status: apiStatusFilter !== 'all' ? apiStatusFilter : undefined,
+        status: apiStatusFilter === 'all' ? undefined : apiStatusFilter,
       })
       setApiTransactions(data)
     } catch (error) {
@@ -349,11 +349,14 @@ export default function TransactionsPage() {
                     placeholder="Buscar por número, CPF ou nome..."
                     value={hubSearch}
                     onChange={(e) => setHubSearch(e.target.value)}
-                    className="pl-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="border-gray-200 pl-10 focus:border-purple-500 focus:ring-purple-500"
                   />
                 </div>
 
-                <Select value={hubStatusFilter} onValueChange={setHubStatusFilter}>
+                <Select
+                  value={hubStatusFilter}
+                  onValueChange={setHubStatusFilter}
+                >
                   <SelectTrigger className="border-gray-200 focus:border-purple-500 focus:ring-purple-500">
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
@@ -372,7 +375,10 @@ export default function TransactionsPage() {
                   </SelectContent>
                 </Select>
 
-                <Select value={hubMethodFilter} onValueChange={setHubMethodFilter}>
+                <Select
+                  value={hubMethodFilter}
+                  onValueChange={setHubMethodFilter}
+                >
                   <SelectTrigger className="border-gray-200 focus:border-purple-500 focus:ring-purple-500">
                     <SelectValue placeholder="Filtrar por método" />
                   </SelectTrigger>
@@ -450,7 +456,9 @@ export default function TransactionsPage() {
                               {formatCurrency(transaction.amount_brl)}
                             </TableCell>
                             <TableCell>
-                              {getPaymentMethodBadge(transaction.payment_method)}
+                              {getPaymentMethodBadge(
+                                transaction.payment_method,
+                              )}
                             </TableCell>
                             <TableCell className="text-sm font-medium capitalize text-gray-700">
                               {transaction.crypto_network}
@@ -459,26 +467,27 @@ export default function TransactionsPage() {
                               {getStatusBadge(transaction.status)}
                             </TableCell>
                             <TableCell className="text-sm font-medium text-gray-600">
-                              {new Date(transaction.created_at).toLocaleDateString(
-                                'pt-BR',
-                                {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                },
-                              )}
+                              {new Date(
+                                transaction.created_at,
+                              ).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                             </TableCell>
                             <TableCell>
-                              <Link href={`/admin/transactions/${transaction.id}`}>
+                              <Link
+                                href={`/admin/transactions/${transaction.id}`}
+                              >
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   className="group border-purple-200 text-purple-600 hover:border-purple-600 hover:bg-purple-600 hover:text-white"
                                 >
                                   Ver detalhes
-                                  <ArrowUpRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                  <ArrowUpRight className="ml-1 h-3 w-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                                 </Button>
                               </Link>
                             </TableCell>
@@ -577,9 +586,9 @@ export default function TransactionsPage() {
                           variant={account.is_active ? 'outline' : 'default'}
                           onClick={() => handleToggleAccountActive(account.id)}
                           className={
-                            !account.is_active
-                              ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                              : ''
+                            account.is_active
+                              ? ''
+                              : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
                           }
                         >
                           {account.is_active ? 'Desativar' : 'Ativar'}
@@ -630,11 +639,14 @@ export default function TransactionsPage() {
                     placeholder="Buscar por número ou carteira..."
                     value={apiSearch}
                     onChange={(e) => setApiSearch(e.target.value)}
-                    className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="border-gray-200 pl-10 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
 
-                <Select value={apiStatusFilter} onValueChange={setApiStatusFilter}>
+                <Select
+                  value={apiStatusFilter}
+                  onValueChange={setApiStatusFilter}
+                >
                   <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
@@ -718,16 +730,15 @@ export default function TransactionsPage() {
                               {getStatusBadge(transaction.status)}
                             </TableCell>
                             <TableCell className="text-sm font-medium text-gray-600">
-                              {new Date(transaction.created_at).toLocaleDateString(
-                                'pt-BR',
-                                {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                },
-                              )}
+                              {new Date(
+                                transaction.created_at,
+                              ).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                             </TableCell>
                             <TableCell>
                               <Link
@@ -739,7 +750,7 @@ export default function TransactionsPage() {
                                   className="group border-blue-200 text-blue-600 hover:border-blue-600 hover:bg-blue-600 hover:text-white"
                                 >
                                   Ver detalhes
-                                  <ArrowUpRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                  <ArrowUpRight className="ml-1 h-3 w-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                                 </Button>
                               </Link>
                             </TableCell>

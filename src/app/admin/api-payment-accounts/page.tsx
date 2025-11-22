@@ -4,14 +4,20 @@ import { Plus, Power, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import {
+  type ApiPaymentAccount,
   createApiPaymentAccount,
   deleteApiPaymentAccount,
   getApiPaymentAccounts,
   toggleApiAccountActive,
-  type ApiPaymentAccount,
 } from '@/app/actions/api-payment-accounts'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -178,9 +184,12 @@ export default function ApiPaymentAccountsPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-lg font-mono">{account.pix_key}</CardTitle>
+                    <CardTitle className="font-mono text-lg">
+                      {account.pix_key}
+                    </CardTitle>
                     <CardDescription>
-                      Criado em {new Date(account.created_at).toLocaleDateString('pt-BR')}
+                      Criado em{' '}
+                      {new Date(account.created_at).toLocaleDateString('pt-BR')}
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
@@ -218,7 +227,10 @@ export default function ApiPaymentAccountsPage() {
           <p>• Apenas uma chave PIX pode estar ativa por vez</p>
           <p>• Esta chave será usada para todas as transações do sistema API</p>
           <p>• Sistema API não requer KYC dos clientes</p>
-          <p>• Gerencie com cuidado - mudanças afetam novas transações imediatamente</p>
+          <p>
+            • Gerencie com cuidado - mudanças afetam novas transações
+            imediatamente
+          </p>
         </CardContent>
       </Card>
 
@@ -228,7 +240,8 @@ export default function ApiPaymentAccountsPage() {
           <DialogHeader>
             <DialogTitle>Adicionar Nova Chave PIX</DialogTitle>
             <DialogDescription>
-              Digite a chave PIX que será usada para receber pagamentos do sistema API.
+              Digite a chave PIX que será usada para receber pagamentos do
+              sistema API.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

@@ -5,7 +5,10 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { getApiTransaction, updateApiTransactionStatus } from '@/app/actions/api-transactions'
+import {
+  getApiTransaction,
+  updateApiTransactionStatus,
+} from '@/app/actions/api-transactions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,7 +24,13 @@ interface ApiTransactionDetail {
   exchange_rate: number | null
   crypto_network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana' | 'tron'
   wallet_address: string
-  status: 'pending_payment' | 'payment_received' | 'converting' | 'sent' | 'cancelled' | 'expired'
+  status:
+    | 'pending_payment'
+    | 'payment_received'
+    | 'converting'
+    | 'sent'
+    | 'cancelled'
+    | 'expired'
   pix_key: string | null
   tx_hash: string | null
   created_at: string
@@ -47,7 +56,9 @@ export default function ApiTransactionDetailPage() {
   const locale = parameters.locale as string
   const transactionId = parameters.id as string
 
-  const [transaction, setTransaction] = useState<ApiTransactionDetail | null>(null)
+  const [transaction, setTransaction] = useState<ApiTransactionDetail | null>(
+    null,
+  )
   const [loading, setLoading] = useState(true)
   const [txHash, setTxHash] = useState('')
   const [notes, setNotes] = useState('')
@@ -76,7 +87,7 @@ export default function ApiTransactionDetailPage() {
 
   async function handleStatusUpdate(
     newStatus: ApiTransactionDetail['status'],
-    requiresTxHash = false
+    requiresTxHash = false,
   ) {
     if (requiresTxHash && !txHash.trim()) {
       alert('Por favor, insira o TX Hash')
@@ -94,7 +105,9 @@ export default function ApiTransactionDetailPage() {
       router.refresh()
       await loadTransaction()
     } catch (error) {
-      alert(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+      alert(
+        `Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      )
     } finally {
       setActionLoading(false)
     }
@@ -307,17 +320,18 @@ export default function ApiTransactionDetailPage() {
                 </div>
               )}
 
-              {transaction.status !== 'cancelled' && transaction.status !== 'sent' && (
-                <Button
-                  onClick={() => handleStatusUpdate('cancelled')}
-                  disabled={actionLoading}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Cancelar Transação
-                </Button>
-              )}
+              {transaction.status !== 'cancelled' &&
+                transaction.status !== 'sent' && (
+                  <Button
+                    onClick={() => handleStatusUpdate('cancelled')}
+                    disabled={actionLoading}
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Cancelar Transação
+                  </Button>
+                )}
             </CardContent>
           </Card>
 
@@ -357,9 +371,13 @@ export default function ApiTransactionDetailPage() {
                   <div className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-green-600" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium">Pagamento Confirmado</div>
+                      <div className="text-sm font-medium">
+                        Pagamento Confirmado
+                      </div>
                       <div className="text-xs text-gray-500">
-                        {new Date(transaction.payment_confirmed_at).toLocaleString('pt-BR')}
+                        {new Date(
+                          transaction.payment_confirmed_at,
+                        ).toLocaleString('pt-BR')}
                       </div>
                     </div>
                   </div>
@@ -371,7 +389,9 @@ export default function ApiTransactionDetailPage() {
                     <div className="flex-1">
                       <div className="text-sm font-medium">Crypto Enviado</div>
                       <div className="text-xs text-gray-500">
-                        {new Date(transaction.crypto_sent_at).toLocaleString('pt-BR')}
+                        {new Date(transaction.crypto_sent_at).toLocaleString(
+                          'pt-BR',
+                        )}
                       </div>
                     </div>
                   </div>

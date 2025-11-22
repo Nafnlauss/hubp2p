@@ -5,10 +5,10 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
+  Menu,
   Receipt,
   ShieldCheck,
   Users,
-  Menu,
   X,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -76,7 +76,7 @@ export default function AdminLayout({
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden rounded-lg p-2 hover:bg-gray-100"
+                className="rounded-lg p-2 hover:bg-gray-100 lg:hidden"
               >
                 {sidebarOpen ? (
                   <X className="h-6 w-6" />
@@ -141,7 +141,7 @@ export default function AdminLayout({
             sidebarOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
-          <div className="flex h-full flex-col gap-y-5 overflow-y-auto border-r border-gray-200/50 bg-white/80 backdrop-blur-xl px-6 py-6">
+          <div className="flex h-full flex-col gap-y-5 overflow-y-auto border-r border-gray-200/50 bg-white/80 px-6 py-6 backdrop-blur-xl">
             <nav className="flex flex-1 flex-col">
               <ul className="flex flex-1 flex-col gap-y-2">
                 {navigation.map((item) => {
@@ -157,12 +157,15 @@ export default function AdminLayout({
                         className={cn(
                           'group relative flex items-center gap-x-3 rounded-xl p-3 text-sm font-semibold transition-all duration-200',
                           isActive
-                            ? 'bg-gradient-to-r shadow-lg shadow-purple-500/20 text-white ' + item.color
+                            ? 'bg-gradient-to-r text-white shadow-lg shadow-purple-500/20 ' +
+                                item.color
                             : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900',
                         )}
                       >
                         {isActive && (
-                          <div className={`absolute inset-0 rounded-xl bg-gradient-to-r opacity-20 blur-sm ${item.color}`} />
+                          <div
+                            className={`absolute inset-0 rounded-xl bg-gradient-to-r opacity-20 blur-sm ${item.color}`}
+                          />
                         )}
                         <item.icon
                           className={cn(
@@ -189,9 +192,7 @@ export default function AdminLayout({
                   <div className="font-semibold text-gray-900">
                     Sistema Online
                   </div>
-                  <div className="text-gray-600">
-                    Monitorando em tempo real
-                  </div>
+                  <div className="text-gray-600">Monitorando em tempo real</div>
                 </div>
               </div>
             </div>
@@ -211,14 +212,12 @@ export default function AdminLayout({
           <div className="relative min-h-screen">
             {/* Padrão de fundo decorativo */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-purple-300/10 blur-3xl" />
-              <div className="absolute top-40 -left-40 h-80 w-80 rounded-full bg-blue-300/10 blur-3xl" />
+              <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-purple-300/10 blur-3xl" />
+              <div className="absolute -left-40 top-40 h-80 w-80 rounded-full bg-blue-300/10 blur-3xl" />
             </div>
 
             {/* Conteúdo */}
-            <div className="relative px-4 py-8 sm:px-6 lg:px-8">
-              {children}
-            </div>
+            <div className="relative px-4 py-8 sm:px-6 lg:px-8">{children}</div>
           </div>
         </main>
       </div>

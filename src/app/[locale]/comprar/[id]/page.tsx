@@ -30,7 +30,13 @@ interface ApiTransaction {
   exchange_rate: number | null
   crypto_network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana'
   wallet_address: string
-  status: 'pending_payment' | 'payment_received' | 'converting' | 'sent' | 'cancelled' | 'expired'
+  status:
+    | 'pending_payment'
+    | 'payment_received'
+    | 'converting'
+    | 'sent'
+    | 'cancelled'
+    | 'expired'
   pix_key: string | null
   tx_hash: string | null
   created_at: string
@@ -227,7 +233,7 @@ export default function ApiPaymentPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => window.location.href = '/pt-BR/comprar'}>
+            <Button onClick={() => (window.location.href = '/pt-BR/comprar')}>
               Nova Compra
             </Button>
           </CardContent>
@@ -245,9 +251,7 @@ export default function ApiPaymentPage() {
       <div>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Pagamento PIX
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight">Pagamento PIX</h1>
             <p className="text-muted-foreground">
               Transação #{transaction.transaction_number}
             </p>
@@ -310,10 +314,7 @@ export default function ApiPaymentPage() {
                   variant="outline"
                   size="icon"
                   onClick={() =>
-                    copyToClipboard(
-                      transaction.pix_key || '',
-                      'Chave PIX',
-                    )
+                    copyToClipboard(transaction.pix_key || '', 'Chave PIX')
                   }
                   disabled={!transaction.pix_key}
                 >
@@ -336,10 +337,7 @@ export default function ApiPaymentPage() {
                   variant="outline"
                   size="icon"
                   onClick={() =>
-                    copyToClipboard(
-                      transaction.amount_brl.toFixed(2),
-                      'Valor',
-                    )
+                    copyToClipboard(transaction.amount_brl.toFixed(2), 'Valor')
                   }
                 >
                   <Copy className="h-4 w-4" />
@@ -498,7 +496,9 @@ export default function ApiPaymentPage() {
             Informações Importantes
           </h3>
           <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-            <li>• O pagamento deve ser realizado no valor exato mostrado acima</li>
+            <li>
+              • O pagamento deve ser realizado no valor exato mostrado acima
+            </li>
             <li>• Após o pagamento, clique em "Já realizei o pagamento"</li>
             <li>• A verificação pode levar alguns minutos</li>
             <li>• Após confirmação, a cripto será enviada automaticamente</li>

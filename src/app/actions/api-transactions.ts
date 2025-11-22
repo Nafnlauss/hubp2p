@@ -1,9 +1,11 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { convertBrlToUsd, getFinalExchangeRate } from '@/lib/bitget'
-import { getActiveApiPaymentAccount } from './api-payment-accounts'
 import { revalidatePath } from 'next/cache'
+
+import { convertBrlToUsd, getFinalExchangeRate } from '@/lib/bitget'
+import { createClient } from '@/lib/supabase/server'
+
+import { getActiveApiPaymentAccount } from './api-payment-accounts'
 
 export interface ApiTransaction {
   id: string
@@ -13,7 +15,13 @@ export interface ApiTransaction {
   exchange_rate: number | null
   crypto_network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana' | 'tron'
   wallet_address: string
-  status: 'pending_payment' | 'payment_received' | 'converting' | 'sent' | 'cancelled' | 'expired'
+  status:
+    | 'pending_payment'
+    | 'payment_received'
+    | 'converting'
+    | 'sent'
+    | 'cancelled'
+    | 'expired'
   pix_key: string | null
   tx_hash: string | null
   created_at: string
@@ -34,7 +42,7 @@ export interface CreateApiTransactionData {
  * Create new API transaction (no user required)
  */
 export async function createApiTransaction(
-  data: CreateApiTransactionData
+  data: CreateApiTransactionData,
 ): Promise<ApiTransaction> {
   const supabase = await createClient()
 
@@ -51,8 +59,9 @@ export async function createApiTransaction(
   const usdAmount = await convertBrlToUsd(data.amount_brl)
 
   // Generate transaction number
-  const { data: transactionNumber, error: rpcError } = await supabase
-    .rpc('generate_api_transaction_number')
+  const { data: transactionNumber, error: rpcError } = await supabase.rpc(
+    'generate_api_transaction_number',
+  )
 
   if (rpcError) {
     console.error('Error generating transaction number:', rpcError)
@@ -91,7 +100,9 @@ export async function createApiTransaction(
 /**
  * Get API transaction by ID (public access by transaction number)
  */
-export async function getApiTransaction(transactionId: string): Promise<ApiTransaction | null> {
+export async function getApiTransaction(
+  transactionId: string,
+): Promise<ApiTransaction | null> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -115,7 +126,7 @@ export async function getApiTransaction(transactionId: string): Promise<ApiTrans
  * Get API transaction by transaction number
  */
 export async function getApiTransactionByNumber(
-  transactionNumber: string
+  transactionNumber: string,
 ): Promise<ApiTransaction | null> {
   const supabase = await createClient()
 
@@ -155,7 +166,7 @@ export async function getApiTransactions(filters?: {
   // Apply search filter
   if (filters?.searchTerm) {
     query = query.or(
-      `transaction_number.ilike.%${filters.searchTerm}%,wallet_address.ilike.%${filters.searchTerm}%`
+      `transaction_number.ilike.%${filters.searchTerm}%,wallet_address.ilike.%${filters.searchTerm}%`,
     )
   }
 
@@ -178,7 +189,7 @@ export async function updateApiTransactionStatus(
   additionalData?: {
     tx_hash?: string
     admin_notes?: string
-  }
+  },
 ): Promise<void> {
   const supabase = await createClient()
 
@@ -217,7 +228,9 @@ export async function updateApiTransactionStatus(
 /**
  * Cancel API transaction
  */
-export async function cancelApiTransaction(transactionId: string): Promise<void> {
+export async function cancelApiTransaction(
+  transactionId: string,
+): Promise<void> {
   await updateApiTransactionStatus(transactionId, 'cancelled')
 }
 
@@ -225,14 +238,23 @@ export async function cancelApiTransaction(transactionId: string): Promise<void>
  * Calculate USD amount from BRL and return exchange rate (public function for real-time calculation)
  */
 export async function calculateUsdFromBrl(
-  brlAmount: number
+  brlAmount: number,
 ): Promise<{ usdAmount: number; exchangeRate: number }> {
   try {
-    console.log('[SERVER ACTION] calculateUsdFromBrl - Início para BRL:', brlAmount)
+    console.log(
+      '[SERVER ACTION] calculateUsdFromBrl - Início para BRL:',
+      brlAmount,
+    )
     const { displayRate } = await getFinalExchangeRate()
     const usdAmount = await convertBrlToUsd(brlAmount)
-    console.log('[SERVER ACTION] calculateUsdFromBrl - USD calculado:', usdAmount)
-    console.log('[SERVER ACTION] calculateUsdFromBrl - Taxa exibida:', displayRate)
+    console.log(
+      '[SERVER ACTION] calculateUsdFromBrl - USD calculado:',
+      usdAmount,
+    )
+    console.log(
+      '[SERVER ACTION] calculateUsdFromBrl - Taxa exibida:',
+      displayRate,
+    )
     return { usdAmount, exchangeRate: displayRate }
   } catch (error) {
     console.error('[SERVER ACTION] calculateUsdFromBrl - Erro:', error)

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+
 import { ComprarForm } from './_components/comprar-form'
 
 export const metadata: Metadata = {

@@ -34,7 +34,14 @@ import { createClient } from '@/lib/supabase/client'
 const depositSchema = z.object({
   payment_method: z.enum(['pix', 'ted']),
   amount_brl: z.coerce.number().min(100, 'Valor mínimo é R$ 100,00'),
-  crypto_network: z.enum(['bitcoin', 'ethereum', 'polygon', 'bsc', 'solana', 'tron']),
+  crypto_network: z.enum([
+    'bitcoin',
+    'ethereum',
+    'polygon',
+    'bsc',
+    'solana',
+    'tron',
+  ]),
   wallet_address: z
     .string()
     .min(26, 'Endereço de carteira inválido')

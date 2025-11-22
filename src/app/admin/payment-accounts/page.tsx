@@ -7,27 +7,27 @@ import {
   CreditCard,
   Loader2,
   Plus,
+  Power,
   QrCode,
   Trash2,
-  Power,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
 import {
+  type ApiPaymentAccount,
+  createApiPaymentAccount,
+  deleteApiPaymentAccount,
+  getApiPaymentAccounts,
+  toggleApiAccountActive,
+} from '@/app/actions/api-payment-accounts'
+import {
   createPaymentAccount,
   deletePaymentAccount,
   getPaymentAccounts,
   toggleAccountActive,
 } from '@/app/actions/payment-accounts'
-import {
-  createApiPaymentAccount,
-  deleteApiPaymentAccount,
-  getApiPaymentAccounts,
-  toggleApiAccountActive,
-  type ApiPaymentAccount,
-} from '@/app/actions/api-payment-accounts'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -401,357 +401,370 @@ export default function PaymentAccountsPage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">hubp2p.com</h2>
-            <p className="text-sm text-gray-600">Sistema principal com KYC - PIX e TED</p>
+            <p className="text-sm text-gray-600">
+              Sistema principal com KYC - PIX e TED
+            </p>
           </div>
         </div>
-          <Tabs defaultValue="pix">
-            <TabsList className="bg-gradient-to-r from-purple-100 to-pink-100 p-1">
-              <TabsTrigger value="pix">
-                <QrCode className="mr-2 h-4 w-4" />
-                Chaves PIX
-              </TabsTrigger>
-              <TabsTrigger value="ted">
-                <Building2 className="mr-2 h-4 w-4" />
-                Contas Bancárias (TED)
-              </TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="pix">
+          <TabsList className="bg-gradient-to-r from-purple-100 to-pink-100 p-1">
+            <TabsTrigger value="pix">
+              <QrCode className="mr-2 h-4 w-4" />
+              Chaves PIX
+            </TabsTrigger>
+            <TabsTrigger value="ted">
+              <Building2 className="mr-2 h-4 w-4" />
+              Contas Bancárias (TED)
+            </TabsTrigger>
+          </TabsList>
 
-            {/* PIX Tab */}
-            <TabsContent value="pix">
-              <Card className="border-purple-100 shadow-lg">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <div className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 p-2">
-                        <QrCode className="h-5 w-5 text-white" />
-                      </div>
-                      Chaves PIX - HUB
-                    </CardTitle>
-                    <CardDescription className="mt-2">
-                      Apenas uma chave PIX pode estar ativa por vez
-                    </CardDescription>
-                  </div>
-                  <Dialog open={isPixDialogOpen} onOpenChange={setIsPixDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:from-purple-700 hover:to-pink-700">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Adicionar PIX
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Adicionar Chave PIX</DialogTitle>
-                        <DialogDescription>
-                          Cadastre uma nova chave PIX para receber pagamentos
-                        </DialogDescription>
-                      </DialogHeader>
-                      <Form {...pixForm}>
-                        <form
-                          onSubmit={pixForm.handleSubmit(handleCreatePix)}
-                          className="space-y-4"
-                        >
-                          <FormField
-                            control={pixForm.control}
-                            name="pix_key"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Chave PIX</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="email@exemplo.com ou CPF/CNPJ"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <Button
-                            type="submit"
-                            disabled={submitting}
-                            className="w-full"
-                          >
-                            {submitting && (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            )}
-                            Adicionar
-                          </Button>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  {hubLoading ? (
-                    <div className="flex h-32 items-center justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+          {/* PIX Tab */}
+          <TabsContent value="pix">
+            <Card className="border-purple-100 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-2xl">
+                    <div className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 p-2">
+                      <QrCode className="h-5 w-5 text-white" />
                     </div>
-                  ) : pixAccounts.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-purple-100">
-                          <TableHead className="font-semibold">Chave PIX</TableHead>
-                          <TableHead className="font-semibold">Status</TableHead>
-                          <TableHead className="text-right font-semibold">
-                            Ações
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {pixAccounts.map((account) => (
-                          <TableRow key={account.id}>
-                            <TableCell className="font-mono">
-                              {account.pix_key}
-                            </TableCell>
-                            <TableCell>
-                              {account.is_active ? (
-                                <Badge
-                                  variant="default"
-                                  className="flex w-fit items-center gap-1 bg-green-600"
-                                >
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Ativa
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary">Inativa</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                {!account.is_active && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      handleToggleActive(account.id, 'pix')
-                                    }
-                                  >
-                                    Ativar
-                                  </Button>
-                                )}
+                    Chaves PIX - HUB
+                  </CardTitle>
+                  <CardDescription className="mt-2">
+                    Apenas uma chave PIX pode estar ativa por vez
+                  </CardDescription>
+                </div>
+                <Dialog
+                  open={isPixDialogOpen}
+                  onOpenChange={setIsPixDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:from-purple-700 hover:to-pink-700">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Adicionar PIX
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Chave PIX</DialogTitle>
+                      <DialogDescription>
+                        Cadastre uma nova chave PIX para receber pagamentos
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...pixForm}>
+                      <form
+                        onSubmit={pixForm.handleSubmit(handleCreatePix)}
+                        className="space-y-4"
+                      >
+                        <FormField
+                          control={pixForm.control}
+                          name="pix_key"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Chave PIX</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="email@exemplo.com ou CPF/CNPJ"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="submit"
+                          disabled={submitting}
+                          className="w-full"
+                        >
+                          {submitting && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Adicionar
+                        </Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {hubLoading ? (
+                  <div className="flex h-32 items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  </div>
+                ) : pixAccounts.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-purple-100">
+                        <TableHead className="font-semibold">
+                          Chave PIX
+                        </TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="text-right font-semibold">
+                          Ações
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pixAccounts.map((account) => (
+                        <TableRow key={account.id}>
+                          <TableCell className="font-mono">
+                            {account.pix_key}
+                          </TableCell>
+                          <TableCell>
+                            {account.is_active ? (
+                              <Badge
+                                variant="default"
+                                className="flex w-fit items-center gap-1 bg-green-600"
+                              >
+                                <CheckCircle2 className="h-3 w-3" />
+                                Ativa
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">Inativa</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {!account.is_active && (
                                 <Button
                                   size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleDelete(account.id)}
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleToggleActive(account.id, 'pix')
+                                  }
                                 >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                  Ativar
                                 </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="flex h-32 items-center justify-center text-muted-foreground">
-                      Nenhuma chave PIX cadastrada
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* TED Tab - mantém o código existente */}
-            <TabsContent value="ted">
-              <Card className="border-purple-100 shadow-lg">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <div className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 p-2">
-                        <Building2 className="h-5 w-5 text-white" />
-                      </div>
-                      Contas Bancárias - HUB
-                    </CardTitle>
-                    <CardDescription className="mt-2">
-                      Apenas uma conta bancária pode estar ativa por vez
-                    </CardDescription>
-                  </div>
-                  <Dialog open={isTedDialogOpen} onOpenChange={setIsTedDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:from-purple-700 hover:to-pink-700">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Adicionar Conta
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Adicionar Conta Bancária</DialogTitle>
-                        <DialogDescription>
-                          Cadastre uma nova conta para receber TEDs
-                        </DialogDescription>
-                      </DialogHeader>
-                      <Form {...tedForm}>
-                        <form
-                          onSubmit={tedForm.handleSubmit(handleCreateTed)}
-                          className="space-y-4"
-                        >
-                          <FormField
-                            control={tedForm.control}
-                            name="bank_name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Nome do Banco</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Banco do Brasil" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={tedForm.control}
-                            name="bank_code"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Código do Banco</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="001" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={tedForm.control}
-                            name="account_holder"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Titular da Conta</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Nome completo" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                              control={tedForm.control}
-                              name="account_agency"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Agência</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="0001" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
                               )}
-                            />
-                            <FormField
-                              control={tedForm.control}
-                              name="account_number"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Conta</FormLabel>
-                                  <FormControl>
-                                    <Input placeholder="12345-6" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <Button
-                            type="submit"
-                            disabled={submitting}
-                            className="w-full"
-                          >
-                            {submitting && (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            )}
-                            Adicionar
-                          </Button>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  {hubLoading ? (
-                    <div className="flex h-32 items-center justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-                    </div>
-                  ) : tedAccounts.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-purple-100">
-                          <TableHead className="font-semibold">Banco</TableHead>
-                          <TableHead className="font-semibold">Titular</TableHead>
-                          <TableHead className="font-semibold">Agência</TableHead>
-                          <TableHead className="font-semibold">Conta</TableHead>
-                          <TableHead className="font-semibold">Status</TableHead>
-                          <TableHead className="text-right font-semibold">
-                            Ações
-                          </TableHead>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDelete(account.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tedAccounts.map((account) => (
-                          <TableRow key={account.id}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{account.bank_name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Código: {account.bank_code}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>{account.account_holder}</TableCell>
-                            <TableCell className="font-mono">
-                              {account.account_agency}
-                            </TableCell>
-                            <TableCell className="font-mono">
-                              {account.account_number}
-                            </TableCell>
-                            <TableCell>
-                              {account.is_active ? (
-                                <Badge
-                                  variant="default"
-                                  className="flex w-fit items-center gap-1 bg-green-600"
-                                >
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Ativa
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary">Inativa</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                {!account.is_active && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      handleToggleActive(account.id, 'ted')
-                                    }
-                                  >
-                                    Ativar
-                                  </Button>
-                                )}
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="flex h-32 items-center justify-center text-muted-foreground">
+                    Nenhuma chave PIX cadastrada
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* TED Tab - mantém o código existente */}
+          <TabsContent value="ted">
+            <Card className="border-purple-100 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-2xl">
+                    <div className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 p-2">
+                      <Building2 className="h-5 w-5 text-white" />
+                    </div>
+                    Contas Bancárias - HUB
+                  </CardTitle>
+                  <CardDescription className="mt-2">
+                    Apenas uma conta bancária pode estar ativa por vez
+                  </CardDescription>
+                </div>
+                <Dialog
+                  open={isTedDialogOpen}
+                  onOpenChange={setIsTedDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:from-purple-700 hover:to-pink-700">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Adicionar Conta
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Conta Bancária</DialogTitle>
+                      <DialogDescription>
+                        Cadastre uma nova conta para receber TEDs
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...tedForm}>
+                      <form
+                        onSubmit={tedForm.handleSubmit(handleCreateTed)}
+                        className="space-y-4"
+                      >
+                        <FormField
+                          control={tedForm.control}
+                          name="bank_name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome do Banco</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Banco do Brasil"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={tedForm.control}
+                          name="bank_code"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Código do Banco</FormLabel>
+                              <FormControl>
+                                <Input placeholder="001" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={tedForm.control}
+                          name="account_holder"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Titular da Conta</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Nome completo" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={tedForm.control}
+                            name="account_agency"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Agência</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="0001" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={tedForm.control}
+                            name="account_number"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Conta</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="12345-6" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <Button
+                          type="submit"
+                          disabled={submitting}
+                          className="w-full"
+                        >
+                          {submitting && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Adicionar
+                        </Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {hubLoading ? (
+                  <div className="flex h-32 items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  </div>
+                ) : tedAccounts.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-purple-100">
+                        <TableHead className="font-semibold">Banco</TableHead>
+                        <TableHead className="font-semibold">Titular</TableHead>
+                        <TableHead className="font-semibold">Agência</TableHead>
+                        <TableHead className="font-semibold">Conta</TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="text-right font-semibold">
+                          Ações
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tedAccounts.map((account) => (
+                        <TableRow key={account.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{account.bank_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Código: {account.bank_code}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{account.account_holder}</TableCell>
+                          <TableCell className="font-mono">
+                            {account.account_agency}
+                          </TableCell>
+                          <TableCell className="font-mono">
+                            {account.account_number}
+                          </TableCell>
+                          <TableCell>
+                            {account.is_active ? (
+                              <Badge
+                                variant="default"
+                                className="flex w-fit items-center gap-1 bg-green-600"
+                              >
+                                <CheckCircle2 className="h-3 w-3" />
+                                Ativa
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">Inativa</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              {!account.is_active && (
                                 <Button
                                   size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleDelete(account.id)}
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleToggleActive(account.id, 'ted')
+                                  }
                                 >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                  Ativar
                                 </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="flex h-32 items-center justify-center text-muted-foreground">
-                      Nenhuma conta bancária cadastrada
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDelete(account.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="flex h-32 items-center justify-center text-muted-foreground">
+                    Nenhuma conta bancária cadastrada
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* API.HUB Section - api.hubp2p */}
@@ -762,141 +775,159 @@ export default function PaymentAccountsPage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">api.hubp2p</h2>
-            <p className="text-sm text-gray-600">Sistema API sem KYC - Apenas PIX</p>
+            <p className="text-sm text-gray-600">
+              Sistema API sem KYC - Apenas PIX
+            </p>
           </div>
         </div>
 
         <Card className="border-blue-100 shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-blue-100 bg-gradient-to-r from-blue-50 to-cyan-50">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <div className="rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 p-2">
-                    <QrCode className="h-5 w-5 text-white" />
-                  </div>
-                  Chaves PIX - API.HUB
-                </CardTitle>
-                <CardDescription className="mt-2">
-                  Sistema API (sem KYC) - Apenas uma chave pode estar ativa
-                </CardDescription>
-              </div>
-              <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 shadow-md hover:from-blue-700 hover:to-cyan-700">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar PIX
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Adicionar Chave PIX - API.HUB</DialogTitle>
-                    <DialogDescription>
-                      Digite a chave PIX que será usada para receber pagamentos do sistema API.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <label htmlFor="api-pix-key" className="text-sm font-medium">
-                        Chave PIX
-                      </label>
-                      <Input
-                        id="api-pix-key"
-                        placeholder="email@exemplo.com ou CPF/CNPJ"
-                        value={apiPixKey}
-                        onChange={(e) => setApiPixKey(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleAddApiAccount()
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <Button variant="outline" onClick={() => setShowApiDialog(false)}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleAddApiAccount} disabled={apiAdding}>
-                      {apiAdding ? 'Adicionando...' : 'Adicionar'}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {apiLoading ? (
-                <div className="flex h-32 items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <CardHeader className="flex flex-row items-center justify-between border-b border-blue-100 bg-gradient-to-r from-blue-50 to-cyan-50">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <div className="rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 p-2">
+                  <QrCode className="h-5 w-5 text-white" />
                 </div>
-              ) : apiAccounts.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-blue-100">
-                      <TableHead className="font-semibold">Chave PIX</TableHead>
-                      <TableHead className="font-semibold">Data de Criação</TableHead>
-                      <TableHead className="font-semibold">Status</TableHead>
-                      <TableHead className="text-right font-semibold">
-                        Ações
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {apiAccounts.map((account) => (
-                      <TableRow key={account.id}>
-                        <TableCell className="font-mono">
-                          {account.pix_key}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {new Date(account.created_at).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant={account.is_active ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => handleToggleApiActive(account.id)}
-                          >
-                            <Power className="mr-2 h-4 w-4" />
-                            {account.is_active ? 'Ativa' : 'Inativa'}
-                          </Button>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteApiAccount(account.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="flex h-32 flex-col items-center justify-center text-muted-foreground">
-                  <p className="mb-4">Nenhuma chave PIX cadastrada</p>
-                  <Button onClick={() => setShowApiDialog(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar Primeira Chave
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Info Card */}
-          <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
-            <CardHeader>
-              <CardTitle className="text-blue-900 dark:text-blue-100">
-                Informações Importantes - API.HUB
+                Chaves PIX - API.HUB
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-              <p>• Apenas uma chave PIX pode estar ativa por vez</p>
-              <p>• Esta chave será usada para todas as transações do sistema API</p>
-              <p>• Sistema API não requer KYC dos clientes</p>
-              <p>• Gerencie com cuidado - mudanças afetam novas transações imediatamente</p>
-            </CardContent>
-          </Card>
+              <CardDescription className="mt-2">
+                Sistema API (sem KYC) - Apenas uma chave pode estar ativa
+              </CardDescription>
+            </div>
+            <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 shadow-md hover:from-blue-700 hover:to-cyan-700">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar PIX
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Adicionar Chave PIX - API.HUB</DialogTitle>
+                  <DialogDescription>
+                    Digite a chave PIX que será usada para receber pagamentos do
+                    sistema API.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="api-pix-key"
+                      className="text-sm font-medium"
+                    >
+                      Chave PIX
+                    </label>
+                    <Input
+                      id="api-pix-key"
+                      placeholder="email@exemplo.com ou CPF/CNPJ"
+                      value={apiPixKey}
+                      onChange={(e) => setApiPixKey(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddApiAccount()
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowApiDialog(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleAddApiAccount} disabled={apiAdding}>
+                    {apiAdding ? 'Adicionando...' : 'Adicionar'}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {apiLoading ? (
+              <div className="flex h-32 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+            ) : apiAccounts.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-blue-100">
+                    <TableHead className="font-semibold">Chave PIX</TableHead>
+                    <TableHead className="font-semibold">
+                      Data de Criação
+                    </TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="text-right font-semibold">
+                      Ações
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {apiAccounts.map((account) => (
+                    <TableRow key={account.id}>
+                      <TableCell className="font-mono">
+                        {account.pix_key}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {new Date(account.created_at).toLocaleDateString(
+                          'pt-BR',
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant={account.is_active ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handleToggleApiActive(account.id)}
+                        >
+                          <Power className="mr-2 h-4 w-4" />
+                          {account.is_active ? 'Ativa' : 'Inativa'}
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteApiAccount(account.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="flex h-32 flex-col items-center justify-center text-muted-foreground">
+                <p className="mb-4">Nenhuma chave PIX cadastrada</p>
+                <Button onClick={() => setShowApiDialog(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar Primeira Chave
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Info Card */}
+        <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
+          <CardHeader>
+            <CardTitle className="text-blue-900 dark:text-blue-100">
+              Informações Importantes - API.HUB
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+            <p>• Apenas uma chave PIX pode estar ativa por vez</p>
+            <p>
+              • Esta chave será usada para todas as transações do sistema API
+            </p>
+            <p>• Sistema API não requer KYC dos clientes</p>
+            <p>
+              • Gerencie com cuidado - mudanças afetam novas transações
+              imediatamente
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

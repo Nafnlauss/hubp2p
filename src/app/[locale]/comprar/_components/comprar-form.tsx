@@ -1,13 +1,24 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Loader2, RefreshCw } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { Loader2, RefreshCw } from 'lucide-react'
 
+import {
+  calculateUsdFromBrl,
+  createApiTransaction,
+} from '@/app/actions/api-transactions'
 import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -25,13 +36,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
-import { createApiTransaction, calculateUsdFromBrl } from '@/app/actions/api-transactions'
 
 const formSchema = z.object({
   amount_brl: z.number().min(100, 'Valor mínimo é R$ 100,00'),
-  crypto_network: z.enum(['bitcoin', 'ethereum', 'polygon', 'bsc', 'solana', 'tron']),
+  crypto_network: z.enum([
+    'bitcoin',
+    'ethereum',
+    'polygon',
+    'bsc',
+    'solana',
+    'tron',
+  ]),
   wallet_address: z
     .string()
     .min(26, 'Endereço inválido')
@@ -71,7 +87,9 @@ export function ComprarForm() {
 
   // Função para calcular USD (memoizada com useCallback)
   const calculateUsd = useCallback(async () => {
-    const amount = Number.parseFloat(brlAmount.replace(/[^\d,]/g, '').replace(',', '.'))
+    const amount = Number.parseFloat(
+      brlAmount.replaceAll(/[^\d,]/g, '').replace(',', '.'),
+    )
 
     if (Number.isNaN(amount) || amount < 100) {
       setUsdAmount(null)
@@ -106,8 +124,8 @@ export function ComprarForm() {
   // Timer de 30 segundos para atualizar automaticamente
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
+      setTimeLeft((previous) => {
+        if (previous <= 1) {
           // Quando chegar a 0, atualiza e reinicia
           setIsRefreshing(true)
           calculateUsd().finally(() => {
@@ -115,7 +133,7 @@ export function ComprarForm() {
           })
           return 30
         }
-        return prev - 1
+        return previous - 1
       })
     }, 1000)
 
@@ -123,7 +141,7 @@ export function ComprarForm() {
   }, [calculateUsd])
 
   const formatBRL = (value: string) => {
-    const numbers = value.replace(/\D/g, '')
+    const numbers = value.replaceAll(/\D/g, '')
     const amount = Number.parseInt(numbers) / 100
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -173,7 +191,9 @@ export function ComprarForm() {
   return (
     <Card className="border-none shadow-2xl">
       <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-slate-50">
-        <CardTitle className="text-2xl font-bold text-gray-900">Informações da Compra</CardTitle>
+        <CardTitle className="text-2xl font-bold text-gray-900">
+          Informações da Compra
+        </CardTitle>
         <CardDescription className="text-base">
           Preencha os dados abaixo para gerar sua chave PIX
         </CardDescription>
@@ -203,11 +223,15 @@ export function ComprarForm() {
             <div className="rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Você receberá:</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Você receberá:
+                  </p>
                   {isCalculating || usdAmount === null ? (
                     <div className="mt-2 flex items-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                      <span className="text-sm text-gray-500">Calculando...</span>
+                      <span className="text-sm text-gray-500">
+                        Calculando...
+                      </span>
                     </div>
                   ) : (
                     <p className="mt-1 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">

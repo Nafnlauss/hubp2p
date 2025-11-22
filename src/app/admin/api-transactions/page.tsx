@@ -1,11 +1,17 @@
-import { Suspense } from 'react'
-import { Receipt, Search, Filter } from 'lucide-react'
+import { Filter, Receipt, Search } from 'lucide-react'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 import { getApiTransactions } from '@/app/actions/api-transactions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -28,7 +34,13 @@ interface PageProps {
   searchParams: Promise<{ status?: string; search?: string }>
 }
 
-const statusLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusLabels: Record<
+  string,
+  {
+    label: string
+    variant: 'default' | 'secondary' | 'destructive' | 'outline'
+  }
+> = {
   pending_payment: { label: 'Aguardando Pagamento', variant: 'outline' },
   payment_received: { label: 'Pagamento Recebido', variant: 'secondary' },
   converting: { label: 'Convertendo', variant: 'default' },
@@ -145,7 +157,10 @@ async function TransactionsTable({
   )
 }
 
-export default async function ApiTransactionsPage({ params, searchParams }: PageProps) {
+export default async function ApiTransactionsPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { locale } = await params
   const { status, search } = await searchParams
 
@@ -191,8 +206,12 @@ export default async function ApiTransactionsPage({ params, searchParams }: Page
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="pending_payment">Aguardando Pagamento</SelectItem>
-                <SelectItem value="payment_received">Pagamento Recebido</SelectItem>
+                <SelectItem value="pending_payment">
+                  Aguardando Pagamento
+                </SelectItem>
+                <SelectItem value="payment_received">
+                  Pagamento Recebido
+                </SelectItem>
                 <SelectItem value="converting">Convertendo</SelectItem>
                 <SelectItem value="sent">Enviado</SelectItem>
                 <SelectItem value="cancelled">Cancelado</SelectItem>

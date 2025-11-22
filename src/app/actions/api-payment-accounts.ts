@@ -1,7 +1,8 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+
+import { createAdminClient } from '@/lib/supabase/server'
 
 export interface ApiPaymentAccount {
   id: string
@@ -133,7 +134,9 @@ export async function toggleApiAccountActive(accountId: string): Promise<void> {
 /**
  * Delete API payment account
  */
-export async function deleteApiPaymentAccount(accountId: string): Promise<void> {
+export async function deleteApiPaymentAccount(
+  accountId: string,
+): Promise<void> {
   const supabase = await createAdminClient()
 
   const { error } = await supabase

@@ -1,4 +1,4 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 
 import { updateSession } from '@/lib/supabase/middleware'
@@ -29,6 +29,16 @@ const intlMiddleware = createMiddleware({
 })
 
 export async function middleware(request: NextRequest) {
+  // Check if request is from api.hubp2p.com subdomain
+  const hostname = request.headers.get('host') || ''
+
+  if (hostname === 'api.hubp2p.com' || hostname.startsWith('api.hubp2p.com:')) {
+    // Rewrite to /pt-BR/comprar
+    const url = request.nextUrl.clone()
+    url.pathname = '/pt-BR/comprar'
+    return NextResponse.rewrite(url)
+  }
+
   // Skip intl middleware for API routes and admin routes
   if (
     request.nextUrl.pathname.startsWith('/api') ||

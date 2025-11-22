@@ -115,7 +115,7 @@ export default function ProteoKycEmbed() {
 
     init()
 
-    // Polling: verificar periodicamente se o KYC foi aprovado no banco
+    // Polling: verificar periodicamente se o KYC foi aprovado/rejeitado no banco
     const pollInterval = setInterval(async () => {
       console.log('🔄 [PROTEO] Verificando status do KYC no banco...')
 
@@ -139,6 +139,11 @@ export default function ProteoKycEmbed() {
         setTimeout(() => {
           router.push(`/${locale}/sucesso`)
         }, 1000)
+      } else if (profile?.kyc_status === 'rejected') {
+        console.log('❌ [PROTEO] KYC rejeitado detectado via polling!')
+        clearInterval(pollInterval)
+        // Redirecionar para página de rejeição
+        router.push(`/${locale}/kyc-rejeitado`)
       }
     }, 3000) // Verificar a cada 3 segundos
 

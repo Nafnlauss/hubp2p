@@ -4,187 +4,244 @@ import { NextResponse } from 'next/server'
 
 import { createAdminClient } from '@/lib/supabase/server'
 
-type KycStatus = 'pending' | 'in_review' | 'approved' | 'rejected'
-
-function normalize(value?: string | null): string | null {
-  return (value || '').toString().trim().toLowerCase() || null
-}
-
-function mapStatus(raw?: string | null): KycStatus | null {
-  const v = normalize(raw)
-  if (!v) return null
-  const map: Record<string, KycStatus> = {
-    approved: 'approved',
-    aprovado: 'approved',
-    success: 'approved',
-    ok: 'approved',
-    pending: 'pending',
-    pendente: 'pending',
-    waiting: 'pending',
-    in_review: 'in_review',
-    'in-review': 'in_review',
-    review: 'in_review',
-    em_analise: 'in_review',
-    'em-analise': 'in_review',
-    analysing: 'in_review',
-    rejected: 'rejected',
-    rejeitado: 'rejected',
-    reproved: 'rejected',
-    failed: 'rejected',
-  }
-  return map[v] || null
-}
-
-function unauthorized(message = 'Unauthorized') {
-  return NextResponse.json({ success: false, error: message }, { status: 401 })
-}
+/**
+ * Webhook do Proteo - OTIMIZADO para responder RÁPIDO
+ * Recebe notificações do Proteo quando KYC é aprovado/rejeitado
+ */
 
 export async function POST(request: Request) {
+  // Processar webhook em background (sem await para responder rápido)
+  processWebhook(request).catch((error) => {
+    console.error(
+      '❌ [PROTEO WEBHOOK] Erro no processamento background:',
+      error,
+    )
+  })
+
+  // Retornar 200 OK instantaneamente
+  return NextResponse.json({ success: true }, { status: 200 })
+}
+
+// Processar webhook em background (async)
+async function processWebhook(request: Request) {
   try {
+    console.log('📨 [PROTEO WEBHOOK] Requisição recebida')
+
+    // 1. Validar secret
     const secret = process.env.PROTEO_WEBHOOK_SECRET
     if (!secret) {
-      return NextResponse.json(
-        { success: false, error: 'Missing PROTEO_WEBHOOK_SECRET' },
-        { status: 500 },
-      )
+      console.error('❌ [PROTEO WEBHOOK] PROTEO_WEBHOOK_SECRET não configurado')
+      return
     }
 
-    // Prefer Authorization: Bearer <secret>, allow fallback ?secret=
-    const authHeader = request.headers.get('authorization') || ''
-    const token = authHeader.toLowerCase().startsWith('bearer ')
-      ? authHeader.slice(7)
-      : null
-
+    // Verificar secret no header Authorization ou query param
     const url = new URL(request.url)
-    const queryToken = url.searchParams.get('secret')
+    const querySecret = url.searchParams.get('secret')
+    const authHeader = request.headers.get('authorization')
+    const bearerToken = authHeader?.replace('Bearer ', '')
 
-    if (token !== secret && queryToken !== secret) {
-      return unauthorized()
+    if (querySecret !== secret && bearerToken !== secret) {
+      console.error('❌ [PROTEO WEBHOOK] Secret inválido')
+      return
     }
 
-    const body = await request.json().catch(() => ({}) as any)
+    console.log('✅ [PROTEO WEBHOOK] Secret validado')
 
-    // Try to resolve status and identifiers with flexible keys
-    const status =
-      mapStatus(body.status) ||
-      mapStatus(body?.event?.status) ||
-      mapStatus(body?.kyc_status) ||
-      null
+    // 2. Obter dados do body
+    const body = await request.json()
+    console.log('📦 [PROTEO WEBHOOK] Payload recebido:', JSON.stringify(body))
 
-    if (!status) {
-      return NextResponse.json(
-        { success: false, error: 'Missing or invalid KYC status' },
-        { status: 400 },
-      )
-    }
+    // 3. Extrair CPF e status (flexível para diferentes formatos)
+    const cpf =
+      body.document ||
+      body.cpf ||
+      body.data?.document ||
+      body.data?.cpf ||
+      body.user?.document ||
+      body.user?.cpf
 
-    const userId: string | null =
-      body.user_id || body.supabase_user_id || body?.event?.user_id || null
+    const rawStatus =
+      body.status ||
+      body.kyc_status ||
+      body.data?.status ||
+      body.data?.kyc_status ||
+      body.verification_status
 
-    const proteoVerificationId: string | null =
-      body.proteo_verification_id ||
-      body.verification_id ||
-      body.background_check_id ||
-      body.kyc_id ||
-      body.id ||
-      null
-
-    const supabase = await createAdminClient()
-
-    let resolvedUserId: string | null = userId
-
-    // If userId is not provided, try to find by proteo_verification_id
-    if (!resolvedUserId && proteoVerificationId) {
-      const { data: existing } = await supabase
-        .from('kyc_verifications')
-        .select('user_id')
-        .eq('proteo_verification_id', proteoVerificationId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      resolvedUserId = existing?.user_id ?? null
-    }
-
-    // 2) Try by CPF/document if provided in webhook payload
-    if (!resolvedUserId) {
-      const cpf: string | null =
-        body.document || body.cpf || body?.event?.document || null
-      if (cpf) {
-        const digits = String(cpf).replaceAll(/\D/g, '')
-        if (digits) {
-          const { data: byCpf } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('cpf', digits)
-            .limit(1)
-            .maybeSingle()
-          resolvedUserId = byCpf?.id ?? null
-        }
-      }
-    }
-
-    if (!resolvedUserId) {
+    if (!cpf || !rawStatus) {
+      console.error('❌ [PROTEO WEBHOOK] CPF ou status ausente no payload')
       return NextResponse.json(
         {
           success: false,
-          error:
-            'Unable to resolve user_id. Send user_id or a known proteo_verification_id.',
+          error: 'Missing required fields: document/cpf and status',
         },
         { status: 400 },
       )
     }
 
-    // Upsert kyc_verifications by proteo_verification_id if present, else insert new
-    if (proteoVerificationId) {
-      const { data: existing } = await supabase
-        .from('kyc_verifications')
-        .select('id')
-        .eq('user_id', resolvedUserId)
-        .eq('proteo_verification_id', proteoVerificationId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+    console.log(`📋 [PROTEO WEBHOOK] CPF: ${cpf}, Status: ${rawStatus}`)
 
-      await (existing?.id
-        ? supabase
-            .from('kyc_verifications')
-            .update({ status, updated_at: new Date().toISOString() })
-            .eq('id', existing.id)
-        : supabase.from('kyc_verifications').insert({
-            user_id: resolvedUserId,
-            status,
-            proteo_verification_id: proteoVerificationId,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            verified_at:
-              status === 'approved' ? new Date().toISOString() : null,
-          }))
-    } else {
-      await supabase.from('kyc_verifications').insert({
-        user_id: resolvedUserId,
-        status,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        verified_at: status === 'approved' ? new Date().toISOString() : null,
-      })
+    // 4. Mapear status (aceitar vários formatos do Proteo)
+    const statusLower = String(rawStatus).toLowerCase().trim()
+    let finalStatus: 'approved' | 'rejected' | 'pending' | 'in_review'
+
+    switch (statusLower) {
+      case 'approved':
+      case 'aprovado':
+      case 'success':
+      case 'complete': {
+        finalStatus = 'approved'
+
+        break
+      }
+      case 'rejected':
+      case 'rejeitado':
+      case 'reproved':
+      case 'failed':
+      case 'lost': {
+        finalStatus = 'rejected'
+
+        break
+      }
+      case 'pending':
+      case 'pendente':
+      case 'waiting': {
+        finalStatus = 'pending'
+
+        break
+      }
+      case 'in_review':
+      case 'in-review':
+      case 'em_analise':
+      case 'analysing':
+      case 'processing': {
+        finalStatus = 'in_review'
+
+        break
+      }
+      default: {
+        console.error(`❌ [PROTEO WEBHOOK] Status desconhecido: ${statusLower}`)
+        console.error(
+          `📦 [PROTEO WEBHOOK] Payload completo:`,
+          JSON.stringify(body),
+        )
+        return NextResponse.json(
+          { success: false, error: `Unknown status: ${rawStatus}` },
+          { status: 400 },
+        )
+      }
     }
 
-    // Best-effort: update profiles.kyc_status (cast to any to avoid TS constraints)
-    const profileUpdate: Record<string, any> = { kyc_status: status }
-    if (status === 'approved') {
+    console.log(`✅ [PROTEO WEBHOOK] Status mapeado: ${finalStatus}`)
+
+    // 5. Limpar CPF (apenas dígitos)
+    const cpfDigits = String(cpf).replaceAll(/\D/g, '')
+    if (cpfDigits.length !== 11) {
+      console.error(`❌ [PROTEO WEBHOOK] CPF inválido: ${cpf}`)
+      return NextResponse.json(
+        { success: false, error: 'Invalid CPF format' },
+        { status: 400 },
+      )
+    }
+
+    console.log(`✅ [PROTEO WEBHOOK] CPF validado: ${cpfDigits}`)
+
+    // 6. Buscar usuário pelo CPF
+    const supabase = await createAdminClient()
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('cpf', cpfDigits)
+      .single()
+
+    if (profileError || !profile) {
+      console.error(
+        `❌ [PROTEO WEBHOOK] Usuário não encontrado para CPF: ${cpfDigits}`,
+        profileError,
+      )
+      return NextResponse.json(
+        { success: false, error: 'User not found for CPF' },
+        { status: 404 },
+      )
+    }
+
+    const userId = profile.id
+    console.log(`✅ [PROTEO WEBHOOK] Usuário encontrado: ${userId}`)
+
+    // 7. Atualizar profile
+    const profileUpdate: {
+      kyc_status: string
+      kyc_completed_at?: string
+    } = {
+      kyc_status: finalStatus,
+    }
+
+    if (finalStatus === 'approved') {
       profileUpdate.kyc_completed_at = new Date().toISOString()
     }
-    await supabase
-      .from('profiles')
-      .update(profileUpdate as any)
-      .eq('id', resolvedUserId)
 
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('[Proteo Webhook] Error:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal error' },
-      { status: 500 },
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update(profileUpdate)
+      .eq('id', userId)
+
+    if (updateError) {
+      console.error(
+        `❌ [PROTEO WEBHOOK] Erro ao atualizar profile:`,
+        updateError,
+      )
+      return NextResponse.json(
+        { success: false, error: 'Failed to update profile' },
+        { status: 500 },
+      )
+    }
+
+    console.log(
+      `✅ [PROTEO WEBHOOK] Profile atualizado com status: ${finalStatus}`,
     )
+
+    // 8. Criar/atualizar kyc_verifications
+    const verificationData = {
+      user_id: userId,
+      status: finalStatus,
+      updated_at: new Date().toISOString(),
+      verified_at:
+        finalStatus === 'approved' ? new Date().toISOString() : undefined,
+    }
+
+    const { error: verificationError } = await supabase
+      .from('kyc_verifications')
+      .upsert(verificationData, {
+        onConflict: 'user_id',
+      })
+
+    if (verificationError) {
+      console.error(
+        `⚠️ [PROTEO WEBHOOK] Erro ao criar verificação (não crítico):`,
+        verificationError,
+      )
+    } else {
+      console.log(`✅ [PROTEO WEBHOOK] Verificação registrada`)
+    }
+
+    console.log(`🎉 [PROTEO WEBHOOK] Webhook processado com sucesso!`)
+  } catch (error) {
+    console.error('❌ [PROTEO WEBHOOK] Erro fatal:', error)
   }
+}
+
+// Aceitar GET apenas para teste rápido (retorna instruções)
+export async function GET() {
+  return NextResponse.json({
+    error: 'Method not allowed',
+    message: 'This webhook only accepts POST requests',
+    usage: {
+      method: 'POST',
+      url: '/api/proteo/webhook?secret=YOUR_SECRET',
+      body: {
+        document: '12345678900',
+        status: 'approved',
+      },
+    },
+  })
 }

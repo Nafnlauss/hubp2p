@@ -17,6 +17,7 @@ import * as z from 'zod'
 import {
   createPaymentAccount,
   deletePaymentAccount,
+  getPaymentAccounts,
   toggleAccountActive,
 } from '@/app/actions/payment-accounts'
 import { Badge } from '@/components/ui/badge'
@@ -55,7 +56,6 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
-import { createClient } from '@/lib/supabase/client'
 
 interface PaymentAccount {
   id: string
@@ -84,7 +84,6 @@ const tedSchema = z.object({
 
 export default function PaymentAccountsPage() {
   const { toast } = useToast()
-  const supabase = createClient()
 
   const [pixAccounts, setPixAccounts] = useState<PaymentAccount[]>([])
   const [tedAccounts, setTedAccounts] = useState<PaymentAccount[]>([])
@@ -111,20 +110,20 @@ export default function PaymentAccountsPage() {
 
   useEffect(() => {
     loadAccounts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadAccounts = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('payment_accounts')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const result = await getPaymentAccounts()
 
-      if (error) throw error
+      if (!result.success) {
+        throw new Error(result.error)
+      }
 
-      setPixAccounts(data?.filter((a) => a.account_type === 'pix') || [])
-      setTedAccounts(data?.filter((a) => a.account_type === 'ted') || [])
+      setPixAccounts(result.data?.filter((a) => a.account_type === 'pix') || [])
+      setTedAccounts(result.data?.filter((a) => a.account_type === 'ted') || [])
     } catch (error) {
       console.error('Erro ao carregar contas:', error)
       toast({
@@ -356,9 +355,9 @@ export default function PaymentAccountsPage() {
                         disabled={submitting}
                         className="w-full"
                       >
-                        {submitting ? (
+                        {submitting && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
+                        )}
                         Adicionar
                       </Button>
                     </form>
@@ -542,9 +541,9 @@ export default function PaymentAccountsPage() {
                         disabled={submitting}
                         className="w-full"
                       >
-                        {submitting ? (
+                        {submitting && (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
+                        )}
                         Adicionar
                       </Button>
                     </form>

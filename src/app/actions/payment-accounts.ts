@@ -1,8 +1,38 @@
+/* eslint-disable unicorn/filename-case */
 'use server'
 
 import { revalidatePath } from 'next/cache'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
+
+export async function getPaymentAccounts() {
+  try {
+    const supabase = await createAdminClient()
+
+    const { data, error } = await supabase
+      .from('payment_accounts')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Erro ao buscar contas:', error)
+      return {
+        success: false,
+        error: 'Erro ao buscar contas de pagamento',
+        data: [],
+      }
+    }
+
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error('Erro ao buscar contas:', error)
+    return {
+      success: false,
+      error: 'Erro ao buscar contas de pagamento',
+      data: [],
+    }
+  }
+}
 
 export async function createPaymentAccount(data: {
   account_type: 'pix' | 'ted'
@@ -14,17 +44,17 @@ export async function createPaymentAccount(data: {
   account_number?: string
 }) {
   try {
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
     const { error } = await supabase.from('payment_accounts').insert({
       account_type: data.account_type,
       is_active: false,
-      pix_key: data.pix_key || null,
-      bank_name: data.bank_name || null,
-      bank_code: data.bank_code || null,
-      account_holder: data.account_holder || null,
-      account_agency: data.account_agency || null,
-      account_number: data.account_number || null,
+      pix_key: data.pix_key || undefined,
+      bank_name: data.bank_name || undefined,
+      bank_code: data.bank_code || undefined,
+      account_holder: data.account_holder || undefined,
+      account_agency: data.account_agency || undefined,
+      account_number: data.account_number || undefined,
     })
 
     if (error) {
@@ -45,7 +75,7 @@ export async function toggleAccountActive(
   accountType: 'pix' | 'ted',
 ) {
   try {
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
     // Primeiro, desativar todas as contas do mesmo tipo
     await supabase
@@ -74,7 +104,7 @@ export async function toggleAccountActive(
 
 export async function deletePaymentAccount(accountId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
     const { error } = await supabase
       .from('payment_accounts')

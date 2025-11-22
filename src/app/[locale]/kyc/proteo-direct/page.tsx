@@ -17,10 +17,7 @@ export default function ProteoDirectPage() {
   useEffect(() => {
     const cpf = searchParameters.get('cpf')
 
-    console.log('🔵 [PROTEO DIRECT] Iniciando verificação com CPF:', cpf)
-
     if (!cpf || cpf.length !== 11) {
-      console.error('❌ [PROTEO DIRECT] CPF inválido:', cpf)
       setError(true)
       return
     }
@@ -30,9 +27,6 @@ export default function ProteoDirectPage() {
       'https://onboarding.proteo.com.br/?tenant=dias_marketplace&background_check_id=3c35bb87-0b04-4130-a026-e4ee9f8ce2c4'
     const url = new URL(baseUrl)
     url.searchParams.set('document', cpf)
-
-    console.log('✅ [PROTEO DIRECT] CPF setado na URL:', cpf)
-    console.log('🔗 [PROTEO DIRECT] URL final:', url.toString())
 
     setKycUrl(url.toString())
   }, [searchParameters])
@@ -92,28 +86,13 @@ export default function ProteoDirectPage() {
           sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox"
           referrerPolicy="no-referrer"
           loading="eager"
-          onLoad={() => console.log('✅ [PROTEO DIRECT] Iframe carregado')}
-          onError={() => {
-            console.error('❌ [PROTEO DIRECT] Erro ao carregar iframe')
-            setError(true)
-          }}
+          onError={() => setError(true)}
         />
       </div>
 
       {/* Footer */}
       <div className="border-t bg-muted/30 px-4 py-2">
-        <p className="mx-auto max-w-4xl text-center text-xs text-muted-foreground">
-          <strong>Nota:</strong> Se o conteúdo não carregar, use o botão abaixo
-          para abrir em nova aba.
-        </p>
-        <div className="mx-auto mt-2 flex max-w-4xl justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.open(kycUrl, '_blank')}
-          >
-            Abrir em Nova Aba
-          </Button>
+        <div className="mx-auto flex max-w-4xl justify-center">
           <Button
             variant="outline"
             size="sm"

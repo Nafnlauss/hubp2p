@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 
 // Helper para verificar se usuário é admin
 async function checkAdminAccess() {
@@ -39,9 +39,20 @@ export async function updateTransactionStatus(
   },
 ) {
   try {
-    const { supabase } = await checkAdminAccess()
+    // Verificar se é admin
+    await checkAdminAccess()
 
-    const updateData: any = {
+    // Usar admin client para bypass de RLS
+    const supabase = await createAdminClient()
+
+    const updateData: {
+      status: string
+      updated_at: string
+      payment_confirmed_at?: string
+      crypto_sent_at?: string
+      tx_hash?: string
+      admin_notes?: string
+    } = {
       status,
       updated_at: new Date().toISOString(),
     }
@@ -83,7 +94,11 @@ export async function updateTransactionStatus(
 // Aprovar KYC
 export async function approveKYC(kycId: string) {
   try {
-    const { supabase } = await checkAdminAccess()
+    // Verificar se é admin
+    await checkAdminAccess()
+
+    // Usar admin client para bypass de RLS
+    const supabase = await createAdminClient()
 
     const { error } = await supabase
       .from('kyc_verifications')
@@ -111,7 +126,11 @@ export async function approveKYC(kycId: string) {
 // Rejeitar KYC
 export async function rejectKYC(kycId: string, reason: string) {
   try {
-    const { supabase } = await checkAdminAccess()
+    // Verificar se é admin
+    await checkAdminAccess()
+
+    // Usar admin client para bypass de RLS
+    const supabase = await createAdminClient()
 
     const { error } = await supabase
       .from('kyc_verifications')
@@ -139,7 +158,11 @@ export async function rejectKYC(kycId: string, reason: string) {
 // Tornar/remover admin
 export async function toggleAdmin(userId: string, isAdmin: boolean) {
   try {
-    const { supabase } = await checkAdminAccess()
+    // Verificar se é admin
+    await checkAdminAccess()
+
+    // Usar admin client para bypass de RLS
+    const supabase = await createAdminClient()
 
     const { error } = await supabase
       .from('profiles')
@@ -166,7 +189,11 @@ export async function toggleAdmin(userId: string, isAdmin: boolean) {
 // Enviar notificação via Pushover
 export async function sendNotification(transactionId: string) {
   try {
-    const { supabase } = await checkAdminAccess()
+    // Verificar se é admin
+    await checkAdminAccess()
+
+    // Usar admin client para bypass de RLS
+    const supabase = await createAdminClient()
 
     // Buscar dados da transação
     const { data: transaction } = await supabase
@@ -262,25 +289,31 @@ export async function getDashboardStats() {
 
     // Agrupar por dia
     const chartData =
-      weekTransactions?.reduce((accumulator: any[], transaction) => {
-        const date = new Date(transaction.created_at!).toLocaleDateString(
-          'pt-BR',
-        )
-        const existing = accumulator.find((item) => item.date === date)
+      weekTransactions?.reduce(
+        (
+          accumulator: Array<{ date: string; count: number; value: number }>,
+          transaction,
+        ) => {
+          const date = new Date(transaction.created_at!).toLocaleDateString(
+            'pt-BR',
+          )
+          const existing = accumulator.find((item) => item.date === date)
 
-        if (existing) {
-          existing.count += 1
-          existing.value += transaction.amount_brl
-        } else {
-          accumulator.push({
-            date,
-            count: 1,
-            value: transaction.amount_brl,
-          })
-        }
+          if (existing) {
+            existing.count += 1
+            existing.value += transaction.amount_brl
+          } else {
+            accumulator.push({
+              date,
+              count: 1,
+              value: transaction.amount_brl,
+            })
+          }
 
-        return accumulator
-      }, []) || []
+          return accumulator
+        },
+        [],
+      ) || []
 
     return {
       todayCount: todayCount || 0,

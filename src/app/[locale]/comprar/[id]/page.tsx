@@ -337,7 +337,13 @@ export default function ApiPaymentPage() {
                   variant="outline"
                   size="icon"
                   onClick={() =>
-                    copyToClipboard(transaction.amount_brl.toFixed(2), 'Valor')
+                    copyToClipboard(
+                      transaction.amount_brl.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }),
+                      'Valor',
+                    )
                   }
                 >
                   <Copy className="h-4 w-4" />
@@ -425,14 +431,23 @@ export default function ApiPaymentPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Você receberá:</span>
               <span className="font-medium">
-                ${transaction.amount_usd?.toFixed(2) || '0.00'} USDT
+                $
+                {transaction.amount_usd?.toLocaleString('pt-BR', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }) || '0,00'}{' '}
+                USDT
               </span>
             </div>
             <Separator />
             <div className="flex justify-between">
               <span className="text-muted-foreground">Taxa de câmbio:</span>
               <span className="font-medium">
-                R$ {transaction.exchange_rate?.toFixed(4) || '0.0000'}
+                R${' '}
+                {transaction.exchange_rate?.toLocaleString('pt-BR', {
+                  minimumFractionDigits: 4,
+                  maximumFractionDigits: 4,
+                }) || '0,0000'}
               </span>
             </div>
             <Separator />

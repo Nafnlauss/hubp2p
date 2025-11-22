@@ -235,7 +235,11 @@ export function ComprarForm() {
                     </div>
                   ) : (
                     <p className="mt-1 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
-                      ${usdAmount.toFixed(2)}
+                      $
+                      {usdAmount.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </p>
                   )}
                 </div>
@@ -250,7 +254,11 @@ export function ComprarForm() {
                   <p className="text-xs font-medium text-gray-600">USDT</p>
                   {exchangeRate && (
                     <p className="text-xs font-semibold text-gray-700">
-                      Taxa: R$ {exchangeRate.toFixed(2)}
+                      Taxa: R${' '}
+                      {exchangeRate.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </p>
                   )}
                 </div>

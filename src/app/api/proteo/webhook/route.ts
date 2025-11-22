@@ -68,14 +68,12 @@ async function processWebhook(request: Request) {
       body.verification_status
 
     if (!cpf || !rawStatus) {
-      console.error('❌ [PROTEO WEBHOOK] CPF ou status ausente no payload')
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required fields: document/cpf and status',
-        },
-        { status: 400 },
+      // Proteo pode enviar payloads intermediários sem CPF/status
+      // Ex: {"success":true,"message":"Background check execution was successfully."}
+      console.log(
+        '⏭️ [PROTEO WEBHOOK] Payload intermediário (sem CPF/status) - ignorando',
       )
+      return
     }
 
     console.log(`📋 [PROTEO WEBHOOK] CPF: ${cpf}, Status: ${rawStatus}`)
@@ -124,10 +122,7 @@ async function processWebhook(request: Request) {
           `📦 [PROTEO WEBHOOK] Payload completo:`,
           JSON.stringify(body),
         )
-        return NextResponse.json(
-          { success: false, error: `Unknown status: ${rawStatus}` },
-          { status: 400 },
-        )
+        return
       }
     }
 
@@ -137,10 +132,7 @@ async function processWebhook(request: Request) {
     const cpfDigits = String(cpf).replaceAll(/\D/g, '')
     if (cpfDigits.length !== 11) {
       console.error(`❌ [PROTEO WEBHOOK] CPF inválido: ${cpf}`)
-      return NextResponse.json(
-        { success: false, error: 'Invalid CPF format' },
-        { status: 400 },
-      )
+      return
     }
 
     console.log(`✅ [PROTEO WEBHOOK] CPF validado: ${cpfDigits}`)
@@ -159,10 +151,7 @@ async function processWebhook(request: Request) {
         `❌ [PROTEO WEBHOOK] Usuário não encontrado para CPF: ${cpfDigits}`,
         profileError,
       )
-      return NextResponse.json(
-        { success: false, error: 'User not found for CPF' },
-        { status: 404 },
-      )
+      return
     }
 
     const userId = profile.id
@@ -190,10 +179,7 @@ async function processWebhook(request: Request) {
         `❌ [PROTEO WEBHOOK] Erro ao atualizar profile:`,
         updateError,
       )
-      return NextResponse.json(
-        { success: false, error: 'Failed to update profile' },
-        { status: 500 },
-      )
+      return
     }
 
     console.log(

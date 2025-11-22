@@ -143,7 +143,7 @@ async function processWebhook(request: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, kyc_status')
       .eq('cpf', cpfDigits)
       .single()
 
@@ -157,6 +157,17 @@ async function processWebhook(request: Request) {
 
     const userId = profile.id
     console.log(`✅ [PROTEO WEBHOOK] Usuário encontrado: ${userId}`)
+    console.log(
+      `📊 [PROTEO WEBHOOK] Status atual: ${profile.kyc_status} → Novo status: ${finalStatus}`,
+    )
+
+    // 6.1 PROTEÇÃO: Nunca sobrescrever "approved" com outro status
+    if (profile.kyc_status === 'approved' && finalStatus !== 'approved') {
+      console.log(
+        `🛡️ [PROTEO WEBHOOK] BLOQUEADO: Tentativa de mudar de "approved" para "${finalStatus}" - IGNORANDO`,
+      )
+      return
+    }
 
     // 7. Atualizar profile
     const profileUpdate: {

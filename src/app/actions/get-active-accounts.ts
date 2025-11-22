@@ -1,10 +1,11 @@
+/* eslint-disable unicorn/filename-case */
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export async function getActivePaymentAccounts() {
   try {
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
     const { data, error } = await supabase
       .from('payment_accounts')
@@ -27,7 +28,7 @@ export async function getActivePaymentAccounts() {
               pix_key: pixAccount.pix_key,
               pix_qr_code: pixAccount.pix_key, // Para QR Code, você pode usar a chave PIX
             }
-          : null,
+          : undefined,
         ted: tedAccount
           ? {
               bank_name: tedAccount.bank_name,
@@ -36,7 +37,7 @@ export async function getActivePaymentAccounts() {
               account_agency: tedAccount.account_agency,
               account_number: tedAccount.account_number,
             }
-          : null,
+          : undefined,
       },
     }
   } catch (error) {

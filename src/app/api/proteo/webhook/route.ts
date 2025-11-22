@@ -86,7 +86,8 @@ async function processWebhook(request: Request) {
       case 'approved':
       case 'aprovado':
       case 'success':
-      case 'complete': {
+      case 'complete':
+      case 'completed': {
         finalStatus = 'approved'
 
         break

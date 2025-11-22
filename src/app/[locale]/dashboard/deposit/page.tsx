@@ -28,13 +28,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
 
@@ -49,6 +42,24 @@ const depositSchema = z.object({
 })
 
 type DepositFormValues = z.infer<typeof depositSchema>
+
+interface TransactionData {
+  user_id: string
+  transaction_number: string
+  payment_method: 'pix' | 'ted'
+  amount_brl: number
+  crypto_network: string
+  wallet_address: string
+  expires_at: string
+  status: string
+  pix_key?: string
+  pix_qr_code?: string
+  bank_name?: string
+  bank_code?: string
+  bank_account_holder?: string
+  bank_account_agency?: string
+  bank_account_number?: string
+}
 
 const paymentMethods = [
   {
@@ -123,6 +134,7 @@ function parseCurrencyBRL(value: string): number {
 export default function NewDepositPage() {
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [amountDisplay, setAmountDisplay] = useState('')
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
@@ -210,7 +222,7 @@ export default function NewDepositPage() {
       expiresAt.setMinutes(expiresAt.getMinutes() + 40)
 
       // Preparar dados da transação
-      const transactionData: any = {
+      const transactionData: TransactionData = {
         user_id: user.id,
         transaction_number: transactionNumber || `TXN-${Date.now()}`,
         payment_method: data.payment_method,
@@ -256,7 +268,9 @@ export default function NewDepositPage() {
       })
 
       // Redirecionar para página de pagamento
-      router.push(`/dashboard/deposit/${(transaction as any).id}`)
+      if (transaction && 'id' in transaction) {
+        router.push(`/dashboard/deposit/${transaction.id}`)
+      }
     } catch (error) {
       console.error('Erro:', error)
       toast({
@@ -371,12 +385,23 @@ export default function NewDepositPage() {
                           {paymentMethods.map((method) => (
                             <div
                               key={method.id}
+                              role="button"
+                              tabIndex={0}
                               className={`cursor-pointer rounded-xl border-2 p-6 shadow-lg transition-all duration-300 ${
                                 field.value === method.id
                                   ? 'scale-105 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-2xl'
                                   : 'border-gray-200 bg-white hover:scale-105 hover:border-blue-300 hover:shadow-xl'
                               }`}
                               onClick={() => field.onChange(method.id)}
+                              onKeyDown={(event) => {
+                                if (
+                                  event.key === 'Enter' ||
+                                  event.key === ' '
+                                ) {
+                                  event.preventDefault()
+                                  field.onChange(method.id)
+                                }
+                              }}
                             >
                               <div className="flex items-start justify-between">
                                 <div>
@@ -434,16 +459,35 @@ export default function NewDepositPage() {
                           </span>
                           <Input
                             type="text"
+                            inputMode="decimal"
                             placeholder="0,00"
                             className="pl-10 text-lg"
-                            value={formatCurrencyBRL(field.value || 0)}
-                            onChange={(e) => {
-                              const numericValue = parseCurrencyBRL(
-                                e.target.value,
-                              )
+                            value={amountDisplay}
+                            onChange={(event) => {
+                              const value = event.target.value
+                              // Permitir apenas números e vírgula
+                              const cleaned = value.replaceAll(/[^\d,]/g, '')
+                              setAmountDisplay(cleaned)
+
+                              // Converter para número e atualizar o form
+                              const numericValue = parseCurrencyBRL(cleaned)
                               field.onChange(numericValue)
                             }}
-                            onBlur={field.onBlur}
+                            onBlur={() => {
+                              // Formatar o valor quando o campo perde o foco
+                              if (field.value) {
+                                setAmountDisplay(formatCurrencyBRL(field.value))
+                              }
+                              field.onBlur()
+                            }}
+                            onFocus={() => {
+                              // Remover formatação quando o campo recebe foco
+                              if (field.value) {
+                                setAmountDisplay(
+                                  field.value.toString().replace('.', ','),
+                                )
+                              }
+                            }}
                             name={field.name}
                             ref={field.ref}
                           />
@@ -482,12 +526,23 @@ export default function NewDepositPage() {
                           {cryptoNetworks.map((network) => (
                             <div
                               key={network.id}
+                              role="button"
+                              tabIndex={0}
                               className={`cursor-pointer rounded-xl border-2 p-4 shadow-lg transition-all duration-300 ${
                                 field.value === network.id
                                   ? 'scale-105 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-2xl'
                                   : 'border-gray-200 bg-white hover:scale-105 hover:border-blue-300 hover:shadow-xl'
                               }`}
                               onClick={() => field.onChange(network.id)}
+                              onKeyDown={(event) => {
+                                if (
+                                  event.key === 'Enter' ||
+                                  event.key === ' '
+                                ) {
+                                  event.preventDefault()
+                                  field.onChange(network.id)
+                                }
+                              }}
                             >
                               <div className="flex items-center justify-between">
                                 <div>

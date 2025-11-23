@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { ComprarForm } from './_components/comprar-form'
+import { ComprarForm } from './_components/ComprarForm'
 
 export const metadata: Metadata = {
   title: 'Comprar USDT | HubP2P API',

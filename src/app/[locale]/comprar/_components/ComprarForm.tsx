@@ -65,13 +65,22 @@ const networks = [
   { value: 'tron', label: 'Tron (TRX)' },
 ] as const
 
+function formatBRL(value: string) {
+  const numbers = value.replaceAll(/\D/g, '')
+  const amount = Number.parseInt(numbers) / 100
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(amount)
+}
+
 export function ComprarForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [brlAmount, setBrlAmount] = useState('R$ 100,00')
-  const [usdAmount, setUsdAmount] = useState<number | null>(null)
-  const [exchangeRate, setExchangeRate] = useState<number | null>(null)
+  const [usdAmount, setUsdAmount] = useState<number | undefined>()
+  const [exchangeRate, setExchangeRate] = useState<number | undefined>()
   const [isCalculating, setIsCalculating] = useState(false)
   const [timeLeft, setTimeLeft] = useState(30)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -92,8 +101,8 @@ export function ComprarForm() {
     )
 
     if (Number.isNaN(amount) || amount < 100) {
-      setUsdAmount(null)
-      setExchangeRate(null)
+      setUsdAmount(undefined)
+      setExchangeRate(undefined)
       return
     }
 
@@ -108,8 +117,8 @@ export function ComprarForm() {
       form.setValue('amount_brl', amount)
     } catch (error) {
       console.error('[CALCULATE USD] Erro ao calcular USD:', error)
-      setUsdAmount(null)
-      setExchangeRate(null)
+      setUsdAmount(undefined)
+      setExchangeRate(undefined)
     } finally {
       setIsCalculating(false)
     }
@@ -140,17 +149,8 @@ export function ComprarForm() {
     return () => clearInterval(timer)
   }, [calculateUsd])
 
-  const formatBRL = (value: string) => {
-    const numbers = value.replaceAll(/\D/g, '')
-    const amount = Number.parseInt(numbers) / 100
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(amount)
-  }
-
-  const handleBrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatBRL(e.target.value)
+  const handleBrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatBRL(event.target.value)
     setBrlAmount(formatted)
   }
 
@@ -175,7 +175,7 @@ export function ComprarForm() {
       })
 
       // Redireciona para a página de pagamento
-      router.push(`/pt-BR/comprar/${transaction.id}`)
+      router.push(`/comprar/${transaction.id}`)
     } catch (error) {
       toast({
         title: 'Erro',
@@ -226,7 +226,7 @@ export function ComprarForm() {
                   <p className="text-sm font-medium text-gray-600">
                     Você receberá:
                   </p>
-                  {isCalculating || usdAmount === null ? (
+                  {isCalculating || usdAmount === undefined ? (
                     <div className="mt-2 flex items-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                       <span className="text-sm text-gray-500">

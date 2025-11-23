@@ -342,6 +342,15 @@ export function ComprarForm() {
                   <p className="text-xs font-medium text-gray-600">
                     {cryptoSymbol}
                   </p>
+                  {exchangeRate && (
+                    <p className="text-xs font-semibold text-gray-700">
+                      Taxa: R${' '}
+                      {exchangeRate.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">

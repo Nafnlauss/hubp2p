@@ -518,17 +518,6 @@ export default function ApiPaymentPage() {
               </div>
               <Separator />
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Taxa de câmbio:</span>
-                <span className="font-medium">
-                  R${' '}
-                  {transaction.exchange_rate?.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 4,
-                    maximumFractionDigits: 4,
-                  }) || '0,0000'}
-                </span>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
                 <span className="text-muted-foreground">Rede:</span>
                 <span className="font-medium">
                   {networkLabels[transaction.crypto_network]}

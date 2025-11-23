@@ -92,12 +92,12 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>
 
 const networks = [
-  { value: 'bitcoin', label: 'Bitcoin (BTC)' },
   { value: 'ethereum', label: 'Ethereum (ETH)' },
   { value: 'polygon', label: 'Polygon (MATIC)' },
   { value: 'bsc', label: 'Binance Smart Chain (BNB)' },
-  { value: 'solana', label: 'Solana (SOL)' },
   { value: 'tron', label: 'Tron (TRX)' },
+  { value: 'solana', label: 'Solana (SOL)' },
+  { value: 'bitcoin', label: 'Bitcoin (BTC)' },
 ] as const
 
 // Descrições de formato de endereço para cada rede
@@ -150,7 +150,7 @@ export function ComprarForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount_brl: 100,
-      crypto_network: 'bitcoin',
+      crypto_network: 'ethereum',
       wallet_address: '',
     },
   })
@@ -205,6 +205,16 @@ export function ComprarForm() {
     const debounce = setTimeout(calculateCrypto, 500)
     return () => clearTimeout(debounce)
   }, [calculateCrypto])
+
+  // Recalcula imediatamente quando a rede muda (sem esperar 30s)
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'crypto_network') {
+        calculateCrypto()
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form, calculateCrypto])
 
   // Timer de 30 segundos para atualizar automaticamente
   useEffect(() => {

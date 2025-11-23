@@ -114,6 +114,16 @@ const walletFormatDescriptions: Record<string, string> = {
   tron: 'Endereço Tron deve começar com T e ter 34 caracteres (ex: TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9)',
 }
 
+// Placeholders de endereço para cada rede
+const walletPlaceholders: Record<string, string> = {
+  bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+  ethereum: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+  polygon: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+  bsc: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+  solana: '7v91N7iZ9mNicL8WfG6cgSCKyRXydQjLh6UYBWwm6y1Q',
+  tron: 'TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9',
+}
+
 function formatBRL(value: string) {
   const numbers = value.replaceAll(/\D/g, '')
   const amount = Number.parseInt(numbers) / 100
@@ -413,7 +423,11 @@ export function ComprarForm() {
                     <FormLabel>Endereço da Carteira</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="0x..."
+                        placeholder={
+                          selectedNetwork
+                            ? walletPlaceholders[selectedNetwork]
+                            : '0x...'
+                        }
                         {...field}
                         className="font-mono"
                       />

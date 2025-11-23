@@ -116,12 +116,12 @@ const walletFormatDescriptions: Record<string, string> = {
 
 // Placeholders de endereço para cada rede
 const walletPlaceholders: Record<string, string> = {
-  bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-  ethereum: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-  polygon: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-  bsc: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-  solana: '7v91N7iZ9mNicL8WfG6cgSCKyRXydQjLh6UYBWwm6y1Q',
-  tron: 'TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9',
+  bitcoin: '1A1z...',
+  ethereum: '0x74...',
+  polygon: '0x74...',
+  bsc: '0x74...',
+  solana: '7v91...',
+  tron: 'TN3W...',
 }
 
 function formatBRL(value: string) {

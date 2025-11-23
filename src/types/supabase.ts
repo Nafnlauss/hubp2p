@@ -7,11 +7,127 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: '13.0.5'
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          password_hash: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          password_hash: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          password_hash?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      api_payment_accounts: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          pix_key: string
+          pix_key_holder: string | null
+          pix_qr_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          pix_key: string
+          pix_key_holder?: string | null
+          pix_qr_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          pix_key?: string
+          pix_key_holder?: string | null
+          pix_qr_code?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      api_transactions: {
+        Row: {
+          admin_notes: string | null
+          amount_brl: number
+          amount_usd: number | null
+          created_at: string | null
+          crypto_network: string
+          crypto_sent_at: string | null
+          exchange_rate: number | null
+          expires_at: string
+          id: string
+          payment_confirmed_at: string | null
+          pix_key: string | null
+          pix_key_holder: string | null
+          status: string
+          transaction_number: string
+          tx_hash: string | null
+          updated_at: string | null
+          wallet_address: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_brl: number
+          amount_usd?: number | null
+          created_at?: string | null
+          crypto_network: string
+          crypto_sent_at?: string | null
+          exchange_rate?: number | null
+          expires_at: string
+          id?: string
+          payment_confirmed_at?: string | null
+          pix_key?: string | null
+          pix_key_holder?: string | null
+          status?: string
+          transaction_number: string
+          tx_hash?: string | null
+          updated_at?: string | null
+          wallet_address: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_brl?: number
+          amount_usd?: number | null
+          created_at?: string | null
+          crypto_network?: string
+          crypto_sent_at?: string | null
+          exchange_rate?: number | null
+          expires_at?: string
+          id?: string
+          payment_confirmed_at?: string | null
+          pix_key?: string | null
+          pix_key_holder?: string | null
+          status?: string
+          transaction_number?: string
+          tx_hash?: string | null
+          updated_at?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       kyc_verifications: {
         Row: {
           created_at: string | null
@@ -62,7 +178,7 @@ export type Database = {
           {
             foreignKeyName: 'kyc_verifications_user_id_fkey'
             columns: ['user_id']
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: 'profiles'
             referencedColumns: ['id']
           },
@@ -115,6 +231,51 @@ export type Database = {
           },
         ]
       }
+      payment_accounts: {
+        Row: {
+          account_agency: string | null
+          account_holder: string | null
+          account_number: string | null
+          account_type: string
+          bank_code: string | null
+          bank_name: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          pix_key: string | null
+          pix_key_holder: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_agency?: string | null
+          account_holder?: string | null
+          account_number?: string | null
+          account_type: string
+          bank_code?: string | null
+          bank_name?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          pix_key?: string | null
+          pix_key_holder?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_agency?: string | null
+          account_holder?: string | null
+          account_number?: string | null
+          account_type?: string
+          bank_code?: string | null
+          bank_name?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          pix_key?: string | null
+          pix_key_holder?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address_city: string | null
@@ -126,11 +287,19 @@ export type Database = {
           cpf: string
           created_at: string | null
           date_of_birth: string | null
+          first_deposit_at: string | null
+          first_deposit_completed: boolean | null
           full_name: string
           id: string
           is_admin: boolean | null
+          kyc_completed_at: string | null
+          kyc_status: string | null
+          onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
           phone: string | null
           updated_at: string | null
+          wallet_configured: boolean | null
+          wallet_configured_at: string | null
         }
         Insert: {
           address_city?: string | null
@@ -142,11 +311,19 @@ export type Database = {
           cpf: string
           created_at?: string | null
           date_of_birth?: string | null
+          first_deposit_at?: string | null
+          first_deposit_completed?: boolean | null
           full_name: string
           id: string
           is_admin?: boolean | null
+          kyc_completed_at?: string | null
+          kyc_status?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
           phone?: string | null
           updated_at?: string | null
+          wallet_configured?: boolean | null
+          wallet_configured_at?: string | null
         }
         Update: {
           address_city?: string | null
@@ -158,11 +335,19 @@ export type Database = {
           cpf?: string
           created_at?: string | null
           date_of_birth?: string | null
+          first_deposit_at?: string | null
+          first_deposit_completed?: boolean | null
           full_name?: string
           id?: string
           is_admin?: boolean | null
+          kyc_completed_at?: string | null
+          kyc_status?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
           phone?: string | null
           updated_at?: string | null
+          wallet_configured?: boolean | null
+          wallet_configured_at?: string | null
         }
         Relationships: []
       }
@@ -249,12 +434,56 @@ export type Database = {
           },
         ]
       }
+      wallets: {
+        Row: {
+          address: string
+          created_at: string | null
+          currency: string
+          id: string
+          is_primary: boolean | null
+          label: string | null
+          network: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string | null
+          currency: string
+          id?: string
+          is_primary?: boolean | null
+          label?: string | null
+          network?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string | null
+          currency?: string
+          id?: string
+          is_primary?: boolean | null
+          label?: string | null
+          network?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      generate_api_transaction_number: { Args: never; Returns: string }
       generate_transaction_number: { Args: never; Returns: string }
+      verify_admin_password: {
+        Args: { p_email: string; p_password: string }
+        Returns: {
+          email: string
+          id: string
+        }[]
+      }
     }
     Enums: {
       crypto_network:

@@ -42,21 +42,28 @@ export async function getActiveApiPaymentAccount(): Promise<
 > {
   const supabase = await createAdminClient()
 
+  console.log('[GET-ACTIVE] Buscando conta de pagamento ativa...')
+
   const { data, error } = await supabase
     .from('api_payment_accounts')
     .select('*')
     .eq('is_active', true)
     .single()
 
+  console.log('[GET-ACTIVE] Data:', data)
+  console.log('[GET-ACTIVE] Error:', error)
+
   if (error) {
     if (error.code === 'PGRST116') {
       // No active account found
+      console.log('[GET-ACTIVE] Nenhuma conta ativa encontrada (PGRST116)')
       return undefined
     }
     console.error('Error fetching active API payment account:', error)
     throw new Error('Erro ao buscar conta de pagamento ativa')
   }
 
+  console.log('[GET-ACTIVE] Conta ativa encontrada:', data.pix_key)
   return data
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/filename-case */
 'use server'
 
 import { revalidatePath } from 'next/cache'
@@ -24,6 +25,7 @@ export interface ApiTransaction {
     | 'cancelled'
     | 'expired'
   pix_key: string | null
+  pix_key_holder: string | null
   tx_hash: string | null
   created_at: string
   expires_at: string
@@ -73,6 +75,12 @@ export async function createApiTransaction(
   const expiresAt = new Date()
   expiresAt.setMinutes(expiresAt.getMinutes() + 40)
 
+  console.log('[CREATE API TRANSACTION] Dados a inserir:', {
+    crypto_network: data.crypto_network,
+    wallet_address: data.wallet_address,
+    amount_brl: data.amount_brl,
+  })
+
   // Create transaction
   const { data: transaction, error } = await supabase
     .from('api_transactions')
@@ -85,6 +93,7 @@ export async function createApiTransaction(
       wallet_address: data.wallet_address,
       status: 'pending_payment',
       pix_key: paymentAccount.pix_key,
+      pix_key_holder: paymentAccount.pix_key_holder,
       expires_at: expiresAt.toISOString(),
     })
     .select()
@@ -95,15 +104,24 @@ export async function createApiTransaction(
     throw new Error('Erro ao criar transação')
   }
 
-  console.log('[CREATE API TRANSACTION] Transação criada com sucesso:', transaction.id)
+  console.log(
+    '[CREATE API TRANSACTION] Transação criada com sucesso:',
+    transaction.id,
+  )
 
   // Enviar notificação Pushover prioritária para o admin (não bloqueia retorno)
   sendApiNotification(transaction.id).catch((notificationError) => {
     // Log do erro mas não falha a transação
-    console.error('[CREATE API TRANSACTION] Erro ao enviar notificação Pushover:', notificationError)
+    console.error(
+      '[CREATE API TRANSACTION] Erro ao enviar notificação Pushover:',
+      notificationError,
+    )
   })
 
-  console.log('[CREATE API TRANSACTION] Retornando transação:', transaction.transaction_number)
+  console.log(
+    '[CREATE API TRANSACTION] Retornando transação:',
+    transaction.transaction_number,
+  )
   return transaction
 }
 
@@ -112,7 +130,7 @@ export async function createApiTransaction(
  */
 export async function getApiTransaction(
   transactionId: string,
-): Promise<ApiTransaction | null> {
+): Promise<ApiTransaction | undefined> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -123,7 +141,7 @@ export async function getApiTransaction(
 
   if (error) {
     if (error.code === 'PGRST116') {
-      return null
+      return undefined
     }
     console.error('Error fetching API transaction:', error)
     throw new Error('Erro ao buscar transação')
@@ -137,7 +155,7 @@ export async function getApiTransaction(
  */
 export async function getApiTransactionByNumber(
   transactionNumber: string,
-): Promise<ApiTransaction | null> {
+): Promise<ApiTransaction | undefined> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -148,7 +166,7 @@ export async function getApiTransactionByNumber(
 
   if (error) {
     if (error.code === 'PGRST116') {
-      return null
+      return undefined
     }
     console.error('Error fetching API transaction:', error)
     throw new Error('Erro ao buscar transação')

@@ -29,7 +29,7 @@ interface ApiTransaction {
   amount_brl: number
   amount_usd: number | null
   exchange_rate: number | null
-  crypto_network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana'
+  crypto_network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana' | 'tron'
   wallet_address: string
   status:
     | 'pending_payment'
@@ -39,6 +39,7 @@ interface ApiTransaction {
     | 'cancelled'
     | 'expired'
   pix_key: string | null
+  pix_key_holder: string | null
   tx_hash: string | null
   created_at: string
   expires_at: string
@@ -87,6 +88,7 @@ const networkLabels = {
   polygon: 'Polygon (MATIC)',
   bsc: 'Binance Smart Chain (BNB)',
   solana: 'Solana (SOL)',
+  tron: 'Tron (TRX)',
 }
 
 export default function ApiPaymentPage() {
@@ -343,6 +345,18 @@ export default function ApiPaymentPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Titular */}
+              {transaction.pix_key_holder && (
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">
+                    Titular da Chave
+                  </label>
+                  <div className="rounded-md border bg-muted px-3 py-2 text-sm font-medium">
+                    {transaction.pix_key_holder}
+                  </div>
+                </div>
+              )}
+
               {/* Chave PIX */}
               <div className="space-y-3">
                 <label className="text-sm font-medium">Chave PIX</label>

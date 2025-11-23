@@ -38,21 +38,56 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 
-const formSchema = z.object({
-  amount_brl: z.number().min(100, 'Valor mínimo é R$ 100,00'),
-  crypto_network: z.enum([
-    'bitcoin',
-    'ethereum',
-    'polygon',
-    'bsc',
-    'solana',
-    'tron',
-  ]),
-  wallet_address: z
-    .string()
-    .min(26, 'Endereço inválido')
-    .max(100, 'Endereço muito longo'),
-})
+// Validações de endereço por rede
+const validateWalletAddress = (address: string, network: string): boolean => {
+  switch (network) {
+    case 'bitcoin': {
+      // Bitcoin: começa com 1, 3, ou bc1
+      return /^(1|3|bc1)[\dA-HJ-NP-Za-z]{25,62}$/.test(address)
+    }
+    case 'ethereum':
+    case 'polygon':
+    case 'bsc': {
+      // Ethereum, Polygon, BSC: começa com 0x e tem 42 caracteres
+      return /^0x[\dA-Fa-f]{40}$/.test(address)
+    }
+    case 'solana': {
+      // Solana: Base58, 32-44 caracteres
+      return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)
+    }
+    case 'tron': {
+      // Tron: começa com T e tem 34 caracteres
+      return /^T[\dA-Za-z]{33}$/.test(address)
+    }
+    default: {
+      return false
+    }
+  }
+}
+
+const formSchema = z
+  .object({
+    amount_brl: z.number().min(100, 'Valor mínimo é R$ 100,00'),
+    crypto_network: z.enum([
+      'bitcoin',
+      'ethereum',
+      'polygon',
+      'bsc',
+      'solana',
+      'tron',
+    ]),
+    wallet_address: z
+      .string()
+      .min(26, 'Endereço inválido')
+      .max(100, 'Endereço muito longo'),
+  })
+  .refine(
+    (data) => validateWalletAddress(data.wallet_address, data.crypto_network),
+    {
+      message: 'Endereço de carteira inválido para a rede selecionada',
+      path: ['wallet_address'],
+    },
+  )
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -64,6 +99,20 @@ const networks = [
   { value: 'solana', label: 'Solana (SOL)' },
   { value: 'tron', label: 'Tron (TRX)' },
 ] as const
+
+// Descrições de formato de endereço para cada rede
+const walletFormatDescriptions: Record<string, string> = {
+  bitcoin:
+    'Endereço Bitcoin deve começar com 1, 3 ou bc1 (ex: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa)',
+  ethereum:
+    'Endereço Ethereum deve começar com 0x e ter 42 caracteres (ex: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb)',
+  polygon:
+    'Endereço Polygon deve começar com 0x e ter 42 caracteres (ex: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb)',
+  bsc: 'Endereço BSC deve começar com 0x e ter 42 caracteres (ex: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb)',
+  solana:
+    'Endereço Solana em formato Base58, 32-44 caracteres (ex: 7v91N7iZ9mNicL8WfG6cgSCKyRXydQjLh6UYBWwm6y1Q)',
+  tron: 'Endereço Tron deve começar com T e ter 34 caracteres (ex: TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9)',
+}
 
 function formatBRL(value: string) {
   const numbers = value.replaceAll(/\D/g, '')
@@ -357,22 +406,32 @@ export function ComprarForm() {
             <FormField
               control={form.control}
               name="wallet_address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Endereço da Carteira</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="0x..."
-                      {...field}
-                      className="font-mono"
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Cole aqui o endereço da sua carteira na rede selecionada
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const selectedNetwork = form.watch('crypto_network')
+                return (
+                  <FormItem>
+                    <FormLabel>Endereço da Carteira</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="0x..."
+                        {...field}
+                        className="font-mono"
+                      />
+                    </FormControl>
+                    <FormDescription className="space-y-1">
+                      <p className="text-muted-foreground">
+                        Cole aqui o endereço da sua carteira na rede selecionada
+                      </p>
+                      {selectedNetwork && (
+                        <p className="font-medium text-blue-600">
+                          ℹ️ {walletFormatDescriptions[selectedNetwork]}
+                        </p>
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )
+              }}
             />
 
             <Button

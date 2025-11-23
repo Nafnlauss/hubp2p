@@ -70,6 +70,7 @@ interface PaymentAccount {
   account_type: 'pix' | 'ted'
   is_active: boolean
   pix_key?: string
+  pix_key_holder?: string
   bank_name?: string
   bank_code?: string
   account_holder?: string
@@ -80,6 +81,7 @@ interface PaymentAccount {
 
 const pixSchema = z.object({
   pix_key: z.string().min(1, 'Chave PIX é obrigatória'),
+  pix_key_holder: z.string().min(1, 'Nome do titular é obrigatório'),
 })
 
 const tedSchema = z.object({
@@ -88,10 +90,6 @@ const tedSchema = z.object({
   account_holder: z.string().min(1, 'Nome do titular é obrigatório'),
   account_agency: z.string().min(1, 'Agência é obrigatória'),
   account_number: z.string().min(1, 'Número da conta é obrigatório'),
-})
-
-const apiPixSchema = z.object({
-  pix_key: z.string().min(1, 'Chave PIX é obrigatória'),
 })
 
 export default function PaymentAccountsPage() {
@@ -110,11 +108,12 @@ export default function PaymentAccountsPage() {
   const [apiLoading, setApiLoading] = useState(true)
   const [showApiDialog, setShowApiDialog] = useState(false)
   const [apiPixKey, setApiPixKey] = useState('')
+  const [apiPixKeyHolder, setApiPixKeyHolder] = useState('')
   const [apiAdding, setApiAdding] = useState(false)
 
   const pixForm = useForm({
     resolver: zodResolver(pixSchema),
-    defaultValues: { pix_key: '' },
+    defaultValues: { pix_key: '', pix_key_holder: '' },
   })
 
   const tedForm = useForm({
@@ -131,6 +130,7 @@ export default function PaymentAccountsPage() {
   useEffect(() => {
     loadHubAccounts()
     loadApiAccounts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadHubAccounts = async () => {
@@ -305,6 +305,15 @@ export default function PaymentAccountsPage() {
 
   // API.HUB Handlers
   const handleAddApiAccount = async () => {
+    if (!apiPixKeyHolder.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Digite o nome do titular.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     if (!apiPixKey.trim()) {
       toast({
         title: 'Erro',
@@ -316,12 +325,16 @@ export default function PaymentAccountsPage() {
 
     setApiAdding(true)
     try {
-      await createApiPaymentAccount({ pix_key: apiPixKey })
+      await createApiPaymentAccount({
+        pix_key: apiPixKey,
+        pix_key_holder: apiPixKeyHolder,
+      })
       toast({
         title: 'Sucesso',
         description: 'Chave PIX adicionada com sucesso.',
       })
       setApiPixKey('')
+      setApiPixKeyHolder('')
       setShowApiDialog(false)
       await loadApiAccounts()
     } catch (error) {
@@ -457,6 +470,22 @@ export default function PaymentAccountsPage() {
                       >
                         <FormField
                           control={pixForm.control}
+                          name="pix_key_holder"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome do Titular</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Nome completo do titular"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={pixForm.control}
                           name="pix_key"
                           render={({ field }) => (
                             <FormItem>
@@ -495,6 +524,7 @@ export default function PaymentAccountsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-purple-100">
+                        <TableHead className="font-semibold">Titular</TableHead>
                         <TableHead className="font-semibold">
                           Chave PIX
                         </TableHead>
@@ -507,6 +537,9 @@ export default function PaymentAccountsPage() {
                     <TableBody>
                       {pixAccounts.map((account) => (
                         <TableRow key={account.id}>
+                          <TableCell className="font-medium">
+                            {account.pix_key_holder || '-'}
+                          </TableCell>
                           <TableCell className="font-mono">
                             {account.pix_key}
                           </TableCell>
@@ -805,11 +838,27 @@ export default function PaymentAccountsPage() {
                 <DialogHeader>
                   <DialogTitle>Adicionar Chave PIX - API.HUB</DialogTitle>
                   <DialogDescription>
-                    Digite a chave PIX que será usada para receber pagamentos do
-                    sistema API.
+                    Digite o nome do titular e a chave PIX que será usada para
+                    receber pagamentos do sistema API.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="api-pix-key-holder"
+                      className="text-sm font-medium"
+                    >
+                      Nome do Titular
+                    </label>
+                    <Input
+                      id="api-pix-key-holder"
+                      placeholder="Nome completo do titular"
+                      value={apiPixKeyHolder}
+                      onChange={(event) =>
+                        setApiPixKeyHolder(event.target.value)
+                      }
+                    />
+                  </div>
                   <div className="space-y-2">
                     <label
                       htmlFor="api-pix-key"
@@ -821,9 +870,9 @@ export default function PaymentAccountsPage() {
                       id="api-pix-key"
                       placeholder="email@exemplo.com ou CPF/CNPJ"
                       value={apiPixKey}
-                      onChange={(e) => setApiPixKey(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                      onChange={(event) => setApiPixKey(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
                           handleAddApiAccount()
                         }
                       }}
@@ -853,6 +902,7 @@ export default function PaymentAccountsPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-blue-100">
+                    <TableHead className="font-semibold">Titular</TableHead>
                     <TableHead className="font-semibold">Chave PIX</TableHead>
                     <TableHead className="font-semibold">
                       Data de Criação
@@ -866,6 +916,9 @@ export default function PaymentAccountsPage() {
                 <TableBody>
                   {apiAccounts.map((account) => (
                     <TableRow key={account.id}>
+                      <TableCell className="font-medium">
+                        {account.pix_key_holder || '-'}
+                      </TableCell>
                       <TableCell className="font-mono">
                         {account.pix_key}
                       </TableCell>

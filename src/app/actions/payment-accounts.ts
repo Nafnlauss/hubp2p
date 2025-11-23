@@ -37,6 +37,7 @@ export async function getPaymentAccounts() {
 export async function createPaymentAccount(data: {
   account_type: 'pix' | 'ted'
   pix_key?: string
+  pix_key_holder?: string
   bank_name?: string
   bank_code?: string
   account_holder?: string
@@ -50,6 +51,7 @@ export async function createPaymentAccount(data: {
       account_type: data.account_type,
       is_active: false,
       pix_key: data.pix_key || undefined,
+      pix_key_holder: data.pix_key_holder || undefined,
       bank_name: data.bank_name || undefined,
       bank_code: data.bank_code || undefined,
       account_holder: data.account_holder || undefined,

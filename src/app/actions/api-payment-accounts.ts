@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/filename-case */
 'use server'
 
 import { revalidatePath } from 'next/cache'
@@ -7,7 +8,8 @@ import { createAdminClient } from '@/lib/supabase/server'
 export interface ApiPaymentAccount {
   id: string
   pix_key: string
-  pix_qr_code: string | null
+  pix_key_holder: string | undefined
+  pix_qr_code: string | undefined
   is_active: boolean
   created_at: string
   updated_at: string
@@ -35,7 +37,9 @@ export async function getApiPaymentAccounts(): Promise<ApiPaymentAccount[]> {
 /**
  * Get active API payment account (for creating transactions)
  */
-export async function getActiveApiPaymentAccount(): Promise<ApiPaymentAccount | null> {
+export async function getActiveApiPaymentAccount(): Promise<
+  ApiPaymentAccount | undefined
+> {
   const supabase = await createAdminClient()
 
   const { data, error } = await supabase
@@ -47,7 +51,7 @@ export async function getActiveApiPaymentAccount(): Promise<ApiPaymentAccount | 
   if (error) {
     if (error.code === 'PGRST116') {
       // No active account found
-      return null
+      return undefined
     }
     console.error('Error fetching active API payment account:', error)
     throw new Error('Erro ao buscar conta de pagamento ativa')
@@ -61,6 +65,7 @@ export async function getActiveApiPaymentAccount(): Promise<ApiPaymentAccount | 
  */
 export async function createApiPaymentAccount(data: {
   pix_key: string
+  pix_key_holder?: string
   pix_qr_code?: string
 }): Promise<ApiPaymentAccount> {
   const supabase = await createAdminClient()
@@ -69,7 +74,8 @@ export async function createApiPaymentAccount(data: {
     .from('api_payment_accounts')
     .insert({
       pix_key: data.pix_key,
-      pix_qr_code: data.pix_qr_code || null,
+      pix_key_holder: data.pix_key_holder || undefined,
+      pix_qr_code: data.pix_qr_code || undefined,
       is_active: false,
     })
     .select()

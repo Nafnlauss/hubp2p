@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { convertBrlToUsd, getFinalExchangeRate } from '@/lib/bitget'
 import { createClient } from '@/lib/supabase/server'
 
-import { sendNotification } from './admin'
+import { sendApiNotification } from './admin'
 import { getActiveApiPaymentAccount } from './api-payment-accounts'
 
 export interface ApiTransaction {
@@ -97,7 +97,7 @@ export async function createApiTransaction(
 
   // Enviar notificação Pushover prioritária para o admin
   try {
-    await sendNotification(transaction.id, 'new_transaction')
+    await sendApiNotification(transaction.id)
   } catch (notificationError) {
     // Log do erro mas não falha a transação
     console.error('Erro ao enviar notificação Pushover:', notificationError)

@@ -195,6 +195,80 @@ export async function toggleAdmin(userId: string, isAdmin: boolean) {
   }
 }
 
+// Enviar notificação via Pushover para transações API (sem usuário)
+export async function sendApiNotification(transactionId: string) {
+  try {
+    // Usar admin client para bypass de RLS
+    const supabase = await createAdminClient()
+
+    // Buscar dados da transação API
+    const { data: transaction } = await supabase
+      .from('api_transactions')
+      .select('*')
+      .eq('id', transactionId)
+      .single()
+
+    if (!transaction) {
+      throw new Error('Transação não encontrada')
+    }
+
+    const title = '🚨 NOVA TRANSAÇÃO PIX!'
+    const message =
+      `Transação #${transaction.transaction_number}\n` +
+      `Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(transaction.amount_brl)}\n` +
+      `Rede: ${transaction.crypto_network}\n` +
+      `Aguardando confirmação de pagamento PIX`
+
+    // Integração real com Pushover
+    const pushoverToken = process.env.PUSHOVER_APP_TOKEN
+    const pushoverUser = process.env.PUSHOVER_USER_KEY
+
+    if (!pushoverToken || !pushoverUser) {
+      console.error('Pushover não configurado: faltam variáveis de ambiente')
+      return { success: false, error: 'Pushover não configurado' }
+    }
+
+    try {
+      // Enviar notificação prioritária (Emergency Priority)
+      const response = await fetch('https://api.pushover.net/1/messages.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: pushoverToken,
+          user: pushoverUser,
+          title: title,
+          message: message,
+          priority: 2, // Emergency - requer confirmação
+          retry: 30, // Tentar novamente a cada 30 segundos
+          expire: 3600, // Expirar após 1 hora
+          sound: 'siren', // Som de sirene
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.status === 1) {
+        return { success: true }
+      } else {
+        return { success: false, error: result.errors?.join(', ') }
+      }
+    } catch (fetchError) {
+      console.error('Erro ao chamar API do Pushover:', fetchError)
+      return {
+        success: false,
+        error:
+          fetchError instanceof Error ? fetchError.message : 'Erro ao enviar',
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao enviar notificação:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+    }
+  }
+}
+
 // Enviar notificação via Pushover
 export async function sendNotification(
   transactionId: string,

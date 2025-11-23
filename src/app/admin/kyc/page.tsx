@@ -3,11 +3,19 @@
 import { Camera, CheckCircle, FileText, User, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { approveKYC, rejectKYC } from '@/app/actions/admin'
+import { approveKYC, getUsersWithoutKYC, rejectKYC } from '@/app/actions/admin'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 
@@ -28,8 +36,17 @@ interface KYCVerification {
   }
 }
 
+interface UserWithoutKYC {
+  id: string
+  full_name: string
+  cpf: string
+  phone: string | null
+  created_at: string
+}
+
 export default function KYCPage() {
   const [verifications, setVerifications] = useState<KYCVerification[]>([])
+  const [usersWithoutKYC, setUsersWithoutKYC] = useState<UserWithoutKYC[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [rejectionReason, setRejectionReason] = useState<{
@@ -38,8 +55,13 @@ export default function KYCPage() {
   const [selectedKyc, setSelectedKyc] = useState<KYCVerification | null>(null)
 
   useEffect(() => {
-    loadVerifications()
+    loadData()
   }, [])
+
+  async function loadData() {
+    await Promise.all([loadVerifications(), loadUsersWithoutKYC()])
+    setLoading(false)
+  }
 
   async function loadVerifications() {
     const supabase = createClient()
@@ -62,8 +84,13 @@ export default function KYCPage() {
     if (!error && data) {
       setVerifications(data as any)
     }
+  }
 
-    setLoading(false)
+  async function loadUsersWithoutKYC() {
+    const result = await getUsersWithoutKYC()
+    if (result.success && result.data) {
+      setUsersWithoutKYC(result.data as any)
+    }
   }
 
   async function handleApprove(kycId: string) {
@@ -314,9 +341,63 @@ export default function KYCPage() {
         </div>
       )}
 
+      {/* Usuários sem KYC */}
+      {!loading && usersWithoutKYC.length > 0 && (
+        <div>
+          <h2 className="mb-4 text-xl font-bold text-gray-900">
+            Usuários sem Verificação KYC
+          </h2>
+          <Card>
+            <CardContent className="pt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>CPF</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Data de Cadastro</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {usersWithoutKYC.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">
+                        {user.full_name}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {user.cpf}
+                      </TableCell>
+                      <TableCell>{user.phone || 'Não informado'}</TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">Não Verificado</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Estatísticas */}
       {!loading && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Sem Verificação
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{usersWithoutKYC.length}</div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium text-gray-600">

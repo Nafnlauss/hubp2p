@@ -254,25 +254,6 @@ export default function NotificationsPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Informações sobre Pushover */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="text-blue-900">Sobre Pushover</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-blue-800">
-          <p>
-            Pushover é um serviço de notificações push que permite enviar
-            alertas em tempo real para dispositivos móveis e desktop.
-          </p>
-          <p>
-            Para configurar, adicione as variáveis de ambiente{' '}
-            <code className="rounded bg-blue-100 px-1">PUSHOVER_TOKEN</code> e{' '}
-            <code className="rounded bg-blue-100 px-1">PUSHOVER_USER</code> no
-            seu arquivo .env
-          </p>
-        </CardContent>
-      </Card>
     </div>
   )
 }

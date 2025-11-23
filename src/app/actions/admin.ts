@@ -196,10 +196,15 @@ export async function toggleAdmin(userId: string, isAdmin: boolean) {
 }
 
 // Enviar notificação via Pushover
-export async function sendNotification(transactionId: string) {
+export async function sendNotification(
+  transactionId: string,
+  type: 'new_transaction' | 'status_update' = 'status_update',
+) {
   try {
-    // Verificar se é admin
-    await checkAdminAccess()
+    // Verificar se é admin (não necessário para new_transaction)
+    if (type === 'status_update') {
+      await checkAdminAccess()
+    }
 
     // Usar admin client para bypass de RLS
     const supabase = await createAdminClient()
@@ -215,31 +220,103 @@ export async function sendNotification(transactionId: string) {
       throw new Error('Transação não encontrada')
     }
 
-    // Mock de integração Pushover
-    const message = `Atualização na transação #${transaction.transaction_number}: Status ${transaction.status}`
+    // Mensagem baseada no tipo de notificação
+    let message = ''
+    let title = ''
 
-    // Aqui seria a integração real com Pushover
-    // const response = await fetch("https://api.pushover.net/1/messages.json", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({
-    //     token: process.env.PUSHOVER_TOKEN,
-    //     user: process.env.PUSHOVER_USER,
-    //     message: message,
-    //   }),
-    // })
+    if (type === 'new_transaction') {
+      title = '🚨 NOVA TRANSAÇÃO PIX!'
+      message =
+        `Transação #${transaction.transaction_number}\n` +
+        `Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(transaction.amount_brl)}\n` +
+        `Cliente: ${transaction.profiles?.full_name || 'N/A'}\n` +
+        `Aguardando confirmação de pagamento PIX`
+    } else {
+      title = `Transação #${transaction.transaction_number}`
+      message =
+        `Status: ${transaction.status}\n` +
+        `Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(transaction.amount_brl)}`
+    }
 
-    // Registrar log de notificação
-    await supabase.from('notification_logs').insert({
-      transaction_id: transactionId,
-      type: 'pushover',
-      recipient: 'admin',
-      message: message,
-      status: 'sent',
-      sent_at: new Date().toISOString(),
-    })
+    // Integração real com Pushover
+    const pushoverToken = process.env.PUSHOVER_APP_TOKEN
+    const pushoverUser = process.env.PUSHOVER_USER_KEY
 
-    return { success: true }
+    if (!pushoverToken || !pushoverUser) {
+      console.error('Pushover não configurado: faltam variáveis de ambiente')
+      await supabase.from('notification_logs').insert({
+        transaction_id: transactionId,
+        type: 'pushover',
+        recipient: 'admin',
+        message: message,
+        status: 'failed',
+        error_message: 'Pushover não configurado',
+        sent_at: new Date().toISOString(),
+      })
+      return { success: false, error: 'Pushover não configurado' }
+    }
+
+    try {
+      // Enviar notificação prioritária (Emergency Priority)
+      const response = await fetch('https://api.pushover.net/1/messages.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: pushoverToken,
+          user: pushoverUser,
+          title: title,
+          message: message,
+          priority: 2, // Emergency - requer confirmação
+          retry: 30, // Tentar novamente a cada 30 segundos
+          expire: 3600, // Expirar após 1 hora
+          sound: 'siren', // Som de sirene
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.status === 1) {
+        // Notificação enviada com sucesso
+        await supabase.from('notification_logs').insert({
+          transaction_id: transactionId,
+          type: 'pushover',
+          recipient: 'admin',
+          message: message,
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+        })
+        return { success: true }
+      } else {
+        // Erro ao enviar notificação
+        await supabase.from('notification_logs').insert({
+          transaction_id: transactionId,
+          type: 'pushover',
+          recipient: 'admin',
+          message: message,
+          status: 'failed',
+          error_message: result.errors?.join(', ') || 'Erro desconhecido',
+          sent_at: new Date().toISOString(),
+        })
+        return { success: false, error: result.errors?.join(', ') }
+      }
+    } catch (fetchError) {
+      console.error('Erro ao chamar API do Pushover:', fetchError)
+      await supabase.from('notification_logs').insert({
+        transaction_id: transactionId,
+        type: 'pushover',
+        recipient: 'admin',
+        message: message,
+        status: 'failed',
+        error_message:
+          fetchError instanceof Error ? fetchError.message : 'Erro ao enviar',
+        sent_at: new Date().toISOString(),
+      })
+      return {
+        success: false,
+        error:
+          fetchError instanceof Error ? fetchError.message : 'Erro ao enviar',
+      }
+    }
   } catch (error) {
     console.error('Erro ao enviar notificação:', error)
     return {
@@ -334,5 +411,91 @@ export async function getDashboardStats() {
   } catch (error) {
     console.error('Erro ao buscar estatísticas:', error)
     throw error
+  }
+}
+
+// Buscar usuários sem KYC (admin only)
+export async function getUsersWithoutKYC() {
+  try {
+    const { supabase } = await checkAdminAccess()
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(
+        `
+        *,
+        kyc_verifications (
+          id
+        )
+      `,
+      )
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Erro ao buscar usuários:', error)
+      throw new Error('Erro ao buscar usuários')
+    }
+
+    // Filtrar apenas usuários que não têm nenhuma verificação KYC
+    const usersWithoutKYC =
+      data?.filter(
+        (user: any) =>
+          !user.kyc_verifications || user.kyc_verifications.length === 0,
+      ) || []
+
+    return { success: true, data: usersWithoutKYC }
+  } catch (error) {
+    console.error('Erro ao buscar usuários:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      data: [],
+    }
+  }
+}
+
+// Buscar todos os usuários (admin only)
+export async function getUsers() {
+  try {
+    const { supabase } = await checkAdminAccess()
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(
+        `
+        *,
+        kyc_verifications (
+          id,
+          status,
+          created_at,
+          updated_at
+        )
+      `,
+      )
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Erro ao buscar usuários:', error)
+      throw new Error('Erro ao buscar usuários')
+    }
+
+    // Garantir que kyc_verifications sempre seja um array
+    const normalizedData = data?.map((user) => ({
+      ...user,
+      kyc_verifications: Array.isArray(user.kyc_verifications)
+        ? user.kyc_verifications
+        : user.kyc_verifications
+          ? [user.kyc_verifications]
+          : [],
+    }))
+
+    return { success: true, data: normalizedData }
+  } catch (error) {
+    console.error('Erro ao buscar usuários:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido',
+      data: [],
+    }
   }
 }

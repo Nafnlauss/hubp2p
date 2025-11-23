@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
 import { getActivePaymentAccounts } from '@/app/actions/get-active-accounts'
+import { sendNotification } from '@/app/actions/admin'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -292,6 +293,14 @@ export default function NewDepositPage() {
           variant: 'destructive',
         })
         return
+      }
+
+      // Enviar notificação Pushover prioritária para o admin
+      try {
+        await sendNotification(transaction.id, 'new_transaction')
+      } catch (notificationError) {
+        // Log do erro mas não falha a transação
+        console.error('Erro ao enviar notificação Pushover:', notificationError)
       }
 
       toast({

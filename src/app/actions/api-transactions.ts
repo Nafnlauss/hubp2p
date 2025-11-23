@@ -95,14 +95,15 @@ export async function createApiTransaction(
     throw new Error('Erro ao criar transação')
   }
 
-  // Enviar notificação Pushover prioritária para o admin
-  try {
-    await sendApiNotification(transaction.id)
-  } catch (notificationError) {
-    // Log do erro mas não falha a transação
-    console.error('Erro ao enviar notificação Pushover:', notificationError)
-  }
+  console.log('[CREATE API TRANSACTION] Transação criada com sucesso:', transaction.id)
 
+  // Enviar notificação Pushover prioritária para o admin (não bloqueia retorno)
+  sendApiNotification(transaction.id).catch((notificationError) => {
+    // Log do erro mas não falha a transação
+    console.error('[CREATE API TRANSACTION] Erro ao enviar notificação Pushover:', notificationError)
+  })
+
+  console.log('[CREATE API TRANSACTION] Retornando transação:', transaction.transaction_number)
   return transaction
 }
 

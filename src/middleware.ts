@@ -29,6 +29,20 @@ const intlMiddleware = createMiddleware({
 })
 
 export async function middleware(request: NextRequest) {
+  // Check if request is from api.hubp2p.com subdomain
+  const hostname = request.headers.get('host') || ''
+
+  // Only rewrite root path of api.hubp2p.com to /pt-BR/comprar
+  // Don't rewrite other paths like /comprar/[id] or /pt-BR/comprar/[id]
+  if (
+    (hostname === 'api.hubp2p.com' || hostname.startsWith('api.hubp2p.com:')) &&
+    (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '')
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/pt-BR/comprar'
+    return NextResponse.rewrite(url)
+  }
+
   // Skip intl middleware for API routes and admin routes
   if (
     request.nextUrl.pathname.startsWith('/api') ||

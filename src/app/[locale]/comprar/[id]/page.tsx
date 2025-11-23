@@ -107,6 +107,11 @@ export default function ApiPaymentPage() {
   useEffect(() => {
     if (!transaction) return
 
+    console.log(
+      '[REALTIME] Configurando subscription para transação:',
+      transaction.id,
+    )
+
     const channel = supabase
       .channel(`api-transaction-${transaction.id}`)
       .on(
@@ -118,15 +123,31 @@ export default function ApiPaymentPage() {
           filter: `id=eq.${transaction.id}`,
         },
         (payload) => {
+          console.log('[REALTIME] Atualização recebida:', payload)
+          console.log('[REALTIME] Status anterior:', transaction.status)
+          console.log('[REALTIME] Status novo:', payload.new.status)
           setTransaction(payload.new as ApiTransaction)
+
+          // Toast de notificação para o usuário
+          if (payload.new.status !== transaction.status) {
+            const statusInfo =
+              statusMap[payload.new.status as keyof typeof statusMap]
+            toast({
+              title: 'Status Atualizado',
+              description: `Status da transação: ${statusInfo.label}`,
+            })
+          }
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[REALTIME] Status da subscription:', status)
+      })
 
     return () => {
+      console.log('[REALTIME] Removendo subscription')
       supabase.removeChannel(channel)
     }
-  }, [transaction, supabase])
+  }, [transaction, supabase, toast])
 
   // Countdown timer
   useEffect(() => {
@@ -514,7 +535,9 @@ export default function ApiPaymentPage() {
             <li>
               • O pagamento deve ser realizado no valor exato mostrado acima
             </li>
-            <li>• Após o pagamento, clique em "Já realizei o pagamento"</li>
+            <li>
+              • Após o pagamento, clique em &quot;Já realizei o pagamento&quot;
+            </li>
             <li>• A verificação pode levar alguns minutos</li>
             <li>• Após confirmação, a cripto será enviada automaticamente</li>
             <li>• Guarde o número da transação para consultas futuras</li>

@@ -7,8 +7,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
-import { getActivePaymentAccounts } from '@/app/actions/get-active-accounts'
 import { sendNotification } from '@/app/actions/admin'
+import { getActivePaymentAccounts } from '@/app/actions/get-active-accounts'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -272,7 +272,6 @@ export default function NewDepositPage() {
         transactionData.pix_qr_code = accounts.pix.pix_qr_code
       } else if (data.payment_method === 'ted' && accounts.ted) {
         transactionData.bank_name = accounts.ted.bank_name
-        transactionData.bank_code = accounts.ted.bank_code
         transactionData.bank_account_holder = accounts.ted.account_holder
         transactionData.bank_account_agency = accounts.ted.account_agency
         transactionData.bank_account_number = accounts.ted.account_number

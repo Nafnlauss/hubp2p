@@ -92,6 +92,11 @@ export default function PaymentPage() {
   useEffect(() => {
     if (!transaction) return
 
+    console.log(
+      '[REALTIME] Configurando subscription para transação:',
+      transaction.id,
+    )
+
     const channel = supabase
       .channel(`transaction-${transaction.id}`)
       .on(
@@ -103,15 +108,33 @@ export default function PaymentPage() {
           filter: `id=eq.${transaction.id}`,
         },
         (payload) => {
+          console.log('[REALTIME] Atualização recebida:', payload)
+          console.log('[REALTIME] Status anterior:', transaction.status)
+          console.log('[REALTIME] Status novo:', payload.new.status)
           setTransaction(payload.new as Transaction)
+
+          // Toast de notificação para o usuário
+          if (payload.new.status !== transaction.status) {
+            const statusInfo =
+              statusMap[payload.new.status as keyof typeof statusMap]
+            if (statusInfo) {
+              toast({
+                title: 'Status Atualizado',
+                description: `Status da transação: ${statusInfo.label}`,
+              })
+            }
+          }
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[REALTIME] Status da subscription:', status)
+      })
 
     return () => {
+      console.log('[REALTIME] Removendo subscription')
       supabase.removeChannel(channel)
     }
-  }, [transaction, supabase])
+  }, [transaction, supabase, toast])
 
   // Countdown timer
   useEffect(() => {

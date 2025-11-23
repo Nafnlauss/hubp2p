@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
@@ -84,6 +84,7 @@ export function ComprarForm() {
   const [isCalculating, setIsCalculating] = useState(false)
   const [timeLeft, setTimeLeft] = useState(30)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const isFirstMount = useRef(true)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -126,6 +127,16 @@ export function ComprarForm() {
 
   // Calcula USD em tempo real quando o valor BRL muda (com debounce)
   useEffect(() => {
+    // Pula o cálculo no primeiro mount para evitar setState durante render
+    if (isFirstMount.current) {
+      isFirstMount.current = false
+      // Mas ainda calcula o valor inicial após o mount
+      const timer = setTimeout(() => {
+        calculateUsd()
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+
     const debounce = setTimeout(calculateUsd, 500)
     return () => clearTimeout(debounce)
   }, [calculateUsd])

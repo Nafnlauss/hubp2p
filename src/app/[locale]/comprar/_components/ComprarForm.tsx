@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
 import {
-  calculateUsdFromBrl,
+  calculateCryptoFromBrl,
   createApiTransaction,
 } from '@/app/actions/api-transactions'
 import { Button } from '@/components/ui/button'
@@ -138,7 +138,8 @@ export function ComprarForm() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [brlAmount, setBrlAmount] = useState('R$ 100,00')
-  const [usdAmount, setUsdAmount] = useState<number | undefined>()
+  const [cryptoAmount, setCryptoAmount] = useState<number | undefined>()
+  const [cryptoSymbol, setCryptoSymbol] = useState<string>('USDT')
   const [exchangeRate, setExchangeRate] = useState<number | undefined>()
   const [isCalculating, setIsCalculating] = useState(false)
   const [timeLeft, setTimeLeft] = useState(30)
@@ -154,51 +155,56 @@ export function ComprarForm() {
     },
   })
 
-  // Função para calcular USD (memoizada com useCallback)
-  const calculateUsd = useCallback(async () => {
+  // Função para calcular cripto (BTC ou USDT) baseado na rede (memoizada com useCallback)
+  const calculateCrypto = useCallback(async () => {
     const amount = Number.parseFloat(
       brlAmount.replaceAll(/[^\d,]/g, '').replace(',', '.'),
     )
 
+    const network = form.getValues('crypto_network')
+
     if (Number.isNaN(amount) || amount < 100) {
-      setUsdAmount(undefined)
+      setCryptoAmount(undefined)
       setExchangeRate(undefined)
       return
     }
 
     setIsCalculating(true)
     try {
-      console.log('[CALCULATE USD] Iniciando cálculo para BRL:', amount)
-      const result = await calculateUsdFromBrl(amount)
-      console.log('[CALCULATE USD] USD calculado:', result.usdAmount)
-      console.log('[CALCULATE USD] Taxa:', result.exchangeRate)
-      setUsdAmount(result.usdAmount)
+      console.log('[CALCULATE CRYPTO] Iniciando cálculo para BRL:', amount)
+      console.log('[CALCULATE CRYPTO] Rede:', network)
+      const result = await calculateCryptoFromBrl(amount, network)
+      console.log('[CALCULATE CRYPTO] Cripto calculado:', result.cryptoAmount)
+      console.log('[CALCULATE CRYPTO] Símbolo:', result.cryptoSymbol)
+      console.log('[CALCULATE CRYPTO] Taxa:', result.exchangeRate)
+      setCryptoAmount(result.cryptoAmount)
+      setCryptoSymbol(result.cryptoSymbol)
       setExchangeRate(result.exchangeRate)
       form.setValue('amount_brl', amount)
     } catch (error) {
-      console.error('[CALCULATE USD] Erro ao calcular USD:', error)
-      setUsdAmount(undefined)
+      console.error('[CALCULATE CRYPTO] Erro ao calcular cripto:', error)
+      setCryptoAmount(undefined)
       setExchangeRate(undefined)
     } finally {
       setIsCalculating(false)
     }
   }, [brlAmount, form])
 
-  // Calcula USD em tempo real quando o valor BRL muda (com debounce)
+  // Calcula cripto em tempo real quando o valor BRL ou rede muda (com debounce)
   useEffect(() => {
     // Pula o cálculo no primeiro mount para evitar setState durante render
     if (isFirstMount.current) {
       isFirstMount.current = false
       // Mas ainda calcula o valor inicial após o mount
       const timer = setTimeout(() => {
-        calculateUsd()
+        calculateCrypto()
       }, 0)
       return () => clearTimeout(timer)
     }
 
-    const debounce = setTimeout(calculateUsd, 500)
+    const debounce = setTimeout(calculateCrypto, 500)
     return () => clearTimeout(debounce)
-  }, [calculateUsd])
+  }, [calculateCrypto])
 
   // Timer de 30 segundos para atualizar automaticamente
   useEffect(() => {
@@ -207,7 +213,7 @@ export function ComprarForm() {
         if (previous <= 1) {
           // Quando chegar a 0, atualiza e reinicia
           setIsRefreshing(true)
-          calculateUsd().finally(() => {
+          calculateCrypto().finally(() => {
             setIsRefreshing(false)
           })
           return 30
@@ -217,7 +223,7 @@ export function ComprarForm() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [calculateUsd])
+  }, [calculateCrypto])
 
   const handleBrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatBRL(event.target.value)
@@ -289,14 +295,14 @@ export function ComprarForm() {
               </p>
             </div>
 
-            {/* Valor em USD (calculado automaticamente) */}
+            {/* Valor em Cripto (calculado automaticamente) */}
             <div className="rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-600">
                     Você receberá:
                   </p>
-                  {isCalculating || usdAmount === undefined ? (
+                  {isCalculating || cryptoAmount === undefined ? (
                     <div className="mt-2 flex items-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                       <span className="text-sm text-gray-500">
@@ -305,23 +311,27 @@ export function ComprarForm() {
                     </div>
                   ) : (
                     <p className="mt-1 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
-                      $
-                      {usdAmount.toLocaleString('pt-BR', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
+                      {cryptoSymbol === 'BTC' ? '₿' : '$'}
+                      {cryptoAmount.toLocaleString('pt-BR', {
+                        minimumFractionDigits: cryptoSymbol === 'BTC' ? 8 : 2,
+                        maximumFractionDigits: cryptoSymbol === 'BTC' ? 8 : 2,
                       })}
                     </p>
                   )}
                 </div>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600">
-                  <span className="text-3xl font-bold text-white">$</span>
+                  <span className="text-3xl font-bold text-white">
+                    {cryptoSymbol === 'BTC' ? '₿' : '$'}
+                  </span>
                 </div>
               </div>
 
               {/* Timer e círculo de progresso */}
               <div className="mt-4 flex items-center justify-between border-t border-blue-200 pt-4">
                 <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-600">USDT</p>
+                  <p className="text-xs font-medium text-gray-600">
+                    {cryptoSymbol}
+                  </p>
                   {exchangeRate && (
                     <p className="text-xs font-semibold text-gray-700">
                       Taxa: R${' '}
@@ -452,7 +462,7 @@ export function ComprarForm() {
               type="submit"
               className="h-11 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-base font-semibold shadow-lg transition-all hover:scale-105 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
               size="lg"
-              disabled={isLoading || !usdAmount}
+              disabled={isLoading || !cryptoAmount}
             >
               {isLoading ? (
                 <>

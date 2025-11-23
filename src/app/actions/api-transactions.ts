@@ -3,7 +3,11 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { convertBrlToUsd, getFinalExchangeRate } from '@/lib/bitget'
+import {
+  convertBrlToUsd,
+  convertUsdToBtc,
+  getFinalExchangeRate,
+} from '@/lib/bitget'
 import { createClient } from '@/lib/supabase/server'
 
 import { sendApiNotification } from './admin'
@@ -287,5 +291,45 @@ export async function calculateUsdFromBrl(
   } catch (error) {
     console.error('[SERVER ACTION] calculateUsdFromBrl - Erro:', error)
     throw new Error('Erro ao calcular valor em USD. Tente novamente.')
+  }
+}
+
+/**
+ * Calculate crypto amount based on network (BTC for bitcoin, USDT for others)
+ */
+export async function calculateCryptoFromBrl(
+  brlAmount: number,
+  network: 'bitcoin' | 'ethereum' | 'polygon' | 'bsc' | 'solana' | 'tron',
+): Promise<{
+  cryptoAmount: number
+  cryptoSymbol: string
+  exchangeRate: number
+  usdAmount: number
+}> {
+  try {
+    const { displayRate } = await getFinalExchangeRate()
+    const usdAmount = await convertBrlToUsd(brlAmount)
+
+    if (network === 'bitcoin') {
+      // For Bitcoin network, convert USD to BTC
+      const btcAmount = await convertUsdToBtc(usdAmount)
+      return {
+        cryptoAmount: btcAmount,
+        cryptoSymbol: 'BTC',
+        exchangeRate: displayRate,
+        usdAmount,
+      }
+    }
+
+    // For other networks (Ethereum, Polygon, BSC, Solana, Tron), use USDT
+    return {
+      cryptoAmount: usdAmount,
+      cryptoSymbol: 'USDT',
+      exchangeRate: displayRate,
+      usdAmount,
+    }
+  } catch (error) {
+    console.error('[SERVER ACTION] calculateCryptoFromBrl - Erro:', error)
+    throw new Error('Erro ao calcular valor em cripto. Tente novamente.')
   }
 }

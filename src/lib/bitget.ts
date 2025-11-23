@@ -127,3 +127,52 @@ export async function convertUsdToBrl(usdAmount: number): Promise<number> {
 
   return Number.parseFloat(brlAmount.toFixed(2))
 }
+
+/**
+ * Fetches current BTC/USDT exchange rate from BitGet API
+ */
+export async function getBtcUsdtRate(): Promise<number> {
+  try {
+    const response = await fetch(`${BITGET_API_URL}?symbol=BTCUSDT`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      next: { revalidate: 30 }, // Cache por 30 segundos
+    })
+
+    if (!response.ok) {
+      throw new Error(`BitGet API error: ${response.status}`)
+    }
+
+    const data: BitGetTickerResponse = await response.json()
+
+    if (!data.data || data.data.length === 0) {
+      throw new Error('No data returned from BitGet API')
+    }
+
+    const ticker = data.data[0]
+    const rate = Number.parseFloat(ticker.lastPr)
+
+    if (Number.isNaN(rate) || rate <= 0) {
+      throw new Error('Invalid BTC/USDT rate received')
+    }
+
+    return rate
+  } catch (error) {
+    console.error('Error fetching BTC/USDT rate:', error)
+    throw new Error('Não foi possível obter a cotação do BTC. Tente novamente.')
+  }
+}
+
+/**
+ * Converts USD amount to BTC using current BTC/USDT rate
+ */
+export async function convertUsdToBtc(usdAmount: number): Promise<number> {
+  const btcUsdtRate = await getBtcUsdtRate()
+
+  // USD / (BTC/USDT rate) = BTC amount
+  const btcAmount = usdAmount / btcUsdtRate
+
+  return Number.parseFloat(btcAmount.toFixed(8)) // BTC usa 8 casas decimais
+}

@@ -508,15 +508,14 @@ export default function PaymentPage() {
               <div className="rounded-lg border border-border bg-muted/50 p-4">
                 <p className="mb-3 text-sm">
                   Após realizar o pagamento, clique no botão abaixo para
-                  notificar nossa equipe. Verificaremos seu pagamento e
-                  processaremos sua transação.
+                  confirmar. Sua transação será processada automaticamente.
                 </p>
                 <Button
                   onClick={confirmPayment}
                   disabled={confirming}
                   className="w-full"
                 >
-                  {confirming ? 'Enviando...' : 'Já realizei o pagamento'}
+                  {confirming ? 'Confirmando...' : 'Já realizei o pagamento'}
                 </Button>
               </div>
             </CardContent>

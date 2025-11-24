@@ -259,7 +259,7 @@ async function calculateCryptoForHubP2P(
 export default function NewDepositPage() {
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [amountDisplay, setAmountDisplay] = useState('')
+  const [amountDisplay, setAmountDisplay] = useState('100,00')
   const [cryptoAmount, setCryptoAmount] = useState<number | undefined>()
   const [cryptoSymbol, setCryptoSymbol] = useState<string>('USDT')
   const [isCalculating, setIsCalculating] = useState(false)

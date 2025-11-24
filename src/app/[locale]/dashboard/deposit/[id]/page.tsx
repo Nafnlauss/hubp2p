@@ -20,6 +20,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
+import { convertUsdToBtc } from '@/lib/bitget'
 import { createClient } from '@/lib/supabase/client'
 
 interface Transaction {
@@ -98,11 +99,40 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true)
   const [timeRemaining, setTimeRemaining] = useState<number>(0)
   const [confirming, setConfirming] = useState(false)
+  const [cryptoAmount, setCryptoAmount] = useState<number | undefined>()
+  const [cryptoSymbol, setCryptoSymbol] = useState<string>('USDT')
 
   useEffect(() => {
     loadTransaction()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parameters.id])
+
+  // Calcula o valor em cripto quando a transação carrega
+  useEffect(() => {
+    const calculateCrypto = async () => {
+      if (!transaction || !transaction.amount_usd) return
+
+      if (transaction.crypto_network === 'bitcoin') {
+        try {
+          // Para Bitcoin, converter USD para BTC
+          const btcAmount = await convertUsdToBtc(transaction.amount_usd)
+          setCryptoAmount(btcAmount)
+          setCryptoSymbol('BTC')
+        } catch (error) {
+          console.error('Erro ao converter USD para BTC:', error)
+          // Fallback para USDT em caso de erro
+          setCryptoAmount(transaction.amount_usd)
+          setCryptoSymbol('USDT')
+        }
+      } else {
+        // Para outras redes, usar USDT direto
+        setCryptoAmount(transaction.amount_usd)
+        setCryptoSymbol('USDT')
+      }
+    }
+
+    calculateCrypto()
+  }, [transaction])
 
   // Realtime subscription
   useEffect(() => {
@@ -554,23 +584,12 @@ export default function PaymentPage() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Você receberá:</span>
                 <span className="font-medium">
-                  $
-                  {transaction.amount_usd?.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
+                  {cryptoSymbol === 'BTC' ? '₿' : '$'}
+                  {cryptoAmount?.toLocaleString('pt-BR', {
+                    minimumFractionDigits: cryptoSymbol === 'BTC' ? 8 : 2,
+                    maximumFractionDigits: cryptoSymbol === 'BTC' ? 8 : 2,
                   }) || '0,00'}{' '}
-                  USDT
-                </span>
-              </div>
-              <Separator />
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Taxa de câmbio:</span>
-                <span className="font-medium">
-                  R${' '}
-                  {transaction.exchange_rate?.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 4,
-                    maximumFractionDigits: 4,
-                  }) || '0,0000'}
+                  {cryptoSymbol}
                 </span>
               </div>
               <Separator />

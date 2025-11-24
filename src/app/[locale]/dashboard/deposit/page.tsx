@@ -1,9 +1,15 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Loader2,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
@@ -30,24 +36,56 @@ import {
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { useToast } from '@/hooks/use-toast'
+import { convertUsdToBtc, getUsdtBrlRate } from '@/lib/bitget'
 import { createClient } from '@/lib/supabase/client'
 
-const depositSchema = z.object({
-  payment_method: z.enum(['pix', 'ted']),
-  amount_brl: z.coerce.number().min(100, 'Valor mínimo é R$ 100,00'),
-  crypto_network: z.enum([
-    'bitcoin',
-    'ethereum',
-    'polygon',
-    'bsc',
-    'solana',
-    'tron',
-  ]),
-  wallet_address: z
-    .string()
-    .min(26, 'Endereço de carteira inválido')
-    .max(100, 'Endereço de carteira inválido'),
-})
+// Validação de endereço por rede
+const validateWalletAddress = (address: string, network: string): boolean => {
+  switch (network) {
+    case 'bitcoin': {
+      return /^(1|3|bc1)[\dA-HJ-NP-Za-z]{25,62}$/.test(address)
+    }
+    case 'ethereum':
+    case 'polygon':
+    case 'bsc': {
+      return /^0x[\dA-Fa-f]{40}$/.test(address)
+    }
+    case 'solana': {
+      return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)
+    }
+    case 'tron': {
+      return /^T[\dA-Za-z]{33}$/.test(address)
+    }
+    default: {
+      return false
+    }
+  }
+}
+
+const depositSchema = z
+  .object({
+    payment_method: z.enum(['pix', 'ted']),
+    amount_brl: z.coerce.number().min(100, 'Valor mínimo é R$ 100,00'),
+    crypto_network: z.enum([
+      'bitcoin',
+      'ethereum',
+      'polygon',
+      'bsc',
+      'solana',
+      'tron',
+    ]),
+    wallet_address: z
+      .string()
+      .min(26, 'Endereço inválido')
+      .max(100, 'Endereço muito longo'),
+  })
+  .refine(
+    (data) => validateWalletAddress(data.wallet_address, data.crypto_network),
+    {
+      message: 'Endereço de carteira inválido para a rede selecionada',
+      path: ['wallet_address'],
+    },
+  )
 
 type DepositFormValues = z.infer<typeof depositSchema>
 
@@ -90,44 +128,58 @@ const cryptoNetworks = [
     name: 'Bitcoin',
     symbol: 'BTC',
     description: 'Rede Bitcoin (BTC)',
-    addressExample: 'bc1q...',
+    addressExample: '1A1z...',
   },
   {
     id: 'ethereum',
     name: 'Ethereum',
     symbol: 'ETH',
     description: 'Rede Ethereum (ETH)',
-    addressExample: '0x...',
+    addressExample: '0x74...',
   },
   {
     id: 'polygon',
     name: 'Polygon',
     symbol: 'MATIC',
     description: 'Rede Polygon (MATIC)',
-    addressExample: '0x...',
+    addressExample: '0x74...',
   },
   {
     id: 'bsc',
     name: 'Binance Smart Chain',
     symbol: 'BSC',
     description: 'Binance Smart Chain (BNB)',
-    addressExample: '0x...',
+    addressExample: '0x74...',
   },
   {
     id: 'solana',
     name: 'Solana',
     symbol: 'SOL',
     description: 'Rede Solana (SOL)',
-    addressExample: 'So...',
+    addressExample: '7v91...',
   },
   {
     id: 'tron',
     name: 'Tron',
     symbol: 'TRX',
     description: 'Rede Tron (TRX)',
-    addressExample: 'T...',
+    addressExample: 'TN3W...',
   },
 ] as const
+
+// Descrições de formato de endereço para cada rede
+const walletFormatDescriptions: Record<string, string> = {
+  bitcoin:
+    'Endereço Bitcoin deve começar com 1, 3 ou bc1 (ex: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa)',
+  ethereum:
+    'Endereço Ethereum deve começar com 0x e ter 42 caracteres (ex: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb)',
+  polygon:
+    'Endereço Polygon deve começar com 0x e ter 42 caracteres (ex: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb)',
+  bsc: 'Endereço BSC deve começar com 0x e ter 42 caracteres (ex: 0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb)',
+  solana:
+    'Endereço Solana em formato Base58, 32-44 caracteres (ex: 7v91N7iZ9mNicL8WfG6cgSCKyRXydQjLh6UYBWwm6y1Q)',
+  tron: 'Endereço Tron deve começar com T e ter 34 caracteres (ex: TN3W4H6rK2ce4vX9YnFQHwKENnHjoxb3m9)',
+}
 
 // Funções auxiliares para formatação de moeda brasileira
 function formatCurrencyBRL(value: number): string {
@@ -164,10 +216,51 @@ function formatCurrencyInput(value: string): string {
   }).format(reais)
 }
 
+// Função para calcular cripto com taxa de hubp2p.com (Bitget + R$0,05 + 4%)
+async function calculateCryptoForHubP2P(
+  brlAmount: number,
+  network: string,
+): Promise<{
+  cryptoAmount: number
+  cryptoSymbol: string
+  usdAmount: number
+}> {
+  // Pegar taxa USDT/BRL da Bitget
+  const bitgetRate = await getUsdtBrlRate()
+
+  // Aplicar markup: taxa base + R$0,05 + 4%
+  const markupFixed = 0.05
+  const markupPercentage = 0.04
+  const finalRate = bitgetRate + markupFixed + bitgetRate * markupPercentage
+
+  // Converter BRL para USD usando a taxa com markup
+  const usdAmount = brlAmount / finalRate
+
+  if (network === 'bitcoin') {
+    // Para Bitcoin, converter USD para BTC
+    const btcAmount = await convertUsdToBtc(usdAmount)
+    return {
+      cryptoAmount: btcAmount,
+      cryptoSymbol: 'BTC',
+      usdAmount,
+    }
+  }
+
+  // Para outras redes, retornar USDT
+  return {
+    cryptoAmount: usdAmount,
+    cryptoSymbol: 'USDT',
+    usdAmount,
+  }
+}
+
 export default function NewDepositPage() {
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [amountDisplay, setAmountDisplay] = useState('')
+  const [cryptoAmount, setCryptoAmount] = useState<number | undefined>()
+  const [cryptoSymbol, setCryptoSymbol] = useState<string>('USDT')
+  const [isCalculating, setIsCalculating] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
@@ -177,7 +270,7 @@ export default function NewDepositPage() {
     defaultValues: {
       payment_method: 'pix',
       amount_brl: 100,
-      crypto_network: 'bitcoin',
+      crypto_network: 'ethereum',
       wallet_address: '',
     },
   })
@@ -192,6 +285,45 @@ export default function NewDepositPage() {
   const selectedNetwork = cryptoNetworks.find(
     (n) => n.id === form.watch('crypto_network'),
   )
+
+  // Função para calcular cripto (memoizada com useCallback)
+  const calculateCrypto = useCallback(async () => {
+    const amount = form.getValues('amount_brl')
+    const network = form.getValues('crypto_network')
+
+    if (!amount || amount < 100) {
+      setCryptoAmount(undefined)
+      return
+    }
+
+    setIsCalculating(true)
+    try {
+      const result = await calculateCryptoForHubP2P(amount, network)
+      setCryptoAmount(result.cryptoAmount)
+      setCryptoSymbol(result.cryptoSymbol)
+    } catch (error) {
+      console.error('[CALCULATE CRYPTO] Erro ao calcular cripto:', error)
+      setCryptoAmount(undefined)
+    } finally {
+      setIsCalculating(false)
+    }
+  }, [form])
+
+  // Recalcula quando o valor BRL muda (com debounce)
+  useEffect(() => {
+    const debounce = setTimeout(calculateCrypto, 500)
+    return () => clearTimeout(debounce)
+  }, [amountDisplay, calculateCrypto])
+
+  // Recalcula imediatamente quando a rede muda
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'crypto_network') {
+        calculateCrypto()
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form, calculateCrypto])
 
   const onSubmit = async (data: DepositFormValues) => {
     setIsSubmitting(true)
@@ -526,6 +658,40 @@ export default function NewDepositPage() {
                     </FormItem>
                   )}
                 />
+
+                {/* Valor em Cripto Calculado */}
+                {form.watch('amount_brl') >= 100 && (
+                  <div className="mt-6 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg">
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-gray-600">
+                        Você receberá:
+                      </p>
+                      {isCalculating || cryptoAmount === undefined ? (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                          <span className="text-sm text-gray-500">
+                            Calculando...
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="mt-1 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
+                          {cryptoSymbol === 'BTC' ? '₿' : '$'}
+                          {cryptoAmount.toLocaleString('pt-BR', {
+                            minimumFractionDigits:
+                              cryptoSymbol === 'BTC' ? 8 : 2,
+                            maximumFractionDigits:
+                              cryptoSymbol === 'BTC' ? 8 : 2,
+                          })}
+                        </p>
+                      )}
+                    </div>
+                    <div className="border-t border-blue-200 pt-4">
+                      <p className="text-xs font-medium text-gray-600">
+                        {cryptoSymbol}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -625,9 +791,16 @@ export default function NewDepositPage() {
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Verifique cuidadosamente o endereço. Transações para
-                        endereços incorretos não podem ser revertidas.
+                      <FormDescription className="space-y-1">
+                        <p className="text-muted-foreground">
+                          Verifique cuidadosamente o endereço. Transações para
+                          endereços incorretos não podem ser revertidas.
+                        </p>
+                        {selectedNetwork && (
+                          <p className="font-medium text-blue-600">
+                            ℹ️ {walletFormatDescriptions[selectedNetwork.id]}
+                          </p>
+                        )}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

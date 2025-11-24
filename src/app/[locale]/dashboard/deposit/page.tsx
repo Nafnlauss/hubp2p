@@ -94,6 +94,8 @@ interface TransactionData {
   transaction_number: string
   payment_method: 'pix' | 'ted'
   amount_brl: number
+  amount_usd?: number
+  exchange_rate?: number
   crypto_network: string
   wallet_address: string
   expires_at: string
@@ -386,12 +388,20 @@ export default function NewDepositPage() {
       const expiresAt = new Date()
       expiresAt.setMinutes(expiresAt.getMinutes() + 40)
 
+      // Calcular valores em USD e taxa
+      const cryptoCalc = await calculateCryptoForHubP2P(
+        data.amount_brl,
+        data.crypto_network,
+      )
+
       // Preparar dados da transação
       const transactionData: TransactionData = {
         user_id: user.id,
         transaction_number: transactionNumber || `TXN-${Date.now()}`,
         payment_method: data.payment_method,
         amount_brl: data.amount_brl,
+        amount_usd: cryptoCalc.usdAmount,
+        exchange_rate: await getUsdtBrlRate(),
         crypto_network: data.crypto_network,
         wallet_address: data.wallet_address,
         expires_at: expiresAt.toISOString(),
@@ -400,19 +410,22 @@ export default function NewDepositPage() {
 
       // Adicionar dados específicos do método de pagamento
       if (data.payment_method === 'pix' && accounts.pix) {
-        transactionData.pix_key = accounts.pix.pix_key
-        transactionData.pix_qr_code = accounts.pix.pix_qr_code
+        transactionData.pix_key = accounts.pix.pix_key ?? undefined
+        transactionData.pix_qr_code = accounts.pix.pix_qr_code ?? undefined
       } else if (data.payment_method === 'ted' && accounts.ted) {
-        transactionData.bank_name = accounts.ted.bank_name
-        transactionData.bank_account_holder = accounts.ted.account_holder
-        transactionData.bank_account_agency = accounts.ted.account_agency
-        transactionData.bank_account_number = accounts.ted.account_number
+        transactionData.bank_name = accounts.ted.bank_name ?? undefined
+        transactionData.bank_account_holder =
+          accounts.ted.account_holder ?? undefined
+        transactionData.bank_account_agency =
+          accounts.ted.account_agency ?? undefined
+        transactionData.bank_account_number =
+          accounts.ted.account_number ?? undefined
       }
 
       // Criar transação
       const { data: transaction, error } = await supabase
         .from('transactions')
-        .insert(transactionData)
+        .insert(transactionData as never)
         .select()
         .single()
 
@@ -426,23 +439,23 @@ export default function NewDepositPage() {
         return
       }
 
-      // Enviar notificação Pushover prioritária para o admin
-      try {
-        await sendNotification(transaction.id, 'new_transaction')
-      } catch (notificationError) {
-        // Log do erro mas não falha a transação
-        console.error('Erro ao enviar notificação Pushover:', notificationError)
-      }
+      // Type assertion para o objeto transaction
+      const createdTransaction = transaction as unknown as { id: string }
+
+      // Enviar notificação Pushover em background (sem bloquear)
+      sendNotification(createdTransaction.id, 'new_transaction').catch(
+        (error) => {
+          console.error('Erro ao enviar notificação Pushover:', error)
+        },
+      )
 
       toast({
         title: 'Transação criada!',
-        description: 'Você será redirecionado para a página de pagamento.',
+        description: 'Redirecionando para a página de pagamento...',
       })
 
-      // Redirecionar para página de pagamento
-      if (transaction && 'id' in transaction) {
-        router.push(`/dashboard/deposit/${transaction.id}`)
-      }
+      // Redirecionar imediatamente para página de pagamento
+      router.push(`/dashboard/deposit/${createdTransaction.id}`)
     } catch (error) {
       console.error('Erro:', error)
       toast({
@@ -660,38 +673,39 @@ export default function NewDepositPage() {
                 />
 
                 {/* Valor em Cripto Calculado */}
-                {form.watch('amount_brl') >= 100 && (
-                  <div className="mt-6 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg">
-                    <div className="mb-4">
-                      <p className="text-sm font-medium text-gray-600">
-                        Você receberá:
-                      </p>
-                      {isCalculating || cryptoAmount === undefined ? (
-                        <div className="mt-2 flex items-center gap-2">
-                          <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                          <span className="text-sm text-gray-500">
-                            Calculando...
-                          </span>
-                        </div>
-                      ) : (
-                        <p className="mt-1 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
-                          {cryptoSymbol === 'BTC' ? '₿' : '$'}
-                          {cryptoAmount.toLocaleString('pt-BR', {
-                            minimumFractionDigits:
-                              cryptoSymbol === 'BTC' ? 8 : 2,
-                            maximumFractionDigits:
-                              cryptoSymbol === 'BTC' ? 8 : 2,
-                          })}
+                {form.watch('amount_brl') >= 100 &&
+                  cryptoAmount !== undefined && (
+                    <div className="mt-6 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-lg">
+                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-600">
+                          Você receberá:
                         </p>
-                      )}
+                        {isCalculating ? (
+                          <div className="mt-2 flex items-center gap-2">
+                            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                            <span className="text-sm text-gray-500">
+                              Calculando...
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="mt-1 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
+                            {cryptoSymbol === 'BTC' ? '₿' : '$'}
+                            {cryptoAmount.toLocaleString('pt-BR', {
+                              minimumFractionDigits:
+                                cryptoSymbol === 'BTC' ? 8 : 2,
+                              maximumFractionDigits:
+                                cryptoSymbol === 'BTC' ? 8 : 2,
+                            })}
+                          </p>
+                        )}
+                      </div>
+                      <div className="border-t border-blue-200 pt-4">
+                        <p className="text-xs font-medium text-gray-600">
+                          {cryptoSymbol}
+                        </p>
+                      </div>
                     </div>
-                    <div className="border-t border-blue-200 pt-4">
-                      <p className="text-xs font-medium text-gray-600">
-                        {cryptoSymbol}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  )}
               </CardContent>
             </Card>
           )}

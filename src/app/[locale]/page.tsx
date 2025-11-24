@@ -1,10 +1,57 @@
 'use client'
 
+import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale } from 'next-intl'
+import { useCallback, useEffect, useState } from 'react'
+
+import { convertUsdToBtc, getUsdtBrlRate } from '@/lib/bitget'
 
 export default function HomePage() {
   const locale = useLocale()
+  const [exchangeRate, setExchangeRate] = useState<number | undefined>()
+  const [isLoading, setIsLoading] = useState(true)
+  const [brlAmount, setBrlAmount] = useState('100')
+  const [cryptoAmount, setCryptoAmount] = useState<number | undefined>()
+  const [cryptoSymbol, setCryptoSymbol] = useState<string>('USDT')
+  const [selectedNetwork, setSelectedNetwork] = useState<'bitcoin' | 'usdt'>(
+    'usdt',
+  )
+
+  // Calcular cotação e valor em cripto
+  const calculateQuote = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const bitgetRate = await getUsdtBrlRate()
+      const markupFixed = 0.05
+      const markupPercentage = 0.04
+      const finalRate = bitgetRate + markupFixed + bitgetRate * markupPercentage
+
+      setExchangeRate(finalRate)
+
+      const amount = Number.parseFloat(brlAmount.replace(',', '.'))
+      if (!Number.isNaN(amount) && amount >= 100) {
+        const usdAmount = amount / finalRate
+
+        if (selectedNetwork === 'bitcoin') {
+          const btcAmount = await convertUsdToBtc(usdAmount)
+          setCryptoAmount(btcAmount)
+          setCryptoSymbol('BTC')
+        } else {
+          setCryptoAmount(usdAmount)
+          setCryptoSymbol('USDT')
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao calcular cotação:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [brlAmount, selectedNetwork])
+
+  useEffect(() => {
+    calculateQuote()
+  }, [calculateQuote])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -84,6 +131,135 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <span className="text-lg">⚡</span>
               <span>Recebimento Rápido</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Calculator Widget */}
+        <div className="mx-auto mt-16 max-w-2xl">
+          <div className="rounded-2xl bg-white p-8 shadow-2xl">
+            <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">
+              Simule sua compra
+            </h2>
+
+            {/* Network Selector */}
+            <div className="mb-6">
+              <p className="mb-2 block text-sm font-medium text-gray-700">
+                Escolha a criptomoeda:
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedNetwork('usdt')}
+                  className={`rounded-lg border-2 px-4 py-3 font-semibold transition-all ${
+                    selectedNetwork === 'usdt'
+                      ? 'border-blue-600 bg-blue-50 text-blue-600'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-lg">💵</span>
+                    <span>USDT</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedNetwork('bitcoin')}
+                  className={`rounded-lg border-2 px-4 py-3 font-semibold transition-all ${
+                    selectedNetwork === 'bitcoin'
+                      ? 'border-blue-600 bg-blue-50 text-blue-600'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-lg">₿</span>
+                    <span>Bitcoin</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Amount Input */}
+            <div className="mb-6">
+              <label
+                htmlFor="brl-amount"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
+                Quanto você quer comprar?
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-gray-500">
+                  R$
+                </span>
+                <input
+                  id="brl-amount"
+                  type="text"
+                  value={brlAmount}
+                  onChange={(event) => {
+                    const value = event.target.value.replaceAll(/[^\d,]/g, '')
+                    setBrlAmount(value)
+                  }}
+                  className="w-full rounded-lg border-2 border-gray-300 py-3 pl-12 pr-4 text-lg font-semibold focus:border-blue-600 focus:outline-none"
+                  placeholder="100"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Valor mínimo: R$ 100,00
+              </p>
+            </div>
+
+            {/* Exchange Rate */}
+            {exchangeRate && (
+              <div className="mb-4 rounded-lg bg-gray-50 p-3">
+                <p className="text-center text-sm text-gray-600">
+                  Taxa de câmbio:{' '}
+                  <span className="font-semibold text-gray-900">
+                    R$ {exchangeRate.toFixed(2)} / USD
+                  </span>
+                </p>
+              </div>
+            )}
+
+            {/* Calculated Amount */}
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                <span className="text-sm font-medium text-gray-600">
+                  Calculando...
+                </span>
+              </div>
+            ) : (
+              cryptoAmount !== undefined &&
+              Number.parseFloat(brlAmount.replace(',', '.')) >= 100 && (
+                <div className="rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
+                  <p className="text-center text-sm font-medium text-gray-600">
+                    Você receberá aproximadamente:
+                  </p>
+                  <p className="mt-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-center text-4xl font-bold text-transparent">
+                    {cryptoSymbol === 'BTC' ? '₿ ' : ''}
+                    {cryptoAmount.toLocaleString('pt-BR', {
+                      minimumFractionDigits: cryptoSymbol === 'BTC' ? 8 : 2,
+                      maximumFractionDigits: cryptoSymbol === 'BTC' ? 8 : 2,
+                    })}{' '}
+                    {cryptoSymbol}
+                  </p>
+                  <p className="mt-2 text-center text-xs text-gray-500">
+                    * Valor aproximado. A cotação final será confirmada no
+                    momento da transação.
+                  </p>
+                </div>
+              )
+            )}
+
+            {/* CTA */}
+            <div className="mt-6 text-center">
+              <Link
+                href={`/${locale}/register`}
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 font-semibold text-white transition-all hover:scale-105 hover:shadow-lg"
+              >
+                Cadastre-se para comprar
+                <span>→</span>
+              </Link>
             </div>
           </div>
         </div>

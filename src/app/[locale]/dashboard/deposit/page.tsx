@@ -103,7 +103,6 @@ interface TransactionData {
   pix_key?: string
   pix_qr_code?: string
   bank_name?: string
-  bank_code?: string
   bank_account_holder?: string
   bank_account_agency?: string
   bank_account_number?: string

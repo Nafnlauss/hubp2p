@@ -274,13 +274,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Taxa de câmbio com valor real cobrado (inclui 4%) */}
+              {/* Taxa de câmbio */}
               {exchangeRate && (
                 <div className="mb-6 rounded-lg bg-blue-50 px-4 py-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Taxa de câmbio:</span>
                     <span className="font-bold text-blue-600">
-                      R$ {formatBRL(exchangeRate)}
+                      R$ {formatBRL(baseRate + 0.05)} + taxa 4%
                     </span>
                   </div>
                 </div>

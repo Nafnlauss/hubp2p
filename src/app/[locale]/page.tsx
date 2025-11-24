@@ -293,10 +293,6 @@ export default function HomePage() {
               >
                 Cadastre-se para comprar →
               </Link>
-
-              <p className="mt-3 text-center text-xs text-gray-400">
-                * Valor aproximado. Cotação confirmada no momento da transação.
-              </p>
             </div>
           </div>
         </div>

@@ -7,11 +7,42 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { convertUsdToBtc, getUsdtBrlRate } from '@/lib/bitget'
 
+// Função para formatar números no padrão brasileiro
+const formatBRL = (value: number): string => {
+  return value.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+// Função para formatar input de moeda
+const formatCurrencyInput = (value: string): string => {
+  // Remove tudo exceto números
+  const numbers = value.replaceAll(/\D/g, '')
+  if (!numbers) return ''
+
+  // Converte para número e divide por 100 para ter centavos
+  const numberValue = Number.parseInt(numbers, 10) / 100
+
+  // Formata no padrão brasileiro
+  return numberValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+// Função para converter string formatada para número
+const parseBRL = (value: string): number => {
+  const numbers = value.replaceAll(/\D/g, '')
+  return Number.parseInt(numbers, 10) / 100
+}
+
 export default function HomePage() {
   const locale = useLocale()
   const [exchangeRate, setExchangeRate] = useState<number | undefined>()
+  const [baseRate, setBaseRate] = useState<number>(5.69) // Taxa base da Bitget
   const [isLoading, setIsLoading] = useState(true)
-  const [brlAmount, setBrlAmount] = useState('100')
+  const [brlAmount, setBrlAmount] = useState('100,00')
   const [cryptoAmount, setCryptoAmount] = useState<number | undefined>()
   const [cryptoSymbol, setCryptoSymbol] = useState<string>('USDT')
   const [selectedNetwork, setSelectedNetwork] = useState<'bitcoin' | 'usdt'>(
@@ -23,13 +54,15 @@ export default function HomePage() {
     setIsLoading(true)
     try {
       const bitgetRate = await getUsdtBrlRate()
+      setBaseRate(bitgetRate)
+
       const markupFixed = 0.05
       const markupPercentage = 0.04
       const finalRate = bitgetRate + markupFixed + bitgetRate * markupPercentage
 
       setExchangeRate(finalRate)
 
-      const amount = Number.parseFloat(brlAmount.replace(',', '.'))
+      const amount = parseBRL(brlAmount)
       if (!Number.isNaN(amount) && amount >= 100) {
         const usdAmount = amount / finalRate
 
@@ -41,6 +74,8 @@ export default function HomePage() {
           setCryptoAmount(usdAmount)
           setCryptoSymbol('USDT')
         }
+      } else {
+        setCryptoAmount(undefined)
       }
     } catch (error) {
       console.error('Erro ao calcular cotação:', error)
@@ -135,131 +170,139 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Calculator Widget */}
-        <div className="mx-auto mt-16 max-w-2xl">
-          <div className="rounded-2xl bg-white p-8 shadow-2xl">
-            <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">
-              Simule sua compra
-            </h2>
-
-            {/* Network Selector */}
-            <div className="mb-6">
-              <p className="mb-2 block text-sm font-medium text-gray-700">
-                Escolha a criptomoeda:
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedNetwork('usdt')}
-                  className={`rounded-lg border-2 px-4 py-3 font-semibold transition-all ${
-                    selectedNetwork === 'usdt'
-                      ? 'border-blue-600 bg-blue-50 text-blue-600'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-lg">💵</span>
-                    <span>USDT</span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedNetwork('bitcoin')}
-                  className={`rounded-lg border-2 px-4 py-3 font-semibold transition-all ${
-                    selectedNetwork === 'bitcoin'
-                      ? 'border-blue-600 bg-blue-50 text-blue-600'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-lg">₿</span>
-                    <span>Bitcoin</span>
-                  </div>
-                </button>
-              </div>
+        {/* Calculator Widget - Estilo Swapped.com */}
+        <div className="mx-auto mt-16 max-w-xl">
+          <div className="overflow-hidden rounded-3xl bg-white shadow-2xl">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5">
+              <h2 className="text-center text-xl font-bold text-white">
+                Simule sua compra de cripto
+              </h2>
             </div>
 
-            {/* Amount Input */}
-            <div className="mb-6">
-              <label
-                htmlFor="brl-amount"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Quanto você quer comprar?
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-gray-500">
-                  R$
-                </span>
-                <input
-                  id="brl-amount"
-                  type="text"
-                  value={brlAmount}
-                  onChange={(event) => {
-                    const value = event.target.value.replaceAll(/[^\d,]/g, '')
-                    setBrlAmount(value)
-                  }}
-                  className="w-full rounded-lg border-2 border-gray-300 py-3 pl-12 pr-4 text-lg font-semibold focus:border-blue-600 focus:outline-none"
-                  placeholder="100"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Valor mínimo: R$ 100,00
-              </p>
-            </div>
-
-            {/* Exchange Rate */}
-            {exchangeRate && (
-              <div className="mb-4 rounded-lg bg-gray-50 p-3">
-                <p className="text-center text-sm text-gray-600">
-                  Taxa de câmbio:{' '}
-                  <span className="font-semibold text-gray-900">
-                    R$ {exchangeRate.toFixed(2)} / USD
+            <div className="p-6">
+              {/* Você paga */}
+              <div className="mb-4">
+                <p className="mb-2 block text-sm font-medium text-gray-600">
+                  Você paga
+                </p>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-900">
+                    R$
                   </span>
+                  <input
+                    type="text"
+                    value={brlAmount}
+                    onChange={(event) => {
+                      const formatted = formatCurrencyInput(event.target.value)
+                      setBrlAmount(formatted)
+                    }}
+                    className="w-full rounded-xl border-2 border-gray-200 bg-gray-50 py-4 pl-16 pr-4 text-2xl font-bold text-gray-900 transition-all focus:border-blue-500 focus:bg-white focus:outline-none"
+                    placeholder="100,00"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Valor mínimo: R$ 100,00
                 </p>
               </div>
-            )}
 
-            {/* Calculated Amount */}
-            {isLoading ? (
-              <div className="flex items-center justify-center gap-2 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                <span className="text-sm font-medium text-gray-600">
-                  Calculando...
-                </span>
-              </div>
-            ) : (
-              cryptoAmount !== undefined &&
-              Number.parseFloat(brlAmount.replace(',', '.')) >= 100 && (
-                <div className="rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
-                  <p className="text-center text-sm font-medium text-gray-600">
-                    Você receberá aproximadamente:
-                  </p>
-                  <p className="mt-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-center text-4xl font-bold text-transparent">
-                    {cryptoSymbol === 'BTC' ? '₿ ' : ''}
-                    {cryptoAmount.toLocaleString('pt-BR', {
-                      minimumFractionDigits: cryptoSymbol === 'BTC' ? 8 : 2,
-                      maximumFractionDigits: cryptoSymbol === 'BTC' ? 8 : 2,
-                    })}{' '}
-                    {cryptoSymbol}
-                  </p>
-                  <p className="mt-2 text-center text-xs text-gray-500">
-                    * Valor aproximado. A cotação final será confirmada no
-                    momento da transação.
-                  </p>
+              {/* Seletor de Cripto */}
+              <div className="mb-4">
+                <p className="mb-2 block text-sm font-medium text-gray-600">
+                  Você recebe
+                </p>
+                <div className="mb-3 grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedNetwork('usdt')}
+                    className={`flex items-center justify-center gap-2 rounded-lg py-3 font-semibold transition-all ${
+                      selectedNetwork === 'usdt'
+                        ? 'bg-white text-blue-600 shadow-md'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <span className="text-xl">💵</span>
+                    <span>USDT</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedNetwork('bitcoin')}
+                    className={`flex items-center justify-center gap-2 rounded-lg py-3 font-semibold transition-all ${
+                      selectedNetwork === 'bitcoin'
+                        ? 'bg-white text-orange-500 shadow-md'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <span className="text-xl">₿</span>
+                    <span>Bitcoin</span>
+                  </button>
                 </div>
-              )
-            )}
 
-            {/* CTA */}
-            <div className="mt-6 text-center">
+                {/* Valor calculado */}
+                <div className="rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-4">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                      <span className="text-sm text-gray-500">
+                        Calculando...
+                      </span>
+                    </div>
+                  ) : cryptoAmount === undefined ? (
+                    <p className="text-center text-sm text-gray-400">
+                      Digite um valor acima de R$ 100,00
+                    </p>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-3xl font-bold text-gray-900">
+                          {cryptoAmount.toLocaleString('pt-BR', {
+                            minimumFractionDigits:
+                              cryptoSymbol === 'BTC' ? 8 : 2,
+                            maximumFractionDigits:
+                              cryptoSymbol === 'BTC' ? 8 : 2,
+                          })}
+                        </p>
+                        <p className="mt-1 text-sm font-medium text-gray-500">
+                          {cryptoSymbol}
+                        </p>
+                      </div>
+                      <span className="text-4xl">
+                        {cryptoSymbol === 'BTC' ? '₿' : '💵'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Taxa de câmbio simplificada */}
+              {exchangeRate && (
+                <div className="mb-6 rounded-lg bg-blue-50 px-4 py-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Taxa de câmbio:</span>
+                    <div className="flex items-center gap-1 font-semibold text-gray-900">
+                      <span>R$ {formatBRL(baseRate)}</span>
+                      <span className="text-gray-400">+</span>
+                      <span>R$ 0,05</span>
+                      <span className="text-gray-400">=</span>
+                      <span className="text-blue-600">
+                        R$ {formatBRL(baseRate + 0.05)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* CTA */}
               <Link
                 href={`/${locale}/register`}
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 font-semibold text-white transition-all hover:scale-105 hover:shadow-lg"
+                className="block w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-center text-lg font-bold text-white transition-all hover:scale-[1.02] hover:shadow-xl"
               >
-                Cadastre-se para comprar
-                <span>→</span>
+                Cadastre-se para comprar →
               </Link>
+
+              <p className="mt-3 text-center text-xs text-gray-400">
+                * Valor aproximado. Cotação confirmada no momento da transação.
+              </p>
             </div>
           </div>
         </div>

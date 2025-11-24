@@ -279,15 +279,9 @@ export default function HomePage() {
                 <div className="mb-6 rounded-lg bg-blue-50 px-4 py-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Taxa de câmbio:</span>
-                    <div className="flex items-center gap-1 font-semibold text-gray-900">
-                      <span>R$ {formatBRL(baseRate)}</span>
-                      <span className="text-gray-400">+</span>
-                      <span>R$ 0,05</span>
-                      <span className="text-gray-400">=</span>
-                      <span className="text-blue-600">
-                        R$ {formatBRL(baseRate + 0.05)}
-                      </span>
-                    </div>
+                    <span className="font-bold text-blue-600">
+                      R$ {formatBRL(baseRate + 0.05)}
+                    </span>
                   </div>
                 </div>
               )}

@@ -30,20 +30,30 @@ const intlMiddleware = createMiddleware({
 
 export async function middleware(request: NextRequest) {
   // Check if request is from api.hubp2p.com subdomain
+  // Railway and other proxies may use different headers
   const hostname = request.headers.get('host') || ''
   const xForwardedHost = request.headers.get('x-forwarded-host') || ''
-  const effectiveHost = xForwardedHost || hostname
+  const xOriginalHost = request.headers.get('x-original-host') || ''
+  const cfConnectingIp = request.headers.get('cf-connecting-ip') || ''
+  const requestUrl = request.url
 
-  // Debug log for subdomain detection
+  // Debug log all headers
+  console.log('🌐 [MIDDLEWARE] ===== SUBDOMAIN DEBUG =====')
   console.log('🌐 [MIDDLEWARE] Host:', hostname)
   console.log('🌐 [MIDDLEWARE] X-Forwarded-Host:', xForwardedHost)
-  console.log('🌐 [MIDDLEWARE] Effective Host:', effectiveHost)
+  console.log('🌐 [MIDDLEWARE] X-Original-Host:', xOriginalHost)
+  console.log('🌐 [MIDDLEWARE] Request URL:', requestUrl)
 
-  const isApiSubdomain =
-    effectiveHost === 'api.hubp2p.com' ||
-    effectiveHost.startsWith('api.hubp2p.com:') ||
-    hostname === 'api.hubp2p.com' ||
-    hostname.startsWith('api.hubp2p.com:')
+  // Check all possible sources for api subdomain
+  const allHosts = [hostname, xForwardedHost, xOriginalHost, requestUrl]
+  const isApiSubdomain = allHosts.some(
+    (h) =>
+      h.includes('api.hubp2p.com') ||
+      h.includes('api%2Ehubp2p') ||
+      h.startsWith('api.'),
+  )
+
+  console.log('🌐 [MIDDLEWARE] Is API Subdomain:', isApiSubdomain)
 
   // Handle api.hubp2p.com subdomain - rewrite all paths to /comprar/*
   if (isApiSubdomain) {

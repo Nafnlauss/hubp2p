@@ -87,13 +87,14 @@ export async function middleware(request: NextRequest) {
 
     console.log('🔄 [MIDDLEWARE] Rewriting to:', newPathname)
 
-    // Build the new URL manually
-    const url = new URL(request.url)
-    url.pathname = newPathname
+    // Use nextUrl which preserves the correct host
+    const rewriteUrl = request.nextUrl.clone()
+    rewriteUrl.pathname = newPathname
 
-    console.log('🎯 [MIDDLEWARE] Final URL:', url.toString())
+    console.log('🎯 [MIDDLEWARE] Rewrite URL pathname:', rewriteUrl.pathname)
+    console.log('🎯 [MIDDLEWARE] Rewrite URL href:', rewriteUrl.href)
 
-    return NextResponse.rewrite(url)
+    return NextResponse.rewrite(rewriteUrl)
   }
 
   // Skip intl middleware for API routes and admin routes

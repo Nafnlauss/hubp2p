@@ -59,6 +59,7 @@ export async function middleware(request: NextRequest) {
   if (isApiSubdomain) {
     console.log('✅ [MIDDLEWARE] API subdomain detected!')
     const pathname = request.nextUrl.pathname
+    console.log('📍 [MIDDLEWARE] Original pathname:', pathname)
 
     // Skip static files and Next.js internals
     if (
@@ -66,21 +67,32 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/api') ||
       pathname.includes('.')
     ) {
+      console.log('⏭️ [MIDDLEWARE] Skipping static/api file')
+      return NextResponse.next()
+    }
+
+    // If already on /comprar, let it through
+    if (pathname.startsWith('/comprar')) {
+      console.log('✅ [MIDDLEWARE] Already on /comprar, passing through')
       return NextResponse.next()
     }
 
     // Rewrite paths:
     // api.hubp2p.com/ -> /comprar
     // api.hubp2p.com/[id] -> /comprar/[id]
-    const url = request.nextUrl.clone()
-    if (pathname === '/' || pathname === '') {
-      url.pathname = '/comprar'
-    } else if (!pathname.startsWith('/comprar')) {
-      // If path is /abc123, rewrite to /comprar/abc123
-      url.pathname = `/comprar${pathname}`
+    let newPathname = '/comprar'
+    if (pathname !== '/' && pathname !== '') {
+      newPathname = `/comprar${pathname}`
     }
 
-    // Simple rewrite without complex middleware chaining
+    console.log('🔄 [MIDDLEWARE] Rewriting to:', newPathname)
+
+    // Build the new URL manually
+    const url = new URL(request.url)
+    url.pathname = newPathname
+
+    console.log('🎯 [MIDDLEWARE] Final URL:', url.toString())
+
     return NextResponse.rewrite(url)
   }
 

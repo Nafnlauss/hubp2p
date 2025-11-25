@@ -31,11 +31,23 @@ const intlMiddleware = createMiddleware({
 export async function middleware(request: NextRequest) {
   // Check if request is from api.hubp2p.com subdomain
   const hostname = request.headers.get('host') || ''
+  const xForwardedHost = request.headers.get('x-forwarded-host') || ''
+  const effectiveHost = xForwardedHost || hostname
+
+  // Debug log for subdomain detection
+  console.log('🌐 [MIDDLEWARE] Host:', hostname)
+  console.log('🌐 [MIDDLEWARE] X-Forwarded-Host:', xForwardedHost)
+  console.log('🌐 [MIDDLEWARE] Effective Host:', effectiveHost)
+
   const isApiSubdomain =
-    hostname === 'api.hubp2p.com' || hostname.startsWith('api.hubp2p.com:')
+    effectiveHost === 'api.hubp2p.com' ||
+    effectiveHost.startsWith('api.hubp2p.com:') ||
+    hostname === 'api.hubp2p.com' ||
+    hostname.startsWith('api.hubp2p.com:')
 
   // Handle api.hubp2p.com subdomain - rewrite all paths to /comprar/*
   if (isApiSubdomain) {
+    console.log('✅ [MIDDLEWARE] API subdomain detected!')
     const pathname = request.nextUrl.pathname
 
     // Skip static files and Next.js internals

@@ -58,25 +58,8 @@ export async function middleware(request: NextRequest) {
       url.pathname = `/comprar${pathname}`
     }
 
-    // Update session first
-    const supabaseResponse = await updateSession(request)
-
-    // Apply intl middleware to get proper locale handling
-    const intlResponse = intlMiddleware(
-      new NextRequest(url, {
-        headers: request.headers,
-      }),
-    )
-
-    // Combine cookies
-    for (const cookie of supabaseResponse.cookies.getAll()) {
-      intlResponse.cookies.set(cookie.name, cookie.value)
-    }
-
-    // Return rewrite response with correct path
-    return NextResponse.rewrite(url, {
-      headers: intlResponse.headers,
-    })
+    // Simple rewrite without complex middleware chaining
+    return NextResponse.rewrite(url)
   }
 
   // Skip intl middleware for API routes and admin routes

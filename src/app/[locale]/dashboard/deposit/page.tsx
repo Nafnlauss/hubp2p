@@ -114,12 +114,16 @@ const paymentMethods = [
     name: 'PIX',
     time: 'Instantâneo',
     description: 'Instantâneo para valores menores',
+    fee: '4%',
+    feePercentage: 0.04,
   },
   {
     id: 'ted',
     name: 'TED',
     time: '30 min a 1h',
     description: 'Recomendado para valores maiores',
+    fee: '3,75%',
+    feePercentage: 0.0375,
   },
 ] as const
 
@@ -217,21 +221,25 @@ function formatCurrencyInput(value: string): string {
   }).format(reais)
 }
 
-// Função para calcular cripto com taxa de hubp2p.com (Bitget + R$0,05 + 4%)
+// Função para calcular cripto com taxa de hubp2p.com
+// PIX: Bitget + R$0,05 + 4%
+// TED: Bitget + R$0,05 + 3,75%
 async function calculateCryptoForHubP2P(
   brlAmount: number,
   network: string,
+  paymentMethod: 'pix' | 'ted' = 'pix',
 ): Promise<{
   cryptoAmount: number
   cryptoSymbol: string
   usdAmount: number
+  exchangeRate: number
 }> {
   // Pegar taxa USDT/BRL da Bitget
   const bitgetRate = await getUsdtBrlRate()
 
-  // Aplicar markup: taxa base + R$0,05 + 4%
+  // Aplicar markup: taxa base + R$0,05 + taxa percentual
   const markupFixed = 0.05
-  const markupPercentage = 0.04
+  const markupPercentage = paymentMethod === 'pix' ? 0.04 : 0.0375 // 4% para PIX, 3,75% para TED
   const finalRate = bitgetRate + markupFixed + bitgetRate * markupPercentage
 
   // Converter BRL para USD usando a taxa com markup
@@ -244,6 +252,7 @@ async function calculateCryptoForHubP2P(
       cryptoAmount: btcAmount,
       cryptoSymbol: 'BTC',
       usdAmount,
+      exchangeRate: finalRate,
     }
   }
 
@@ -252,6 +261,7 @@ async function calculateCryptoForHubP2P(
     cryptoAmount: usdAmount,
     cryptoSymbol: 'USDT',
     usdAmount,
+    exchangeRate: finalRate,
   }
 }
 
@@ -291,6 +301,7 @@ export default function NewDepositPage() {
   const calculateCrypto = useCallback(async () => {
     const amount = form.getValues('amount_brl')
     const network = form.getValues('crypto_network')
+    const paymentMethod = form.getValues('payment_method')
 
     if (!amount || amount < 100) {
       setCryptoAmount(undefined)
@@ -299,7 +310,11 @@ export default function NewDepositPage() {
 
     setIsCalculating(true)
     try {
-      const result = await calculateCryptoForHubP2P(amount, network)
+      const result = await calculateCryptoForHubP2P(
+        amount,
+        network,
+        paymentMethod,
+      )
       setCryptoAmount(result.cryptoAmount)
       setCryptoSymbol(result.cryptoSymbol)
     } catch (error) {
@@ -316,10 +331,10 @@ export default function NewDepositPage() {
     return () => clearTimeout(debounce)
   }, [amountDisplay, calculateCrypto])
 
-  // Recalcula imediatamente quando a rede muda
+  // Recalcula imediatamente quando a rede ou método de pagamento muda
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
-      if (name === 'crypto_network') {
+      if (name === 'crypto_network' || name === 'payment_method') {
         calculateCrypto()
       }
     })
@@ -391,6 +406,7 @@ export default function NewDepositPage() {
       const cryptoCalc = await calculateCryptoForHubP2P(
         data.amount_brl,
         data.crypto_network,
+        data.payment_method,
       )
 
       // Preparar dados da transação
@@ -589,9 +605,17 @@ export default function NewDepositPage() {
                             >
                               <div className="flex items-start justify-between">
                                 <div>
-                                  <h3 className="font-semibold">
-                                    {method.name}
-                                  </h3>
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="font-semibold">
+                                      {method.name}
+                                    </h3>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs font-semibold"
+                                    >
+                                      {method.fee}
+                                    </Badge>
+                                  </div>
                                   <p className="mt-1 text-sm text-muted-foreground">
                                     {method.description}
                                   </p>

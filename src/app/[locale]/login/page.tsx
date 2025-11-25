@@ -148,9 +148,17 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">
-                        {t('auth.login.password')}
-                      </FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          {t('auth.login.password')}
+                        </FormLabel>
+                        <Link
+                          href="/forgot-password"
+                          className="text-sm font-medium text-blue-600 underline-offset-4 transition-colors hover:text-blue-700 hover:underline"
+                        >
+                          Esqueci minha senha
+                        </Link>
+                      </div>
                       <FormControl>
                         <Input
                           type="password"

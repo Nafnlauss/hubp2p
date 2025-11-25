@@ -20,9 +20,9 @@ const intlMiddleware = createMiddleware({
   defaultLocale: 'pt-BR',
 
   // Estratégia de roteamento:
-  // 'pathPrefix' = /pt-BR/page, /en/page (padrão)
-  // 'domains' = usa domain routing
-  localePrefix: 'always',
+  // 'never' = sem prefixo de locale nas URLs (ex: /page em vez de /pt-BR/page)
+  // O locale é detectado via Accept-Language header ou cookie
+  localePrefix: 'never',
 
   // Detectar linguagem automaticamente do Accept-Language header
   localeDetection: true,
@@ -32,14 +32,14 @@ export async function middleware(request: NextRequest) {
   // Check if request is from api.hubp2p.com subdomain
   const hostname = request.headers.get('host') || ''
 
-  // Only rewrite root path of api.hubp2p.com to /pt-BR/comprar
-  // Don't rewrite other paths like /comprar/[id] or /pt-BR/comprar/[id]
+  // Rewrite root path of api.hubp2p.com to /comprar
+  // Don't rewrite other paths like /comprar/[id]
   if (
     (hostname === 'api.hubp2p.com' || hostname.startsWith('api.hubp2p.com:')) &&
     (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '')
   ) {
     const url = request.nextUrl.clone()
-    url.pathname = '/pt-BR/comprar'
+    url.pathname = '/comprar'
     return NextResponse.rewrite(url)
   }
 

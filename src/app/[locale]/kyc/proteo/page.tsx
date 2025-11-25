@@ -61,7 +61,7 @@ export default function ProteoKycEmbed() {
 
       if (!user) {
         console.log('🔴 [PROTEO] Usuário não autenticado')
-        router.push(`/${locale}/login`)
+        router.push('/login')
         return
       }
 
@@ -89,7 +89,7 @@ export default function ProteoKycEmbed() {
       // Se já completou KYC, redirecionar para dashboard
       if (profile?.kyc_status === 'approved') {
         console.log('✅ [PROTEO] KYC já aprovado, redirecionando...')
-        router.push(`/${locale}/dashboard`)
+        router.push('/dashboard')
         return
       }
 
@@ -137,13 +137,13 @@ export default function ProteoKycEmbed() {
         clearInterval(pollInterval)
         // Redirecionar para página de sucesso
         setTimeout(() => {
-          router.push(`/${locale}/sucesso`)
+          router.push('/sucesso')
         }, 1000)
       } else if (profile?.kyc_status === 'rejected') {
         console.log('❌ [PROTEO] KYC rejeitado detectado via polling!')
         clearInterval(pollInterval)
         // Redirecionar para página de rejeição
-        router.push(`/${locale}/kyc-rejeitado`)
+        router.push('/kyc-rejeitado')
       }
     }, 3000) // Verificar a cada 3 segundos
 
@@ -265,10 +265,7 @@ export default function ProteoKycEmbed() {
                     Abrir em Nova Aba
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={() => router.push(`/${locale}/kyc`)}
-                >
+                <Button variant="outline" onClick={() => router.push('/kyc')}>
                   Voltar para KYC
                 </Button>
               </div>

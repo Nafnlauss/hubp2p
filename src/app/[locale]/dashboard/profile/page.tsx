@@ -19,7 +19,7 @@ interface ProfilePageProps {
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const { locale } = await params
+  await params
   const supabase = await createClient()
 
   const {
@@ -28,7 +28,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    redirect(`/${locale}/login`)
+    redirect('/login')
   }
 
   // Buscar perfil
@@ -98,9 +98,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <div className="text-sm font-medium text-muted-foreground">
                 CPF
-              </label>
+              </div>
               <p className="mt-1 font-medium">
                 {profile?.cpf
                   ? profile.cpf.replace(
@@ -112,16 +112,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <div className="text-sm font-medium text-muted-foreground">
                 Telefone
-              </label>
+              </div>
               <p className="mt-1 font-medium">{profile?.phone || '-'}</p>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <div className="text-sm font-medium text-muted-foreground">
                 Data de Nascimento
-              </label>
+              </div>
               <p className="mt-1 font-medium">
                 {profile?.date_of_birth
                   ? new Date(profile.date_of_birth).toLocaleDateString('pt-BR')
@@ -130,9 +130,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <div className="text-sm font-medium text-muted-foreground">
                 Status KYC
-              </label>
+              </div>
               <div className="mt-1">
                 {kyc ? (
                   <Badge
@@ -157,9 +157,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             <>
               <Separator />
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium text-muted-foreground">
                   Endereço
-                </label>
+                </div>
                 <p className="mt-1 font-medium">
                   {profile.address_street}
                   {profile.address_number && `, ${profile.address_number}`}

@@ -72,7 +72,7 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
       console.log(
         '🔴 [DASHBOARD LAYOUT] KYC não aprovado! Redirecionando para /kyc',
       )
-      redirect(`/${locale}/kyc`)
+      redirect('/kyc')
     }
   }
 
@@ -110,10 +110,7 @@ async function DashboardLayout({ children, params }: DashboardLayoutProps) {
         <div className="container flex h-16 items-center justify-between px-4">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <Link
-              href={`/${locale}/dashboard`}
-              className="flex items-center gap-2"
-            >
+            <Link href="/dashboard" className="flex items-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
                 <span className="text-xl font-bold text-white">₿</span>
               </div>

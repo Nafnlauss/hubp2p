@@ -56,7 +56,7 @@ export default function KYCPage() {
         console.log(
           '🔴 [KYC PAGE] Não autenticado após todas as tentativas! Redirecionando para login',
         )
-        router.push(`/${locale}/login`)
+        router.push('/login')
         return
       }
 
@@ -74,7 +74,7 @@ export default function KYCPage() {
         console.log(
           '✅ [KYC PAGE] KYC já aprovado! Redirecionando para dashboard',
         )
-        router.push(`/${locale}/dashboard`)
+        router.push('/dashboard')
         return
       }
 
@@ -98,7 +98,7 @@ export default function KYCPage() {
     } catch (error) {
       console.error('❌ [KYC PAGE] Erro ao deslogar:', error)
     } finally {
-      router.push(`/${locale}/login`)
+      router.push('/login')
     }
   }
 

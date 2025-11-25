@@ -1,15 +1,14 @@
 'use client'
 
 import { AlertCircle } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useLocale } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { useRouter } from '@/lib/navigation'
 
 export default function ProteoDirectPage() {
   const router = useRouter()
-  const locale = useLocale()
   const searchParameters = useSearchParams()
   const [kycUrl, setKycUrl] = useState<string>('')
   const [error, setError] = useState(false)
@@ -40,9 +39,7 @@ export default function ProteoDirectPage() {
           <p className="mb-4 text-muted-foreground">
             O CPF fornecido é inválido. Por favor, volte e insira um CPF válido.
           </p>
-          <Button onClick={() => router.push(`/${locale}/kyc-manual`)}>
-            Voltar
-          </Button>
+          <Button onClick={() => router.push('/kyc-manual')}>Voltar</Button>
         </div>
       </div>
     )
@@ -96,7 +93,7 @@ export default function ProteoDirectPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(`/${locale}/kyc-manual`)}
+            onClick={() => router.push('/kyc-manual')}
           >
             Voltar
           </Button>

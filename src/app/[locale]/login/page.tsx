@@ -186,7 +186,7 @@ export default function LoginPage() {
             <div className="text-center text-sm text-muted-foreground">
               {t('auth.login.noAccount')}{' '}
               <Link
-                href={`/${locale}/register`}
+                href="/register"
                 className="font-medium text-blue-600 underline-offset-4 transition-colors hover:text-blue-700 hover:underline"
               >
                 {t('auth.login.registerLink')}

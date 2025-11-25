@@ -1,11 +1,10 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
-import Link from 'next/link'
-import { useLocale } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 
 import { convertUsdToBtc, getUsdtBrlRate } from '@/lib/bitget'
+import { Link } from '@/lib/navigation'
 
 // Função para formatar números no padrão brasileiro
 const formatBRL = (value: number): string => {
@@ -38,7 +37,6 @@ const parseBRL = (value: string): number => {
 }
 
 export default function HomePage() {
-  const locale = useLocale()
   const [exchangeRate, setExchangeRate] = useState<number | undefined>()
   const [baseRate, setBaseRate] = useState<number>(5.69) // Taxa base da Bitget
   const [isLoading, setIsLoading] = useState(true)
@@ -100,7 +98,7 @@ export default function HomePage() {
             <span className="text-xl font-bold text-gray-900">HubP2P</span>
           </div>
           <Link
-            href={`/${locale}/login`}
+            href="/login"
             className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
           >
             Entrar
@@ -135,7 +133,7 @@ export default function HomePage() {
           {/* CTA Buttons */}
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
-              href={`/${locale}/register`}
+              href="/register"
               className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-4 font-semibold text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl sm:w-auto"
             >
               <span className="relative z-10 flex items-center gap-2">
@@ -146,7 +144,7 @@ export default function HomePage() {
               </span>
             </Link>
             <Link
-              href={`/${locale}/login`}
+              href="/login"
               className="inline-flex w-full items-center justify-center rounded-xl border-2 border-gray-300 bg-white px-8 py-4 font-semibold text-gray-700 transition-all hover:border-gray-400 hover:bg-gray-50 sm:w-auto"
             >
               Já tenho conta
@@ -288,7 +286,7 @@ export default function HomePage() {
 
               {/* CTA */}
               <Link
-                href={`/${locale}/register`}
+                href="/register"
                 className="block w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-center text-lg font-bold text-white transition-all hover:scale-[1.02] hover:shadow-xl"
               >
                 Cadastre-se para comprar →
@@ -351,7 +349,7 @@ export default function HomePage() {
             Cadastre-se agora e complete sua verificação KYC em minutos.
           </p>
           <Link
-            href={`/${locale}/register`}
+            href="/register"
             className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-blue-600 shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
           >
             Criar Conta Gratuita

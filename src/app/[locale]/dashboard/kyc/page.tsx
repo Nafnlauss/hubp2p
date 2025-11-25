@@ -7,9 +7,6 @@ import {
   Upload,
   XCircle,
 } from 'lucide-react'
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { getTranslations } from 'next-intl/server'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Link, redirect } from '@/lib/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 interface KYCPageProps {
@@ -28,8 +26,7 @@ interface KYCPageProps {
 }
 
 export default async function KYCPage({ params }: KYCPageProps) {
-  const { locale } = await params
-  const t = await getTranslations()
+  await params
   const supabase = await createClient()
 
   // Verificar autenticação
@@ -38,7 +35,7 @@ export default async function KYCPage({ params }: KYCPageProps) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/${locale}/login`)
+    redirect('/login')
   }
 
   // Buscar perfil do usuário
@@ -266,12 +263,10 @@ export default async function KYCPage({ params }: KYCPageProps) {
           ))}
 
         <Button size="lg" variant="outline" asChild>
-          <Link href={`/${locale}/kyc/proteo`}>
-            Abrir verificação embutida (iframe)
-          </Link>
+          <Link href="/kyc/proteo">Abrir verificação embutida (iframe)</Link>
         </Button>
         <Button variant="outline" size="lg" asChild>
-          <Link href={`/${locale}/dashboard`}>Voltar ao Dashboard</Link>
+          <Link href="/dashboard">Voltar ao Dashboard</Link>
         </Button>
       </div>
 

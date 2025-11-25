@@ -132,7 +132,7 @@ export default function RegisterPage() {
               description: 'Conta criada! Por favor, faça login manualmente.',
               variant: 'destructive',
             })
-            window.location.href = `/${locale}/login`
+            window.location.href = '/login'
             return
           }
 
@@ -176,7 +176,7 @@ export default function RegisterPage() {
               description: 'Conta criada! Por favor, faça login manualmente.',
               variant: 'destructive',
             })
-            window.location.href = `/${locale}/login`
+            window.location.href = '/login'
             return
           }
 

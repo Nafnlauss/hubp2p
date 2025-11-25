@@ -1,13 +1,11 @@
 'use client'
 
 import { LogOut } from 'lucide-react'
-import { useLocale } from 'next-intl'
 import { useState } from 'react'
 
 import { createClient } from '@/lib/supabase/client'
 
 export function LogoutButton() {
-  const locale = useLocale()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
@@ -21,11 +19,11 @@ export function LogoutButton() {
       await supabase.auth.signOut()
 
       // Redirect to login
-      window.location.href = `/${locale}/login`
+      window.location.href = '/login'
     } catch (error) {
       console.error('Logout error:', error)
       // Even on error, redirect to login
-      window.location.href = `/${locale}/login`
+      window.location.href = '/login'
     }
   }
 

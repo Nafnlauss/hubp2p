@@ -50,14 +50,14 @@ const networkMap = {
 }
 
 async function DashboardPage({ params }: DashboardPageProps) {
-  const { locale } = await params
+  await params
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return null
+  if (!user) return
 
   // Buscar estatísticas
   const { data: transactions } = await supabase
@@ -66,14 +66,19 @@ async function DashboardPage({ params }: DashboardPageProps) {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
+  type Transaction = {
+    status: string
+    amount_brl: number
+  }
+
   const totalDeposited =
     transactions
-      ?.filter((t: any) => t.status === 'sent')
-      .reduce((sum: number, t: any) => sum + t.amount_brl, 0) || 0
+      ?.filter((t: Transaction) => t.status === 'sent')
+      .reduce((sum: number, t: Transaction) => sum + t.amount_brl, 0) || 0
 
   const pendingCount =
     transactions?.filter(
-      (t: any) =>
+      (t: Transaction) =>
         t.status === 'pending_payment' ||
         t.status === 'payment_received' ||
         t.status === 'converting',
@@ -101,7 +106,7 @@ async function DashboardPage({ params }: DashboardPageProps) {
           asChild
           className="h-11 bg-gradient-to-r from-blue-600 to-purple-600 px-6 text-base font-semibold shadow-lg transition-all hover:scale-105 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
         >
-          <Link href={`/${locale}/dashboard/deposit`}>
+          <Link href="/dashboard/deposit">
             <PlusCircle className="mr-2 h-5 w-5" />
             Novo Depósito
           </Link>
@@ -221,7 +226,7 @@ async function DashboardPage({ params }: DashboardPageProps) {
               asChild
               className="text-blue-600 transition-all hover:bg-blue-50 hover:text-blue-700"
             >
-              <Link href={`/${locale}/dashboard/transactions`}>
+              <Link href="/dashboard/transactions">
                 Ver todas
                 <ArrowUpRight className="ml-2 h-5 w-5" />
               </Link>
@@ -241,7 +246,7 @@ async function DashboardPage({ params }: DashboardPageProps) {
                 asChild
                 className="h-11 bg-gradient-to-r from-blue-600 to-purple-600 px-6 text-base font-semibold shadow-lg transition-all hover:scale-105 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
               >
-                <Link href={`/${locale}/dashboard/deposit`}>
+                <Link href="/dashboard/deposit">
                   <PlusCircle className="mr-2 h-5 w-5" />
                   Criar Primeiro Depósito
                 </Link>
@@ -306,9 +311,7 @@ async function DashboardPage({ params }: DashboardPageProps) {
                           asChild
                           className="font-medium text-blue-600 transition-all hover:bg-blue-50 hover:text-blue-700"
                         >
-                          <Link
-                            href={`/${locale}/dashboard/deposit/${transaction.id}`}
-                          >
+                          <Link href="/dashboard/deposit/${transaction.id}">
                             Ver Detalhes
                           </Link>
                         </Button>
@@ -319,9 +322,7 @@ async function DashboardPage({ params }: DashboardPageProps) {
                           asChild
                           className="font-medium text-gray-600 transition-all hover:bg-gray-100 hover:text-gray-900"
                         >
-                          <Link
-                            href={`/${locale}/dashboard/transactions?id=${transaction.id}`}
-                          >
+                          <Link href="/dashboard/transactions?id=${transaction.id}">
                             Ver
                           </Link>
                         </Button>

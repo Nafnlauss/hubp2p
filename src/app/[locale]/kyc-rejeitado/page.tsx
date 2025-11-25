@@ -1,17 +1,15 @@
 'use client'
 
 import { AlertCircle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
+import { useRouter } from '@/lib/navigation'
 
 export default function KycRejeitadoPage() {
   const router = useRouter()
-  const locale = useLocale()
 
   const tentarNovamente = () => {
-    router.push(`/${locale}/kyc/proteo`)
+    router.push('/kyc/proteo')
   }
 
   return (

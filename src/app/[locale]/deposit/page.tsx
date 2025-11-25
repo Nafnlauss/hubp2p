@@ -3,14 +3,11 @@
 import {
   AlertCircle,
   ArrowRight,
-  CheckCircle2,
   Copy,
   Loader2,
   QrCode,
   Wallet,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 
 import {
@@ -28,14 +25,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
+import { useRouter } from '@/lib/navigation'
 
 export default function DepositPage() {
-  const t = useTranslations()
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
-  const locale = useLocale()
 
   // Exemplo de chave PIX (em produção viria do backend)
   const pixKey = 'pix@plataformap2p.com.br'
@@ -45,20 +41,20 @@ export default function DepositPage() {
       const status = await getOnboardingStatus()
 
       if (!status) {
-        router.push(`/${locale}/login`)
+        router.push('/login')
         return
       }
 
       // Se não completou KYC ainda, voltar
       if (!status.kycCompleted) {
-        router.push(`/${locale}/kyc`)
+        router.push('/kyc')
         return
       }
 
       // Se já completou depósito, ir para próximo passo
       if (status.depositCompleted) {
         router.push(
-          `/${locale}${status.nextStep.startsWith('/') ? '' : '/'}${status.nextStep.replace(/^\/(pt-BR|en|es)/, '')}`,
+          `${status.nextStep.startsWith('/') ? '' : '/'}${status.nextStep.replace(/^\/(pt-BR|en|es)/, '')}`,
         )
       }
 
@@ -89,7 +85,7 @@ export default function DepositPage() {
         })
 
         setTimeout(() => {
-          router.push(`/${locale}/wallet`)
+          router.push('/wallet')
         }, 1000)
       } else {
         toast({
@@ -174,7 +170,7 @@ export default function DepositPage() {
                   <li>Selecione PIX → Pagar</li>
                   <li>Cole a chave e informe o valor</li>
                   <li>Confirme a transferência</li>
-                  <li>Volte aqui e clique em "Confirmar Depósito"</li>
+                  <li>Volte aqui e clique em &quot;Confirmar Depósito&quot;</li>
                 </ol>
               </div>
             </div>

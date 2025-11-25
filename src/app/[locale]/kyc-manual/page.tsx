@@ -1,14 +1,13 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useLocale } from 'next-intl'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useRouter } from '@/lib/navigation'
 
 function formatCPF(value: string) {
   const numbers = value.replaceAll(/\D/g, '')
@@ -20,7 +19,6 @@ function formatCPF(value: string) {
 
 export default function KYCManualPage() {
   const router = useRouter()
-  const locale = useLocale()
   const [cpf, setCpf] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -51,7 +49,7 @@ export default function KYCManualPage() {
     console.log('🆔 [KYC MANUAL] CPF:', cpfNumbers)
 
     // Redirecionar para página com o CPF
-    router.push(`/${locale}/kyc/proteo-direct?cpf=${cpfNumbers}`)
+    router.push('/kyc/proteo-direct?cpf=${cpfNumbers}')
   }
 
   return (

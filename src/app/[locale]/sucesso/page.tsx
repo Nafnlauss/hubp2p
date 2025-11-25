@@ -21,7 +21,7 @@ export default function SucessoPage() {
       } = await supabase.auth.getUser()
 
       if (!user) {
-        router.replace(`/${locale}/login`)
+        router.replace('/login')
         return
       }
 
@@ -60,14 +60,14 @@ export default function SucessoPage() {
       console.log(
         '❌ [SUCESSO] KYC não foi aprovado após polling. Redirecionando para /kyc',
       )
-      router.replace(`/${locale}/kyc`)
+      router.replace('/kyc')
     }
 
     void verifyKycWithPolling()
   }, [locale, router])
 
   const irParaDashboard = () => {
-    router.push(`/${locale}/dashboard`)
+    router.push('/dashboard')
   }
 
   if (status === 'loading') {

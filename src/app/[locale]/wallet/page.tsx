@@ -2,14 +2,11 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
-  ArrowRight,
   Bitcoin,
   CheckCircle2,
   Loader2,
   Wallet as WalletIcon,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -46,6 +43,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { useRouter } from '@/lib/navigation'
 
 const walletSchema = z.object({
   currency: z.string().min(1, 'Selecione uma criptomoeda'),
@@ -56,12 +54,10 @@ const walletSchema = z.object({
 type WalletFormData = z.infer<typeof walletSchema>
 
 export default function WalletPage() {
-  const t = useTranslations()
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
-  const locale = useLocale()
 
   const form = useForm<WalletFormData>({
     resolver: zodResolver(walletSchema),
@@ -77,24 +73,24 @@ export default function WalletPage() {
       const status = await getOnboardingStatus()
 
       if (!status) {
-        router.push(`/${locale}/login`)
+        router.push('/login')
         return
       }
 
       // Se não completou etapas anteriores, voltar
       if (!status.kycCompleted) {
-        router.push(`/${locale}/kyc`)
+        router.push('/kyc')
         return
       }
 
       if (!status.depositCompleted) {
-        router.push(`/${locale}/deposit`)
+        router.push('/deposit')
         return
       }
 
       // Se já configurou carteira, ir para dashboard
       if (status.walletConfigured) {
-        router.push(`/${locale}/dashboard`)
+        router.push('/dashboard')
       }
 
       setIsCheckingStatus(false)
@@ -124,7 +120,7 @@ export default function WalletPage() {
         })
 
         setTimeout(() => {
-          router.push(`/${locale}/dashboard`)
+          router.push('/dashboard')
         }, 1000)
       } else {
         toast({

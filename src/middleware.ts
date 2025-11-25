@@ -31,16 +31,52 @@ const intlMiddleware = createMiddleware({
 export async function middleware(request: NextRequest) {
   // Check if request is from api.hubp2p.com subdomain
   const hostname = request.headers.get('host') || ''
+  const isApiSubdomain =
+    hostname === 'api.hubp2p.com' || hostname.startsWith('api.hubp2p.com:')
 
-  // Rewrite root path of api.hubp2p.com to /comprar
-  // Don't rewrite other paths like /comprar/[id]
-  if (
-    (hostname === 'api.hubp2p.com' || hostname.startsWith('api.hubp2p.com:')) &&
-    (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '')
-  ) {
+  // Handle api.hubp2p.com subdomain - rewrite all paths to /comprar/*
+  if (isApiSubdomain) {
+    const pathname = request.nextUrl.pathname
+
+    // Skip static files and Next.js internals
+    if (
+      pathname.startsWith('/_next') ||
+      pathname.startsWith('/api') ||
+      pathname.includes('.')
+    ) {
+      return NextResponse.next()
+    }
+
+    // Rewrite paths:
+    // api.hubp2p.com/ -> /comprar
+    // api.hubp2p.com/[id] -> /comprar/[id]
     const url = request.nextUrl.clone()
-    url.pathname = '/comprar'
-    return NextResponse.rewrite(url)
+    if (pathname === '/' || pathname === '') {
+      url.pathname = '/comprar'
+    } else if (!pathname.startsWith('/comprar')) {
+      // If path is /abc123, rewrite to /comprar/abc123
+      url.pathname = `/comprar${pathname}`
+    }
+
+    // Update session first
+    const supabaseResponse = await updateSession(request)
+
+    // Apply intl middleware to get proper locale handling
+    const intlResponse = intlMiddleware(
+      new NextRequest(url, {
+        headers: request.headers,
+      }),
+    )
+
+    // Combine cookies
+    for (const cookie of supabaseResponse.cookies.getAll()) {
+      intlResponse.cookies.set(cookie.name, cookie.value)
+    }
+
+    // Return rewrite response with correct path
+    return NextResponse.rewrite(url, {
+      headers: intlResponse.headers,
+    })
   }
 
   // Skip intl middleware for API routes and admin routes
